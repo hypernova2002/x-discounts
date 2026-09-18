@@ -1,0 +1,25 @@
+{
+  "giftShopItemForm": {
+    "editTitle": "Edit gift shop item",
+    "newTitle": "New gift shop item",
+    "nameLabel": "Name",
+    "nameRequired": "Name is required",
+    "pointsCostLabel": "Points cost",
+    "pointsCostInvalid": "Points cost must be a whole number greater than 0",
+    "enabledLabel": "Enabled",
+    "unlimitedStockLabel": "Unlimited stock",
+    "stockLabel": "Stock",
+    "stockInvalid": "Stock must be a whole number of 0 or more",
+    "descriptionLabel": "Description",
+    "photoLabel": "Photo",
+    "newPhotoAlt": "New photo preview",
+    "currentPhotoAlt": "Current photo",
+    "cancelButton": "Cancel",
+    "saveChangesButton": "Save changes",
+    "createButton": "Create item",
+    "loadError": "Failed to load item",
+    "itemUpdated": "Item updated",
+    "itemCreated": "Item created",
+    "genericError": "Something went wrong"
+  }
+}

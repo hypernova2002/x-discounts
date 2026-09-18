@@ -1,0 +1,34 @@
+{
+  "effectEditor": {
+    "removeEffectButton": "Remove effect",
+    "multiplierHint": "Applies to the sum of points earned from every other eligible loyalty discount on the order.",
+    "fields": {
+      "percentageOff": "Percentage off",
+      "amount": "Amount",
+      "currency": "Currency",
+      "buyQuantity": "Buy quantity",
+      "getQuantity": "Get quantity",
+      "repeatable": "Repeatable",
+      "buyCondition": "Buy condition",
+      "getCondition": "Get condition",
+      "pointsPerCurrency": "Points per currency unit spent",
+      "points": "Points",
+      "pointsPerItem": "Points per item",
+      "multiplier": "Multiplier",
+      "appliesToLineItems": "Applies to line items matching"
+    },
+    "effectTypes": {
+      "percentageOff": "Percentage off",
+      "fixedAmountOff": "Fixed amount off",
+      "freeItem": "Free item",
+      "pointsPerCurrency": "Points per currency spent",
+      "pointsFlat": "Flat points",
+      "pointsPerItem": "Points per item",
+      "pointsMultiplier": "Points multiplier"
+    },
+    "scopes": {
+      "cart": "Cart",
+      "lineItem": "Line item"
+    }
+  }
+}

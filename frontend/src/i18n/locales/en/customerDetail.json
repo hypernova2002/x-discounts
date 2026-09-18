@@ -1,0 +1,94 @@
+{
+  "customerDetail": {
+    "loadError": "Failed to load customer",
+    "activityLabels": {
+      "order": "Order placed",
+      "giftShopRedemption": "Gift shop redemption",
+      "membership": "Membership"
+    },
+    "membershipUpdated": "Membership updated",
+    "membershipUpdateError": "Failed to update membership",
+    "pointsGranted": "Points granted",
+    "genericError": "Something went wrong",
+    "details": {
+      "title": "Details",
+      "externalId": "External ID",
+      "name": "Name",
+      "email": "Email",
+      "phone": "Phone",
+      "country": "Country",
+      "dateOfBirth": "Date of birth",
+      "marketingOptIn": "Marketing opt-in",
+      "yes": "Yes",
+      "no": "No",
+      "customerSince": "Customer since"
+    },
+    "totals": {
+      "title": "Totals",
+      "orders": "Orders",
+      "totalSpent": "Total spent",
+      "totalDiscounts": "Total discounts",
+      "pointsBalance": "Loyalty points balance",
+      "pointsEarnedLifetime": "Points earned (lifetime)",
+      "pointsRedeemed": "Points redeemed",
+      "pointsExpired": "Points expired"
+    },
+    "membership": {
+      "title": "Membership",
+      "noMembershipPlaceholder": "No membership",
+      "enteredOn": "Entered on",
+      "unknown": "Unknown",
+      "protectedUntil": "Protected until"
+    },
+    "customAttributes": {
+      "title": "Custom attributes"
+    },
+    "activity": {
+      "title": "Activity",
+      "empty": "No activity yet.",
+      "orderSummary": "— {total} total, {discount} off",
+      "pointsEarnedSuffix": ", +{points} points earned",
+      "pointsRedeemedSuffix": ", {points} points redeemed",
+      "giftShopRedemption": "{quantity}x {item} — {points} points spent",
+      "membershipJoined": "Joined {scheme} — {tier}"
+    },
+    "loyaltyPoints": {
+      "title": "Loyalty points",
+      "grantButton": "Grant points",
+      "empty": "No points earned yet.",
+      "source": "Source",
+      "order": "Order",
+      "manualGrant": "Manual grant",
+      "redemptionRefund": "Redemption refund",
+      "legacy": "Legacy",
+      "earned": "Earned",
+      "remaining": "Remaining",
+      "status": "Status",
+      "statusActive": "Active",
+      "statusExpired": "Expired",
+      "statusCancelled": "Cancelled",
+      "earnedAt": "Earned at",
+      "expires": "Expires",
+      "never": "Never"
+    },
+    "grantDialog": {
+      "header": "Grant points",
+      "pointsLabel": "Points",
+      "pointsInvalid": "Enter a whole number of points greater than 0",
+      "expiresLabel": "Expires at (optional)",
+      "reasonLabel": "Reason (optional)",
+      "reasonPlaceholder": "e.g. customer service goodwill",
+      "submit": "Grant"
+    },
+    "orders": {
+      "title": "Orders",
+      "empty": "No orders yet.",
+      "order": "Order",
+      "placed": "Placed",
+      "total": "Total spent",
+      "discount": "Discount applied",
+      "pointsEarned": "Points earned",
+      "pointsRedeemed": "Points redeemed"
+    }
+  }
+}

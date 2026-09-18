@@ -1,0 +1,37 @@
+{
+  "customAttributes": {
+    "title": "Custom Attributes",
+    "newAttributeButton": "New attribute",
+    "searchPlaceholder": "Search by key",
+    "allEntitiesPlaceholder": "All entities",
+    "columns": {
+      "entity": "Entity",
+      "key": "Key",
+      "type": "Type"
+    },
+    "deleteButton": "Delete",
+    "newAttributeDialogTitle": "New custom attribute",
+    "entityLabel": "Entity",
+    "keyLabel": "Key",
+    "dataTypeLabel": "Data type",
+    "createButton": "Create",
+    "entityOptions": {
+      "cart": "Cart",
+      "lineItem": "Line item",
+      "customer": "Customer"
+    },
+    "dataTypeOptions": {
+      "string": "String",
+      "number": "Number",
+      "boolean": "Boolean",
+      "date": "Date"
+    },
+    "loadError": "Failed to load custom attributes",
+    "attributeCreated": "Custom attribute created",
+    "genericError": "Something went wrong",
+    "deleteConfirm": "Delete custom attribute \"{key}\"? This can't be undone.",
+    "attributeDeleted": "Custom attribute deleted",
+    "deleteError": "Failed to delete custom attribute",
+    "keyRequired": "Key is required"
+  }
+}

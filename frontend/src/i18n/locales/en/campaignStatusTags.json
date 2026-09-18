@@ -1,0 +1,8 @@
+{
+  "campaignStatusTags": {
+    "active": "active",
+    "inactive": "inactive",
+    "paused": "paused",
+    "archived": "archived"
+  }
+}

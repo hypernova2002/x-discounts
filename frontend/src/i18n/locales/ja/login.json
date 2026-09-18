@@ -1,0 +1,10 @@
+{
+  "login": {
+    "appName": "x-discounts",
+    "subtitle": "サインイン",
+    "emailLabel": "メールアドレス",
+    "passwordLabel": "パスワード",
+    "submitButton": "サインイン",
+    "signupLink": "アカウントをお持ちでない方はこちら"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "giftShop": {
+    "title": "Gift Shop",
+    "newItemButton": "New item",
+    "loadError": "Failed to load gift shop items",
+    "noPhoto": "No photo",
+    "disabledTag": "disabled",
+    "pointsCost": "{points} points",
+    "unlimitedStock": "unlimited stock",
+    "inStock": "{stock} in stock",
+    "editButton": "Edit",
+    "redeemButton": "Redeem",
+    "emptyHint": "No items yet — add one to get started.",
+    "redeemDialogTitle": "Redeem item",
+    "redeemHint": "{name} — {points} points each",
+    "customerExternalIdLabel": "Customer external ID",
+    "quantityLabel": "Quantity",
+    "redeemSubmitButton": "Redeem",
+    "redeemed": "Redeemed",
+    "genericError": "Something went wrong"
+  }
+}

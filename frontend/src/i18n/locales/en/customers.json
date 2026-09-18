@@ -1,0 +1,17 @@
+{
+  "customers": {
+    "title": "Customers",
+    "loadError": "Failed to load customers",
+    "exportButton": "Export",
+    "searchPlaceholder": "Search customers",
+    "exportError": "Failed to export customers",
+    "externalId": "External ID",
+    "name": "Name",
+    "email": "Email",
+    "membership": "Membership",
+    "noMembership": "None",
+    "country": "Country",
+    "created": "Created",
+    "marketingOptIn": "Marketing opt-in"
+  }
+}

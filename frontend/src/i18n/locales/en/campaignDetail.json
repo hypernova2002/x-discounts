@@ -1,0 +1,30 @@
+{
+  "campaignDetail": {
+    "loadError": "Failed to load campaign",
+    "enabledToast": "Campaign enabled",
+    "pausedToast": "Campaign paused",
+    "archivedToast": "Campaign archived",
+    "unarchivedToast": "Campaign unarchived",
+    "updateError": "Failed to update campaign",
+    "pauseButton": "Pause",
+    "enableButton": "Enable",
+    "archiveButton": "Archive",
+    "unarchiveButton": "Unarchive",
+    "editButton": "Edit",
+    "detailsTitle": "Details",
+    "validFromLabel": "Valid from",
+    "noStartDate": "No start date",
+    "validUntilLabel": "Valid until",
+    "noEndDate": "No end date",
+    "createdLabel": "Created",
+    "discountsTitle": "Discounts",
+    "newDiscountButton": "New discount",
+    "noDiscountsHint": "No discounts in this campaign yet.",
+    "nameColumn": "Name",
+    "kindColumn": "Kind",
+    "keyColumn": "Key",
+    "statusColumn": "Status",
+    "statusEnabled": "enabled",
+    "statusDisabled": "disabled"
+  }
+}

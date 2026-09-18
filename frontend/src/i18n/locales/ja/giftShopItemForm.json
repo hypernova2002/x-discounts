@@ -1,0 +1,25 @@
+{
+  "giftShopItemForm": {
+    "editTitle": "ギフトショップ商品を編集",
+    "newTitle": "新規ギフトショップ商品",
+    "nameLabel": "名前",
+    "nameRequired": "名前は必須です",
+    "pointsCostLabel": "必要ポイント",
+    "pointsCostInvalid": "必要ポイントは1以上の整数を入力してください",
+    "enabledLabel": "有効",
+    "unlimitedStockLabel": "在庫無制限",
+    "stockLabel": "在庫",
+    "stockInvalid": "在庫は0以上の整数を入力してください",
+    "descriptionLabel": "説明",
+    "photoLabel": "写真",
+    "newPhotoAlt": "新しい写真のプレビュー",
+    "currentPhotoAlt": "現在の写真",
+    "cancelButton": "キャンセル",
+    "saveChangesButton": "変更を保存",
+    "createButton": "商品を作成",
+    "loadError": "商品の読み込みに失敗しました",
+    "itemUpdated": "商品を更新しました",
+    "itemCreated": "商品を作成しました",
+    "genericError": "問題が発生しました"
+  }
+}

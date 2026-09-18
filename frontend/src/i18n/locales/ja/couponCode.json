@@ -1,0 +1,7 @@
+{
+  "couponCode": {
+    "exactlyOneModeError": "コード・生成数・顧客のうち、いずれか1つだけを指定してください(複数指定不可、未指定不可)。",
+    "atMostOneModeError": "コード・生成数・顧客のうち、指定できるのは1つまでです。",
+    "countMaxError": "5000以下で指定してください"
+  }
+}

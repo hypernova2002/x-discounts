@@ -1,0 +1,7 @@
+{
+  "couponCode": {
+    "exactlyOneModeError": "Specify exactly one of a code, a count, or customers — not more than one, and not none.",
+    "atMostOneModeError": "Specify only one of a code, a count, or customers — not more than one.",
+    "countMaxError": "Must be 5000 or fewer"
+  }
+}

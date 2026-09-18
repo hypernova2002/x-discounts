@@ -1,0 +1,7 @@
+{
+  "couponCodeSelect": {
+    "placeholder": "クーポンコードを追加",
+    "filterPlaceholder": "クーポンを検索",
+    "optionLabel": "{code} — {name}"
+  }
+}

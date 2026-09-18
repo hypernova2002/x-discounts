@@ -1,0 +1,13 @@
+{
+  "signup": {
+    "appName": "x-discounts",
+    "subtitle": "Create your account",
+    "accountNameLabel": "Account name",
+    "nameLabel": "Your name",
+    "emailLabel": "Email",
+    "passwordLabel": "Password",
+    "passwordConfirmationLabel": "Confirm password",
+    "submitButton": "Sign up",
+    "loginLink": "Already have an account? Sign in"
+  }
+}

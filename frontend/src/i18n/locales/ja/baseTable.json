@@ -1,0 +1,14 @@
+{
+  "baseTable": {
+    "columnsPlaceholder": "列",
+    "noResults": "結果が見つかりません",
+    "filterLabel": "フィルター",
+    "anyOption": "すべて",
+    "clearFilters": "フィルターを解除",
+    "refreshLabel": "更新",
+    "rowsPerPageLabel": "1ページあたりの行数",
+    "of": "/",
+    "prevPageLabel": "前のページ",
+    "nextPageLabel": "次のページ"
+  }
+}

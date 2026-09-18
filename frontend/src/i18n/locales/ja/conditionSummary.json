@@ -1,0 +1,23 @@
+{
+  "conditionSummary": {
+    "appliesToEveryone": "すべての顧客に適用",
+    "groups": {
+      "all": "すべて",
+      "any": "いずれか",
+      "not": "ではない"
+    },
+    "operators": {
+      "eq": "=",
+      "ne": "≠",
+      "gt": ">",
+      "gte": "≥",
+      "lt": "<",
+      "lte": "≤",
+      "in": "いずれかに一致",
+      "notIn": "いずれにも一致しない",
+      "contains": "を含む",
+      "isEmpty": "空である",
+      "isSet": "空でない"
+    }
+  }
+}

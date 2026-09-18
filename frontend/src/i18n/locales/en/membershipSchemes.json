@@ -1,0 +1,13 @@
+{
+  "membershipSchemes": {
+    "title": "Membership Schemes",
+    "newSchemeButton": "New scheme",
+    "columns": {
+      "name": "Name",
+      "tiers": "Tiers",
+      "created": "Created"
+    },
+    "loadError": "Failed to load membership schemes",
+    "searchPlaceholder": "Search membership schemes"
+  }
+}

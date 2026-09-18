@@ -1,0 +1,15 @@
+{
+  "membershipSchemeForm": {
+    "editTitle": "Edit membership scheme",
+    "newTitle": "New membership scheme",
+    "nameLabel": "Name",
+    "nameRequired": "Name is required",
+    "cancelButton": "Cancel",
+    "saveChangesButton": "Save changes",
+    "createButton": "Create scheme",
+    "loadError": "Failed to load scheme",
+    "schemeUpdated": "Scheme updated",
+    "schemeCreated": "Scheme created",
+    "genericError": "Something went wrong"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "membershipSchemeForm": {
+    "editTitle": "会員プログラムを編集",
+    "newTitle": "新規会員プログラム",
+    "nameLabel": "名前",
+    "nameRequired": "名前は必須です",
+    "cancelButton": "キャンセル",
+    "saveChangesButton": "変更を保存",
+    "createButton": "プログラムを作成",
+    "loadError": "プログラムの読み込みに失敗しました",
+    "schemeUpdated": "プログラムを更新しました",
+    "schemeCreated": "プログラムを作成しました",
+    "genericError": "問題が発生しました"
+  }
+}

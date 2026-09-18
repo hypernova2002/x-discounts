@@ -1,0 +1,14 @@
+{
+  "dashboard": {
+    "welcomeBack": "おかえりなさい",
+    "welcomeBackName": "おかえりなさい、{name} さん",
+    "signedInAs": "サインイン中のアカウント",
+    "projectLabel": "プロジェクト",
+    "userLabel": "ユーザー",
+    "roleLabel": "役割",
+    "exportTitle": "プロジェクトデータのエクスポート",
+    "exportHint": "このプロジェクトのキャンペーン、割引、顧客、注文、および関連するすべてのレコードをCSVファイルの.zipとしてダウンロードします。",
+    "exportButton": "プロジェクトをエクスポート",
+    "exportError": "プロジェクトのエクスポートに失敗しました"
+  }
+}

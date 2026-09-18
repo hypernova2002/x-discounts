@@ -1,0 +1,20 @@
+{
+  "users": {
+    "title": "Users",
+    "newUserButton": "New user",
+    "idColumn": "ID",
+    "nameColumn": "Name",
+    "emailColumn": "Email",
+    "localeColumn": "Locale",
+    "searchPlaceholder": "Search users",
+    "newUserDialogHeader": "New user",
+    "nameLabel": "Name",
+    "emailLabel": "Email",
+    "createButton": "Create",
+    "loadError": "Failed to load users",
+    "createdSuccess": "User created",
+    "genericError": "Something went wrong",
+    "nameRequired": "Name is required",
+    "emailRequired": "Email is required"
+  }
+}

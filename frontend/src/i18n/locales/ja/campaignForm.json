@@ -1,0 +1,19 @@
+{
+  "campaignForm": {
+    "loadError": "キャンペーンの読み込みに失敗しました",
+    "updatedToast": "キャンペーンを更新しました",
+    "createdToast": "キャンペーンを作成しました",
+    "genericError": "問題が発生しました",
+    "editTitle": "キャンペーンを編集",
+    "newTitle": "新規キャンペーン",
+    "nameLabel": "名前",
+    "nameRequired": "名前は必須です",
+    "enabledLabel": "有効",
+    "validFromLabel": "開始日",
+    "validUntilLabel": "終了日",
+    "hint": "日付を空欄にすると、スケジュールされた期間は設定されません。キャンペーンが無効化されるか「終了日」を過ぎると、各割引自体の有効期間に関わらず、そのキャンペーン内のすべての割引が停止します。",
+    "cancelButton": "キャンセル",
+    "saveButton": "変更を保存",
+    "createButton": "キャンペーンを作成"
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "customAttributeSelect": {
+    "placeholder": "キー",
+    "filterPlaceholder": "キーを検索",
+    "newAttributeButton": "+ 新しい属性",
+    "newAttributeHeader": "新しい{entity}属性",
+    "keyLabel": "キー",
+    "dataTypeLabel": "データ型",
+    "createButton": "作成",
+    "createdToast": "カスタム属性を作成しました",
+    "genericError": "エラーが発生しました",
+    "builtinOptionLabel": "{key}（組み込み）",
+    "dataTypes": {
+      "string": "文字列",
+      "number": "数値",
+      "boolean": "真偽値",
+      "date": "日付"
+    },
+    "entities": {
+      "cart": "カート",
+      "lineItem": "明細項目",
+      "customer": "顧客"
+    }
+  }
+}

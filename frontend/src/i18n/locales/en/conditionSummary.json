@@ -1,0 +1,23 @@
+{
+  "conditionSummary": {
+    "appliesToEveryone": "applies to everyone",
+    "groups": {
+      "all": "ALL of",
+      "any": "ANY of",
+      "not": "NOT"
+    },
+    "operators": {
+      "eq": "=",
+      "ne": "≠",
+      "gt": ">",
+      "gte": "≥",
+      "lt": "<",
+      "lte": "≤",
+      "in": "in",
+      "notIn": "not in",
+      "contains": "contains",
+      "isEmpty": "is empty",
+      "isSet": "is set"
+    }
+  }
+}

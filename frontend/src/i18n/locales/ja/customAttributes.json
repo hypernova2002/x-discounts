@@ -1,0 +1,37 @@
+{
+  "customAttributes": {
+    "title": "カスタム属性",
+    "newAttributeButton": "新規属性",
+    "searchPlaceholder": "キーで検索",
+    "allEntitiesPlaceholder": "すべての対象エンティティ",
+    "columns": {
+      "entity": "対象エンティティ",
+      "key": "キー",
+      "type": "型"
+    },
+    "deleteButton": "削除",
+    "newAttributeDialogTitle": "新規カスタム属性",
+    "entityLabel": "対象エンティティ",
+    "keyLabel": "キー",
+    "dataTypeLabel": "データ型",
+    "createButton": "作成",
+    "entityOptions": {
+      "cart": "カート",
+      "lineItem": "明細行",
+      "customer": "顧客"
+    },
+    "dataTypeOptions": {
+      "string": "文字列",
+      "number": "数値",
+      "boolean": "真偽値",
+      "date": "日付"
+    },
+    "loadError": "カスタム属性の読み込みに失敗しました",
+    "attributeCreated": "カスタム属性を作成しました",
+    "genericError": "問題が発生しました",
+    "deleteConfirm": "カスタム属性「{key}」を削除しますか？この操作は元に戻せません。",
+    "attributeDeleted": "カスタム属性を削除しました",
+    "deleteError": "カスタム属性の削除に失敗しました",
+    "keyRequired": "キーを入力してください"
+  }
+}

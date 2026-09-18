@@ -1,0 +1,1282 @@
+---
+openapi: 3.1.0
+info:
+  title: x-discounts API
+  version: v1
+paths:
+  "/api/v1/admin/account":
+    get:
+      summary: Show the current account
+      tags:
+      - Account
+      operationId: getAccount
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          description: returns the account
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Account"
+    patch:
+      summary: Update the current account
+      tags:
+      - Account
+      operationId: updateAccount
+      security:
+      - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+      responses:
+        '200':
+          description: account updated
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Account"
+        '403':
+          description: not an account admin
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+        '400':
+          "$ref": "#/components/responses/SchemaValidationError"
+  "/api/v1/admin/api_keys":
+    get:
+      summary: List API keys
+      tags:
+      - API Keys
+      operationId: listApiKeys
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          description: returns keys for the current project (no token field)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  api_keys:
+                    type: array
+                    items:
+                      "$ref": "#/components/schemas/ApiKey"
+                  meta:
+                    type: object
+                    properties:
+                      page:
+                        type: integer
+                      pages:
+                        type: integer
+                      count:
+                        type: integer
+    post:
+      summary: Create an API key
+      tags:
+      - API Keys
+      operationId: createApiKey
+      security:
+      - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/ApiKeyCreateRequest"
+      responses:
+        '201':
+          description: key created (raw token included once)
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ApiKeyWithToken"
+        '422':
+          description: invalid user_id
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+        '400':
+          "$ref": "#/components/responses/SchemaValidationError"
+  "/api/v1/admin/api_keys/{id}":
+    parameters:
+    - name: id
+      in: path
+      schema:
+        type: string
+      required: true
+    get:
+      summary: Show an API key
+      tags:
+      - API Keys
+      operationId: getApiKey
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          description: returns the key
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ApiKey"
+        '400':
+          "$ref": "#/components/responses/SchemaValidationError"
+    delete:
+      summary: Revoke an API key
+      tags:
+      - API Keys
+      operationId: revokeApiKey
+      security:
+      - BearerAuth: []
+      responses:
+        '204':
+          description: key revoked
+        '400':
+          "$ref": "#/components/responses/SchemaValidationError"
+  "/api/v1/admin/discounts":
+    get:
+      summary: List discounts
+      tags:
+      - Discounts
+      operationId: listDiscounts
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          description: returns discounts for the current project
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  discounts:
+                    type: array
+                    items:
+                      "$ref": "#/components/schemas/Discount"
+                  meta:
+                    type: object
+                    properties:
+                      page:
+                        type: integer
+                      pages:
+                        type: integer
+                      count:
+                        type: integer
+    post:
+      summary: Create a discount
+      tags:
+      - Discounts
+      operationId: createDiscount
+      security:
+      - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/DiscountCreateRequest"
+      responses:
+        '201':
+          description: discount created
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Discount"
+        '422':
+          description: validation error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+        '400':
+          "$ref": "#/components/responses/SchemaValidationError"
+  "/api/v1/admin/discounts/{id}":
+    parameters:
+    - name: id
+      in: path
+      schema:
+        type: string
+      required: true
+    get:
+      summary: Show a discount
+      tags:
+      - Discounts
+      operationId: getDiscount
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          description: returns the discount
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Discount"
+        '404':
+          description: not found
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+        '400':
+          "$ref": "#/components/responses/SchemaValidationError"
+    patch:
+      summary: Update a discount
+      tags:
+      - Discounts
+      operationId: updateDiscount
+      security:
+      - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+      responses:
+        '200':
+          description: discount updated
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Discount"
+        '400':
+          "$ref": "#/components/responses/SchemaValidationError"
+    delete:
+      summary: Delete a discount
+      tags:
+      - Discounts
+      operationId: deleteDiscount
+      security:
+      - BearerAuth: []
+      responses:
+        '204':
+          description: discount deleted
+        '400':
+          "$ref": "#/components/responses/SchemaValidationError"
+  "/api/v1/admin/project_memberships":
+    get:
+      summary: List project memberships
+      tags:
+      - Project Memberships
+      operationId: listProjectMemberships
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          description: returns memberships for the current project
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  project_memberships:
+                    type: array
+                    items:
+                      "$ref": "#/components/schemas/ProjectMembership"
+                  meta:
+                    type: object
+                    properties:
+                      page:
+                        type: integer
+                      pages:
+                        type: integer
+                      count:
+                        type: integer
+    post:
+      summary: Add a member to the current project
+      tags:
+      - Project Memberships
+      operationId: createProjectMembership
+      security:
+      - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/ProjectMembershipCreateRequest"
+      responses:
+        '201':
+          description: membership created
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ProjectMembership"
+        '403':
+          description: not a project admin
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+        '400':
+          "$ref": "#/components/responses/SchemaValidationError"
+  "/api/v1/admin/project_memberships/{id}":
+    parameters:
+    - name: id
+      in: path
+      schema:
+        type: string
+      required: true
+    get:
+      summary: Show a project membership
+      tags:
+      - Project Memberships
+      operationId: getProjectMembership
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          description: returns the membership
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ProjectMembership"
+        '400':
+          "$ref": "#/components/responses/SchemaValidationError"
+    patch:
+      summary: Update a project membership
+      tags:
+      - Project Memberships
+      operationId: updateProjectMembership
+      security:
+      - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                role:
+                  type: string
+      responses:
+        '200':
+          description: role updated
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ProjectMembership"
+        '400':
+          "$ref": "#/components/responses/SchemaValidationError"
+    delete:
+      summary: Remove a project membership
+      tags:
+      - Project Memberships
+      operationId: deleteProjectMembership
+      security:
+      - BearerAuth: []
+      responses:
+        '204':
+          description: membership removed
+        '422':
+          description: cannot remove the last admin
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+        '400':
+          "$ref": "#/components/responses/SchemaValidationError"
+  "/api/v1/admin/projects":
+    get:
+      summary: List projects
+      tags:
+      - Projects
+      operationId: listProjects
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          description: returns projects visible to the current user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  projects:
+                    type: array
+                    items:
+                      "$ref": "#/components/schemas/Project"
+                  meta:
+                    type: object
+                    properties:
+                      page:
+                        type: integer
+                      pages:
+                        type: integer
+                      count:
+                        type: integer
+    post:
+      summary: Create a project
+      tags:
+      - Projects
+      operationId: createProject
+      security:
+      - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/ProjectCreateRequest"
+      responses:
+        '201':
+          description: project created
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Project"
+        '403':
+          description: not an account admin
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+        '400':
+          "$ref": "#/components/responses/SchemaValidationError"
+  "/api/v1/admin/projects/{id}":
+    parameters:
+    - name: id
+      in: path
+      schema:
+        type: string
+      required: true
+    get:
+      summary: Show a project
+      tags:
+      - Projects
+      operationId: getProject
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          description: returns the project
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Project"
+        '404':
+          description: not found
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+        '400':
+          "$ref": "#/components/responses/SchemaValidationError"
+    patch:
+      summary: Update a project
+      tags:
+      - Projects
+      operationId: updateProject
+      security:
+      - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+      responses:
+        '200':
+          description: project updated
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Project"
+        '400':
+          "$ref": "#/components/responses/SchemaValidationError"
+    delete:
+      summary: Delete a project
+      tags:
+      - Projects
+      operationId: deleteProject
+      security:
+      - BearerAuth: []
+      responses:
+        '204':
+          description: project deleted
+        '400':
+          "$ref": "#/components/responses/SchemaValidationError"
+  "/api/v1/admin/users":
+    get:
+      summary: List users
+      tags:
+      - Users
+      operationId: listUsers
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          description: returns users for the current account
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users:
+                    type: array
+                    items:
+                      "$ref": "#/components/schemas/User"
+                  meta:
+                    type: object
+                    properties:
+                      page:
+                        type: integer
+                      pages:
+                        type: integer
+                      count:
+                        type: integer
+    post:
+      summary: Create a user
+      tags:
+      - Users
+      operationId: createUser
+      security:
+      - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/UserCreateRequest"
+      responses:
+        '201':
+          description: user created
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/User"
+        '422':
+          description: validation error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+        '400':
+          "$ref": "#/components/responses/SchemaValidationError"
+  "/api/v1/admin/users/{id}":
+    parameters:
+    - name: id
+      in: path
+      schema:
+        type: string
+      required: true
+    get:
+      summary: Show a user
+      tags:
+      - Users
+      operationId: getUser
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          description: returns the user
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/User"
+        '404':
+          description: not found
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+        '400':
+          "$ref": "#/components/responses/SchemaValidationError"
+    patch:
+      summary: Update a user
+      tags:
+      - Users
+      operationId: updateUser
+      security:
+      - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                email:
+                  type: string
+      responses:
+        '200':
+          description: user updated
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/User"
+        '400':
+          "$ref": "#/components/responses/SchemaValidationError"
+    delete:
+      summary: Delete a user
+      tags:
+      - Users
+      operationId: deleteUser
+      security:
+      - BearerAuth: []
+      responses:
+        '204':
+          description: user deleted
+        '400':
+          "$ref": "#/components/responses/SchemaValidationError"
+  "/api/v1/login":
+    post:
+      summary: Sign in
+      tags:
+      - Sessions
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/LoginRequest"
+      responses:
+        '201':
+          description: signed in
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/SessionResponse"
+        '401':
+          description: invalid credentials
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+        '400':
+          "$ref": "#/components/responses/SchemaValidationError"
+  "/api/v1/logout":
+    delete:
+      summary: Sign out
+      tags:
+      - Sessions
+      operationId: logout
+      security:
+      - BearerAuth: []
+      responses:
+        '204':
+          description: signed out
+  "/api/v1/me":
+    get:
+      summary: Current identity
+      tags:
+      - Me
+      operationId: getMe
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          description: returns the current identity
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/MeResponse"
+  "/api/v1/signup":
+    post:
+      summary: Create an account
+      tags:
+      - Signups
+      operationId: createSignup
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/SignupRequest"
+      responses:
+        '201':
+          description: account created, signed in
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/SessionResponse"
+        '422':
+          description: validation error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+        '400':
+          "$ref": "#/components/responses/SchemaValidationError"
+servers:
+- url: "/"
+components:
+  schemas:
+    Account:
+      type: object
+      properties:
+        id:
+          type: string
+          readOnly: true
+        name:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      title: Account
+    ApiKey:
+      type: object
+      properties:
+        id:
+          type: string
+          readOnly: true
+        name:
+          type: string
+        role:
+          type: string
+          enum:
+          - admin
+          - developer
+          - marketer
+          - viewer
+        user_id:
+          type: string
+        token_last_four:
+          type: string
+          description: Last 4 characters of the token, for display only
+        last_used_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        revoked_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      title: ApiKey
+    ApiKeyCreateRequest:
+      type: object
+      required:
+      - user_id
+      - role
+      - name
+      properties:
+        user_id:
+          type: string
+        role:
+          type: string
+          enum:
+          - admin
+          - developer
+          - marketer
+          - viewer
+        name:
+          type: string
+      title: ApiKeyCreateRequest
+    ApiKeyWithToken:
+      type: object
+      properties:
+        id:
+          type: string
+          readOnly: true
+        name:
+          type: string
+        role:
+          type: string
+          enum:
+          - admin
+          - developer
+          - marketer
+          - viewer
+        user_id:
+          type: string
+        token_last_four:
+          type: string
+          description: Last 4 characters of the token, for display only
+        last_used_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        revoked_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        token:
+          type: string
+      title: ApiKeyWithToken
+    ConditionNode:
+      type: object
+      description: Either a condition group (and/or/not + conditions) or a leaf condition
+        (entity/key/operator/value).
+      properties:
+        operator:
+          type: string
+          description: and | or | not | eq | ne | gt | gte | lt | lte | in | not_in
+            | contains
+        entity:
+          type: string
+          enum:
+          - cart
+          - line_item
+          - customer
+        key:
+          type: string
+        value: {}
+        conditions:
+          type: array
+          items:
+            "$ref": "#/components/schemas/ConditionNode"
+      title: ConditionNode
+    Coupon:
+      type: object
+      properties:
+        code:
+          type: string
+        issued_from:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        issued_until:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        valid_from:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        valid_until:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        max_redemptions:
+          type:
+          - integer
+          - 'null'
+        max_redemptions_per_customer:
+          type:
+          - integer
+          - 'null'
+      title: Coupon
+    Discount:
+      type: object
+      properties:
+        id:
+          type: string
+          readOnly: true
+        key:
+          type: string
+          description: Unique, developer-supplied identifier (per project)
+        kind:
+          type: string
+          enum:
+          - promotion
+          - coupon
+        name:
+          type: string
+        stackable:
+          type: boolean
+        eligibility_condition:
+          "$ref": "#/components/schemas/ConditionNode"
+        promotion:
+          anyOf:
+          - "$ref": "#/components/schemas/Promotion"
+          - type: 'null'
+        coupon:
+          anyOf:
+          - "$ref": "#/components/schemas/Coupon"
+          - type: 'null'
+        effects:
+          type: array
+          items:
+            "$ref": "#/components/schemas/DiscountEffect"
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      title: Discount
+    DiscountCreateRequest:
+      type: object
+      required:
+      - kind
+      - key
+      - name
+      properties:
+        kind:
+          type: string
+          enum:
+          - promotion
+          - coupon
+        key:
+          type: string
+          description: Unique per project. Letters, numbers, underscores, hyphens,
+            periods.
+        name:
+          type: string
+        stackable:
+          type: boolean
+          default: false
+        eligibility_condition:
+          "$ref": "#/components/schemas/ConditionNode"
+        promotion:
+          type: object
+          description: Required when kind = promotion
+          required:
+          - active_from
+          properties:
+            active_from:
+              type: string
+              format: date-time
+            active_until:
+              type: string
+              format: date-time
+        coupon:
+          type: object
+          description: Required when kind = coupon
+          required:
+          - code
+          properties:
+            code:
+              type: string
+            issued_from:
+              type: string
+              format: date-time
+            issued_until:
+              type: string
+              format: date-time
+            valid_from:
+              type: string
+              format: date-time
+            valid_until:
+              type: string
+              format: date-time
+            max_redemptions:
+              type: integer
+            max_redemptions_per_customer:
+              type: integer
+        effects:
+          type: array
+          items:
+            type: object
+            required:
+            - effect_type
+            - scope
+            - config
+            properties:
+              effect_type:
+                type: string
+                enum:
+                - percentage_off
+                - fixed_amount_off
+                - free_item
+              scope:
+                type: string
+                enum:
+                - cart
+                - line_item
+              target_condition:
+                description: Required when scope = line_item
+                anyOf:
+                - "$ref": "#/components/schemas/ConditionNode"
+                - type: 'null'
+              config:
+                type: object
+                description: percentage_off -> {percentage}, fixed_amount_off -> {amount,
+                  currency}, free_item -> {buy_quantity, get_quantity, repeatable,
+                  buy_condition, get_condition}
+      title: DiscountCreateRequest
+    DiscountEffect:
+      type: object
+      properties:
+        id:
+          type: string
+          readOnly: true
+        effect_type:
+          type: string
+          enum:
+          - percentage_off
+          - fixed_amount_off
+          - free_item
+        scope:
+          type: string
+          enum:
+          - cart
+          - line_item
+        target_condition:
+          anyOf:
+          - "$ref": "#/components/schemas/ConditionNode"
+          - type: 'null'
+        config:
+          type: object
+          description: 'Shape depends on effect_type: percentage_off -> {percentage},
+            fixed_amount_off -> {amount, currency}, free_item -> {buy_quantity, get_quantity,
+            repeatable, buy_condition, get_condition}'
+      title: DiscountEffect
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              description: See ErrorCodes::REGISTRY for the full list
+            message:
+              type: string
+            details:
+              type: array
+              description: Field-specific problems, if any. Empty for errors that
+                aren't field-specific.
+              items:
+                type: object
+                properties:
+                  field:
+                    type: string
+                  message:
+                    type: string
+      title: Error
+    LoginRequest:
+      type: object
+      required:
+      - email
+      - password
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+      title: LoginRequest
+    MeResponse:
+      type: object
+      properties:
+        project:
+          anyOf:
+          - "$ref": "#/components/schemas/MinimalProject"
+          - type: 'null'
+          description: null until a session picks one via X-Project-Id
+        user:
+          "$ref": "#/components/schemas/MinimalUser"
+        role:
+          type:
+          - string
+          - 'null'
+          enum:
+          - admin
+          - developer
+          - marketer
+          - viewer
+          -
+      title: MeResponse
+    MinimalProject:
+      type: object
+      properties:
+        id:
+          type: string
+          readOnly: true
+        name:
+          type: string
+      title: MinimalProject
+    MinimalUser:
+      type: object
+      properties:
+        id:
+          type: string
+          readOnly: true
+        name:
+          type: string
+        email:
+          type: string
+      title: MinimalUser
+    Project:
+      type: object
+      properties:
+        id:
+          type: string
+          readOnly: true
+        name:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      title: Project
+    ProjectCreateRequest:
+      type: object
+      required:
+      - name
+      properties:
+        name:
+          type: string
+      title: ProjectCreateRequest
+    ProjectMembership:
+      type: object
+      properties:
+        id:
+          type: string
+          readOnly: true
+        project_id:
+          type: string
+        user_id:
+          type: string
+        role:
+          type: string
+          enum:
+          - admin
+          - developer
+          - marketer
+          - viewer
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      title: ProjectMembership
+    ProjectMembershipCreateRequest:
+      type: object
+      required:
+      - user_id
+      - role
+      properties:
+        user_id:
+          type: string
+        role:
+          type: string
+          enum:
+          - admin
+          - developer
+          - marketer
+          - viewer
+      title: ProjectMembershipCreateRequest
+    Promotion:
+      type: object
+      properties:
+        active_from:
+          type: string
+          format: date-time
+        active_until:
+          type:
+          - string
+          - 'null'
+          format: date-time
+      title: Promotion
+    SessionResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          description: 'sess_... — send as Authorization: Bearer <token>'
+        user:
+          "$ref": "#/components/schemas/MinimalUser"
+      title: SessionResponse
+    SignupRequest:
+      type: object
+      required:
+      - account_name
+      - name
+      - email
+      - password
+      - password_confirmation
+      properties:
+        account_name:
+          type: string
+          description: Creates a new account, with this user as its first admin
+        name:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+          minLength: 8
+        password_confirmation:
+          type: string
+      title: SignupRequest
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          readOnly: true
+        name:
+          type: string
+        email:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      title: User
+    UserCreateRequest:
+      type: object
+      required:
+      - name
+      - email
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+      title: UserCreateRequest
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+  responses:
+    SchemaValidationError:
+      description: Request validation failed
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              details:
+                type: array
+                items:
+                  type: string
+            required:
+            - error
+            - details
+security: []

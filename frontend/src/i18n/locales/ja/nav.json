@@ -1,0 +1,19 @@
+{
+  "nav": {
+    "dashboard": "ダッシュボード",
+    "projects": "プロジェクト",
+    "users": "ユーザー",
+    "campaigns": "キャンペーン",
+    "orders": "注文",
+    "customers": "顧客",
+    "memberships": "メンバーシップ",
+    "giftShop": "ギフトショップ",
+    "customAttributes": "カスタム属性",
+    "signOut": "サインアウト",
+    "language": "言語",
+    "admin": "管理",
+    "toggleMenu": "メニューを切り替える",
+    "switchProject": "プロジェクトを切り替える",
+    "switchProjectError": "プロジェクトを切り替えられませんでした"
+  }
+}

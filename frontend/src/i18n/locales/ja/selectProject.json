@@ -1,0 +1,9 @@
+{
+  "selectProject": {
+    "appName": "x-discounts",
+    "subtitle": "プロジェクトを選択",
+    "noProjects": "アクセス可能なプロジェクトがまだありません。",
+    "loadError": "プロジェクトを読み込めませんでした。",
+    "selectError": "そのプロジェクトを選択できませんでした。"
+  }
+}

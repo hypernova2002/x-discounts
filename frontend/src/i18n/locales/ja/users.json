@@ -1,0 +1,20 @@
+{
+  "users": {
+    "title": "ユーザー",
+    "newUserButton": "新規ユーザー",
+    "idColumn": "ID",
+    "nameColumn": "名前",
+    "emailColumn": "メールアドレス",
+    "localeColumn": "表示言語",
+    "searchPlaceholder": "ユーザーを検索",
+    "newUserDialogHeader": "新規ユーザー",
+    "nameLabel": "名前",
+    "emailLabel": "メールアドレス",
+    "createButton": "作成",
+    "loadError": "ユーザーの読み込みに失敗しました",
+    "createdSuccess": "ユーザーを作成しました",
+    "genericError": "エラーが発生しました",
+    "nameRequired": "名前を入力してください",
+    "emailRequired": "メールアドレスを入力してください"
+  }
+}

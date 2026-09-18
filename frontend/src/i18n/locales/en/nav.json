@@ -1,0 +1,19 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "projects": "Projects",
+    "users": "Users",
+    "campaigns": "Campaigns",
+    "orders": "Orders",
+    "customers": "Customers",
+    "memberships": "Memberships",
+    "giftShop": "Gift Shop",
+    "customAttributes": "Custom Attributes",
+    "signOut": "Sign out",
+    "language": "Language",
+    "admin": "Admin",
+    "toggleMenu": "Toggle menu",
+    "switchProject": "Switch project",
+    "switchProjectError": "Couldn't switch project"
+  }
+}

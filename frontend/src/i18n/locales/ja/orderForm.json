@@ -1,0 +1,50 @@
+{
+  "orderForm": {
+    "genericError": "エラーが発生しました",
+    "orderCreated": "注文を作成しました",
+    "amountOff": "{amount}割引",
+    "freeItem": "{quantity}x {sku} 無料",
+    "title": "新規注文",
+    "lineItems": {
+      "title": "明細項目",
+      "skuPlaceholder": "SKU",
+      "quantityPlaceholder": "数量",
+      "unitPricePlaceholder": "単価",
+      "addButton": "+ 明細項目を追加"
+    },
+    "cartAttributes": {
+      "title": "カート属性"
+    },
+    "customer": {
+      "title": "顧客",
+      "externalIdLabel": "外部ID",
+      "nameLabel": "氏名",
+      "optionalPlaceholder": "任意",
+      "emailLabel": "メールアドレス"
+    },
+    "coupons": {
+      "title": "クーポンコード",
+      "valid": "有効",
+      "invalid": "無効",
+      "rulesUnavailable": "割引ルールを利用できません。"
+    },
+    "loyaltyPoints": {
+      "title": "ポイントを利用",
+      "balance": "残高: {balance}ポイント",
+      "applying": "{applied}ポイントを適用して{amount}割引",
+      "previewHint": "プレビューすると顧客の利用可能なポイント残高が表示されます。",
+      "invalidAmount": "0以上の整数を入力してください"
+    },
+    "previewButton": "割引をプレビュー",
+    "createButton": "注文を作成",
+    "staleHint": "カートが変更されました。注文を作成する前に再度プレビューしてください。",
+    "previewResult": {
+      "title": "プレビュー結果",
+      "totalAmountOff": "割引合計(適用可能なすべての割引): {amount}",
+      "noDiscounts": "このカート・顧客に適用できる割引はありません。",
+      "loyaltyPointsEarned": "獲得ポイント: {points}",
+      "multiplierDetail": "({base}基本 × {multiplier})",
+      "pointsRedeemedSummary": "利用ポイント: {applied}ポイントで{amount}割引"
+    }
+  }
+}

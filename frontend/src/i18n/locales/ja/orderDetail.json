@@ -1,0 +1,65 @@
+{
+  "orderDetail": {
+    "loadError": "注文の読み込みに失敗しました",
+    "orderCancelled": "注文をキャンセルしました",
+    "cancelOrderError": "注文のキャンセルに失敗しました",
+    "refunded": "返金済み",
+    "genericError": "エラーが発生しました",
+    "loyaltyPointsRedeemedLabel": "利用ポイント",
+    "orderTitle": "注文 {id}",
+    "cancelledTag": "キャンセル済み",
+    "cancelButton": "注文をキャンセル",
+    "cancelledOn": "{date}にキャンセル",
+    "reasonLabel": "理由(任意)",
+    "customer": {
+      "title": "顧客",
+      "externalId": "外部ID",
+      "name": "氏名",
+      "email": "メールアドレス",
+      "phone": "電話番号",
+      "country": "国"
+    },
+    "totals": {
+      "title": "集計",
+      "total": "合計",
+      "discount": "割引",
+      "pointsEarned": "獲得ポイント"
+    },
+    "receipt": {
+      "title": "領収書",
+      "cartWideDiscounts": "カート全体の割引",
+      "loyaltyPointsEarned": "獲得ポイント",
+      "pointsRedemption": "ポイント利用"
+    },
+    "amountOff": "{amount}割引",
+    "freeItem": "{quantity}x {sku} 無料",
+    "pointsEarnedAmount": "+{points}ポイント",
+    "multiplierApplied": "倍率適用",
+    "refundedOf": "{total}のうち{refunded}",
+    "refundedNote": "{detail}を返金済み",
+    "historyLink": "(履歴)",
+    "refundButton": "返金",
+    "refundOverrideButton": "返金(上書き)",
+    "pointsRedemptionSummary": "{points}ポイント利用 — {amount}割引",
+    "pointsAmount": "{points}ポイント",
+    "byActor": "{actor}による",
+    "unknownActor": "不明",
+    "cancelDialog": {
+      "header": "注文をキャンセル",
+      "refundCheckboxLabel": "割引とポイントを返金する(各割引の返金可否設定に従います)",
+      "reasonPlaceholder": "例: 顧客からのキャンセル依頼"
+    },
+    "refundDialog": {
+      "header": "返金",
+      "amountLabel": "返金額",
+      "reasonPlaceholder": "例: 価格についての苦情",
+      "amountRequired": "金額を入力してください",
+      "amountInteger": "ポイントは整数で入力してください",
+      "amountPositive": "0より大きい値を入力してください"
+    },
+    "historyDialog": {
+      "header": "返金履歴",
+      "empty": "返金記録はありません。"
+    }
+  }
+}

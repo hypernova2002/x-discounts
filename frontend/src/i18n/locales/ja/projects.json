@@ -1,0 +1,17 @@
+{
+  "projects": {
+    "title": "プロジェクト",
+    "newProjectButton": "新規プロジェクト",
+    "idColumn": "ID",
+    "nameColumn": "名前",
+    "createdColumn": "作成日",
+    "searchPlaceholder": "プロジェクトを検索",
+    "newProjectDialogHeader": "新規プロジェクト",
+    "nameLabel": "名前",
+    "createButton": "作成",
+    "loadError": "プロジェクトの読み込みに失敗しました",
+    "createdSuccess": "プロジェクトを作成しました",
+    "genericError": "エラーが発生しました",
+    "nameRequired": "名前を入力してください"
+  }
+}

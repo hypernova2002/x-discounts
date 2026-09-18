@@ -1,0 +1,14 @@
+{
+  "discountRulesSummary": {
+    "eligibilityHeading": "適用条件",
+    "effectsHeading": "効果",
+    "noEffects": "効果はありません。",
+    "appliesToLineItemsWhere": "次の条件に一致する明細項目に適用",
+    "buyLabel": "購入:",
+    "getLabel": "取得:",
+    "percentageOff": "{percentage}%割引",
+    "fixedAmountOff": "{amount} {currency} 割引",
+    "freeItem": "{buyQuantity}個購入で{getQuantity}個無料",
+    "freeItemRepeatable": "{buyQuantity}個購入で{getQuantity}個無料（繰り返し適用）"
+  }
+}

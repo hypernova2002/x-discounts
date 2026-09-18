@@ -1,0 +1,13 @@
+{
+  "signup": {
+    "appName": "x-discounts",
+    "subtitle": "アカウントを作成",
+    "accountNameLabel": "アカウント名",
+    "nameLabel": "お名前",
+    "emailLabel": "メールアドレス",
+    "passwordLabel": "パスワード",
+    "passwordConfirmationLabel": "パスワード（確認）",
+    "submitButton": "サインアップ",
+    "loginLink": "すでにアカウントをお持ちの方はこちら"
+  }
+}

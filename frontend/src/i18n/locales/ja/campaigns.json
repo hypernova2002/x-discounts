@@ -1,0 +1,19 @@
+{
+  "campaigns": {
+    "title": "キャンペーン",
+    "newCampaign": "新規キャンペーン",
+    "loadError": "キャンペーンの読み込みに失敗しました",
+    "exportButton": "エクスポート",
+    "exportError": "キャンペーンのエクスポートに失敗しました",
+    "nameColumn": "名前",
+    "statusColumn": "ステータス",
+    "statusEnabled": "有効",
+    "validFromColumn": "開始日",
+    "validUntilColumn": "終了日",
+    "archivedColumn": "アーカイブ",
+    "notArchived": "未アーカイブ",
+    "editButton": "編集",
+    "showArchivedLabel": "アーカイブ済みを表示",
+    "searchPlaceholder": "キャンペーンを検索"
+  }
+}

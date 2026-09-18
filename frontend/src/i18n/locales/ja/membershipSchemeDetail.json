@@ -1,0 +1,37 @@
+{
+  "membershipSchemeDetail": {
+    "reevaluateButton": "全顧客を今すぐ再評価",
+    "reevaluatedCustomers": "{count}件の顧客を再評価しました",
+    "evaluationFailed": "評価に失敗しました",
+    "loadError": "プログラムの読み込みに失敗しました",
+    "tiersTitle": "会員ランク",
+    "noTiersHint": "まだ会員ランクがありません。以下から追加してください。",
+    "columns": {
+      "rank": "ランク",
+      "name": "名前",
+      "autoJoin": "自動加入"
+    },
+    "autoJoinAutomatic": "自動",
+    "autoJoinManual": "手動のみ",
+    "editButton": "編集",
+    "tierNamePlaceholder": "会員ランク名",
+    "tierNameRequired": "会員ランク名は必須です",
+    "rankPlaceholder": "ランク",
+    "tierRankRequired": "ランクは必須です",
+    "addTierButton": "会員ランクを追加",
+    "tierAdded": "会員ランクを追加しました",
+    "genericError": "問題が発生しました",
+    "editTierDialog": {
+      "title": "会員ランクを編集",
+      "nameLabel": "名前",
+      "rankLabel": "ランク",
+      "autoJoinRequirementsLabel": "自動加入の昇格条件",
+      "autoJoinRequirementsHint": "条件を満たすと、顧客は自動的にこの会員ランクに割り当てられます。条件を満たさなくなった場合は、引き続き適用条件を満たす会員ランク（あれば）に移動します。この会員ランクを手動のみで管理する場合は空欄のままにしてください。",
+      "gracePeriodLabel": "猶予期間（日数）",
+      "gracePeriodPlaceholder": "なし",
+      "gracePeriodHint": "顧客がこの会員ランクになった後、上記の昇格条件を満たさなくなっても、この日数の間はランクが下がったり会員資格を失ったりすることはありません。より上位のランクへの昇格が遅延することはありません。猶予期間を設けない場合は空欄のままにしてください。",
+      "saveButton": "保存"
+    },
+    "tierUpdated": "会員ランクを更新しました"
+  }
+}

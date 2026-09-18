@@ -1,0 +1,25 @@
+{
+  "customAttributeSelect": {
+    "placeholder": "key",
+    "filterPlaceholder": "Search keys",
+    "newAttributeButton": "+ New attribute",
+    "newAttributeHeader": "New {entity} attribute",
+    "keyLabel": "Key",
+    "dataTypeLabel": "Data type",
+    "createButton": "Create",
+    "createdToast": "Custom attribute created",
+    "genericError": "Something went wrong",
+    "builtinOptionLabel": "{key} (built-in)",
+    "dataTypes": {
+      "string": "String",
+      "number": "Number",
+      "boolean": "Boolean",
+      "date": "Date"
+    },
+    "entities": {
+      "cart": "cart",
+      "lineItem": "line item",
+      "customer": "customer"
+    }
+  }
+}

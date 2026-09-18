@@ -1,0 +1,36 @@
+{
+  "conditionTreeEditor": {
+    "emptyState": "条件がありません — すべての顧客に適用されます",
+    "addConditionButton": "条件を追加",
+    "addSiblingConditionButton": "+ 条件を追加",
+    "valuePlaceholder": "値",
+    "valueListPlaceholder": "値1, 値2",
+    "nodeTypes": {
+      "condition": "条件",
+      "group": "グループ"
+    },
+    "groupOperators": {
+      "all": "かつ (AND)",
+      "any": "または (OR)",
+      "not": "ではない (NOT)"
+    },
+    "operators": {
+      "eq": "等しい",
+      "ne": "等しくない",
+      "gt": "より大きい",
+      "gte": "以上",
+      "lt": "より小さい",
+      "lte": "以下",
+      "in": "いずれかに一致",
+      "notIn": "いずれにも一致しない",
+      "contains": "を含む",
+      "isNull": "空である",
+      "isNotNull": "空でない"
+    },
+    "entities": {
+      "cart": "カート",
+      "lineItem": "明細項目",
+      "customer": "顧客"
+    }
+  }
+}

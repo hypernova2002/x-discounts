@@ -1,0 +1,50 @@
+{
+  "orderForm": {
+    "genericError": "Something went wrong",
+    "orderCreated": "Order created",
+    "amountOff": "{amount} off",
+    "freeItem": "{quantity}x {sku} free",
+    "title": "New order",
+    "lineItems": {
+      "title": "Line items",
+      "skuPlaceholder": "sku",
+      "quantityPlaceholder": "quantity",
+      "unitPricePlaceholder": "unit price",
+      "addButton": "+ Add line item"
+    },
+    "cartAttributes": {
+      "title": "Cart attributes"
+    },
+    "customer": {
+      "title": "Customer",
+      "externalIdLabel": "External ID",
+      "nameLabel": "Name",
+      "optionalPlaceholder": "optional",
+      "emailLabel": "Email"
+    },
+    "coupons": {
+      "title": "Coupon codes",
+      "valid": "valid",
+      "invalid": "invalid",
+      "rulesUnavailable": "Discount rules unavailable."
+    },
+    "loyaltyPoints": {
+      "title": "Redeem loyalty points",
+      "balance": "Balance: {balance} points.",
+      "applying": "Applying {applied} points for {amount} off.",
+      "previewHint": "Preview to see the customer's available balance.",
+      "invalidAmount": "Must be a whole number of 0 or more"
+    },
+    "previewButton": "Preview discounts",
+    "createButton": "Create order",
+    "staleHint": "Cart changed — preview again before creating the order.",
+    "previewResult": {
+      "title": "Preview result",
+      "totalAmountOff": "Total amount off (all applicable discounts): {amount}",
+      "noDiscounts": "No discounts apply to this cart/customer.",
+      "loyaltyPointsEarned": "Loyalty points earned: {points}",
+      "multiplierDetail": "({base} base × {multiplier})",
+      "pointsRedeemedSummary": "Points redeemed: {applied} for {amount} off"
+    }
+  }
+}

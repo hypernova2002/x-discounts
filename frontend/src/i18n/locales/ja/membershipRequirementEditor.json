@@ -1,0 +1,31 @@
+{
+  "membershipRequirementEditor": {
+    "emptyState": "要件がありません — この会員ランクは自動的に付与されません",
+    "addRequirementButton": "要件を追加",
+    "addSiblingRequirementButton": "+ 要件を追加",
+    "lifetimePlaceholder": "累計",
+    "nodeTypes": {
+      "requirement": "要件",
+      "group": "グループ"
+    },
+    "groupOperators": {
+      "all": "かつ (AND)",
+      "any": "または (OR)",
+      "not": "ではない (NOT)"
+    },
+    "metrics": {
+      "totalSpent": "累計購入金額",
+      "orderCount": "注文回数",
+      "itemCount": "購入点数",
+      "pointsEarned": "獲得ポイント数"
+    },
+    "operators": {
+      "eq": "等しい",
+      "ne": "等しくない",
+      "gt": "より大きい",
+      "gte": "以上",
+      "lt": "より小さい",
+      "lte": "以下"
+    }
+  }
+}

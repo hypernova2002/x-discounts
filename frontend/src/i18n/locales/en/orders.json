@@ -1,0 +1,16 @@
+{
+  "orders": {
+    "title": "Orders",
+    "loadError": "Failed to load orders",
+    "newOrder": "New order",
+    "exportButton": "Export",
+    "exportError": "Failed to export orders",
+    "order": "Order",
+    "customer": "Customer",
+    "items": "Items",
+    "total": "Total spent",
+    "discount": "Discount applied",
+    "created": "Created",
+    "searchPlaceholder": "Search orders"
+  }
+}

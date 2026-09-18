@@ -1,0 +1,14 @@
+{
+  "dashboard": {
+    "welcomeBack": "Welcome back",
+    "welcomeBackName": "Welcome back, {name}",
+    "signedInAs": "Signed in as",
+    "projectLabel": "Project",
+    "userLabel": "User",
+    "roleLabel": "Role",
+    "exportTitle": "Export project data",
+    "exportHint": "Download every campaign, discount, customer, order, and related record in this project as a single .zip of CSV files.",
+    "exportButton": "Export project",
+    "exportError": "Failed to export project"
+  }
+}

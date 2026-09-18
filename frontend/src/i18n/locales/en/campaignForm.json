@@ -1,0 +1,19 @@
+{
+  "campaignForm": {
+    "loadError": "Failed to load campaign",
+    "updatedToast": "Campaign updated",
+    "createdToast": "Campaign created",
+    "genericError": "Something went wrong",
+    "editTitle": "Edit campaign",
+    "newTitle": "New campaign",
+    "nameLabel": "Name",
+    "nameRequired": "Name is required",
+    "enabledLabel": "Enabled",
+    "validFromLabel": "Valid from",
+    "validUntilLabel": "Valid until",
+    "hint": "Leave dates blank for no scheduled window. A campaign stops all of its discounts as soon as it's disabled or once \"valid until\" passes — regardless of each discount's own active period.",
+    "cancelButton": "Cancel",
+    "saveButton": "Save changes",
+    "createButton": "Create campaign"
+  }
+}

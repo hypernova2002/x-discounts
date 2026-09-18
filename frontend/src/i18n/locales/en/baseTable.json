@@ -1,0 +1,14 @@
+{
+  "baseTable": {
+    "columnsPlaceholder": "Columns",
+    "noResults": "No results found",
+    "filterLabel": "Filter",
+    "anyOption": "Any",
+    "clearFilters": "Clear filters",
+    "refreshLabel": "Refresh",
+    "rowsPerPageLabel": "Rows per page",
+    "of": "of",
+    "prevPageLabel": "Previous page",
+    "nextPageLabel": "Next page"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "login": {
+    "appName": "x-discounts",
+    "subtitle": "Sign in",
+    "emailLabel": "Email",
+    "passwordLabel": "Password",
+    "submitButton": "Sign in",
+    "signupLink": "Need an account? Sign up"
+  }
+}

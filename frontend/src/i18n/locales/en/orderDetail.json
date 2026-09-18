@@ -1,0 +1,65 @@
+{
+  "orderDetail": {
+    "loadError": "Failed to load order",
+    "orderCancelled": "Order cancelled",
+    "cancelOrderError": "Failed to cancel order",
+    "refunded": "Refunded",
+    "genericError": "Something went wrong",
+    "loyaltyPointsRedeemedLabel": "Loyalty Points Redeemed",
+    "orderTitle": "Order {id}",
+    "cancelledTag": "Cancelled",
+    "cancelButton": "Cancel order",
+    "cancelledOn": "Cancelled on {date}",
+    "reasonLabel": "Reason (optional)",
+    "customer": {
+      "title": "Customer",
+      "externalId": "External ID",
+      "name": "Name",
+      "email": "Email",
+      "phone": "Phone",
+      "country": "Country"
+    },
+    "totals": {
+      "title": "Totals",
+      "total": "Total",
+      "discount": "Discount",
+      "pointsEarned": "Points earned"
+    },
+    "receipt": {
+      "title": "Receipt",
+      "cartWideDiscounts": "Cart-wide discounts",
+      "loyaltyPointsEarned": "Loyalty points earned",
+      "pointsRedemption": "Points redemption"
+    },
+    "amountOff": "{amount} off",
+    "freeItem": "{quantity}x {sku} free",
+    "pointsEarnedAmount": "+{points} points",
+    "multiplierApplied": "multiplier applied",
+    "refundedOf": "{refunded} of {total}",
+    "refundedNote": "refunded {detail}",
+    "historyLink": "(history)",
+    "refundButton": "Refund",
+    "refundOverrideButton": "Refund (override)",
+    "pointsRedemptionSummary": "{points} points redeemed — {amount} off",
+    "pointsAmount": "{points} points",
+    "byActor": "by {actor}",
+    "unknownActor": "unknown",
+    "cancelDialog": {
+      "header": "Cancel order",
+      "refundCheckboxLabel": "Refund discounts & points (respects each discount's refundable setting)",
+      "reasonPlaceholder": "e.g. customer requested cancellation"
+    },
+    "refundDialog": {
+      "header": "Refund",
+      "amountLabel": "Amount to refund",
+      "reasonPlaceholder": "e.g. customer complained about price",
+      "amountRequired": "Amount is required",
+      "amountInteger": "Must be a whole number of points",
+      "amountPositive": "Must be greater than zero"
+    },
+    "historyDialog": {
+      "header": "Refund history",
+      "empty": "No refunds recorded."
+    }
+  }
+}

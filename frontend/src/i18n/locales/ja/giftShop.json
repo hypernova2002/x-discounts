@@ -1,0 +1,22 @@
+{
+  "giftShop": {
+    "title": "ギフトショップ",
+    "newItemButton": "新規商品",
+    "loadError": "ギフトショップ商品の読み込みに失敗しました",
+    "noPhoto": "写真なし",
+    "disabledTag": "無効",
+    "pointsCost": "{points}ポイント",
+    "unlimitedStock": "在庫無制限",
+    "inStock": "在庫{stock}点",
+    "editButton": "編集",
+    "redeemButton": "利用",
+    "emptyHint": "まだ商品がありません。追加して始めましょう。",
+    "redeemDialogTitle": "商品を利用",
+    "redeemHint": "{name} — {points}ポイント／個",
+    "customerExternalIdLabel": "顧客外部ID",
+    "quantityLabel": "数量",
+    "redeemSubmitButton": "利用する",
+    "redeemed": "利用しました",
+    "genericError": "問題が発生しました"
+  }
+}

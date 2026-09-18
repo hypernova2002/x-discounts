@@ -1,0 +1,17 @@
+{
+  "projects": {
+    "title": "Projects",
+    "newProjectButton": "New project",
+    "idColumn": "ID",
+    "nameColumn": "Name",
+    "createdColumn": "Created",
+    "searchPlaceholder": "Search projects",
+    "newProjectDialogHeader": "New project",
+    "nameLabel": "Name",
+    "createButton": "Create",
+    "loadError": "Failed to load projects",
+    "createdSuccess": "Project created",
+    "genericError": "Something went wrong",
+    "nameRequired": "Name is required"
+  }
+}

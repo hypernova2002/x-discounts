@@ -1,0 +1,61 @@
+source "https://rubygems.org"
+
+ruby "3.3.12"
+
+# Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
+gem "rails", "~> 7.1.6"
+
+# Use the Puma web server [https://github.com/puma/puma]
+gem "puma", ">= 5.0"
+
+# ORM — Sequel instead of ActiveRecord
+gem "sequel-rails", "~> 1.2"
+gem "pg", "~> 1.5"
+
+# Pagination
+gem "pagy", "~> 9.0"
+
+# OpenAPI docs
+gem "openapi-ruby"
+
+# Background jobs
+gem "sidekiq", "~> 7.3"
+gem "redis", "~> 5.3"
+gem "connection_pool", "~> 2.4" # sidekiq 7.3's scheduler is incompatible with connection_pool 3.x's changed #pop signature
+
+# Windows does not include zoneinfo files, so bundle the tzinfo-data gem
+gem "tzinfo-data", platforms: %i[ windows jruby ]
+
+# Reduces boot times through caching; required in config/boot.rb
+gem "bootsnap", require: false
+
+# Use Rack CORS for handling Cross-Origin Resource Sharing (CORS), making cross-origin Ajax possible
+gem "rack-cors"
+
+# User passwords (login) — unlike API keys, these are low-entropy human secrets, so bcrypt's
+# slow adaptive hashing is the correct tool here.
+gem "bcrypt", "~> 3.1.7"
+
+# Request models: deserialize + type-cast + validate incoming JSON into plain objects
+# (ActiveModel::Validations under the hood), with JSON Schema generation as a side benefit.
+gem "json_model_rb", require: "json_model"
+
+# Response models
+gem "alba"
+
+# Bulk data export as .zip archives of CSV files
+gem "rubyzip", "~> 2.4", require: "zip"
+
+group :development, :test do
+  # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
+  gem "debug", platforms: %i[ mri windows ]
+
+  gem "rspec-rails", "~> 7.1"
+  gem "factory_bot_rails", "~> 6.4"
+end
+
+group :development do
+  # Speed up commands on slow machines / big apps [https://github.com/rails/spring]
+  # gem "spring"
+end
+

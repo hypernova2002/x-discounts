@@ -1,0 +1,37 @@
+{
+  "membershipSchemeDetail": {
+    "reevaluateButton": "Re-evaluate all customers now",
+    "reevaluatedCustomers": "Re-evaluated {count} customers",
+    "evaluationFailed": "Evaluation failed",
+    "loadError": "Failed to load scheme",
+    "tiersTitle": "Tiers",
+    "noTiersHint": "No tiers yet — add one below.",
+    "columns": {
+      "rank": "Rank",
+      "name": "Name",
+      "autoJoin": "Auto-join"
+    },
+    "autoJoinAutomatic": "automatic",
+    "autoJoinManual": "manual only",
+    "editButton": "Edit",
+    "tierNamePlaceholder": "Tier name",
+    "tierNameRequired": "Tier name is required",
+    "rankPlaceholder": "Rank",
+    "tierRankRequired": "Rank is required",
+    "addTierButton": "Add tier",
+    "tierAdded": "Tier added",
+    "genericError": "Something went wrong",
+    "editTierDialog": {
+      "title": "Edit tier",
+      "nameLabel": "Name",
+      "rankLabel": "Rank",
+      "autoJoinRequirementsLabel": "Auto-join requirements",
+      "autoJoinRequirementsHint": "When met, customers are automatically assigned this tier; when no longer met, they move to whichever tier (if any) they still qualify for. Leave blank to manage this tier manually only.",
+      "gracePeriodLabel": "Grace period (days)",
+      "gracePeriodPlaceholder": "none",
+      "gracePeriodHint": "Once a customer enters this tier, they won't be moved down (or out of membership) for this many days even if they stop meeting the requirements above. Promotion to a higher tier is never delayed. Leave blank for no grace period.",
+      "saveButton": "Save"
+    },
+    "tierUpdated": "Tier updated"
+  }
+}

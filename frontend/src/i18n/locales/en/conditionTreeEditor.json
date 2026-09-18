@@ -1,0 +1,36 @@
+{
+  "conditionTreeEditor": {
+    "emptyState": "No conditions — applies to everyone",
+    "addConditionButton": "Add condition",
+    "addSiblingConditionButton": "+ Add condition",
+    "valuePlaceholder": "value",
+    "valueListPlaceholder": "value1, value2",
+    "nodeTypes": {
+      "condition": "Condition",
+      "group": "Group"
+    },
+    "groupOperators": {
+      "all": "All of (AND)",
+      "any": "Any of (OR)",
+      "not": "Not"
+    },
+    "operators": {
+      "eq": "equals",
+      "ne": "not equals",
+      "gt": "greater than",
+      "gte": "greater than or equal",
+      "lt": "less than",
+      "lte": "less than or equal",
+      "in": "in",
+      "notIn": "not in",
+      "contains": "contains",
+      "isNull": "is null",
+      "isNotNull": "is not null"
+    },
+    "entities": {
+      "cart": "cart",
+      "lineItem": "line item",
+      "customer": "customer"
+    }
+  }
+}

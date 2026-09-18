@@ -1,0 +1,19 @@
+{
+  "campaigns": {
+    "title": "Campaigns",
+    "newCampaign": "New campaign",
+    "loadError": "Failed to load campaigns",
+    "exportButton": "Export",
+    "exportError": "Failed to export campaigns",
+    "nameColumn": "Name",
+    "statusColumn": "Status",
+    "statusEnabled": "Enabled",
+    "validFromColumn": "Valid from",
+    "validUntilColumn": "Valid until",
+    "archivedColumn": "Archived",
+    "notArchived": "Not archived",
+    "editButton": "Edit",
+    "showArchivedLabel": "Show archived",
+    "searchPlaceholder": "Search campaigns"
+  }
+}

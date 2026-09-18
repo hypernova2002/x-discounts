@@ -1,0 +1,12 @@
+# Local docker-compose override (copy from docker-compose.example.yml)
+/docker-compose.yml
+
+# OS cruft
+.DS_Store
+
+# Local Claude Code session/tooling state
+/.claude/
+
+# Frontend (added later)
+/frontend/node_modules
+/frontend/dist

@@ -1,0 +1,17 @@
+@import './tokens.css';
+
+/* Shared by detail views: a Card wrapping a labeled dl of read-only fields. */
+.section-card {
+  margin-bottom: 1rem;
+}
+
+.details {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.375rem 1rem;
+  margin: 0;
+}
+
+.details dt {
+  font-weight: 600;
+}

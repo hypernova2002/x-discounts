@@ -1,0 +1,94 @@
+{
+  "customerDetail": {
+    "loadError": "顧客の読み込みに失敗しました",
+    "activityLabels": {
+      "order": "注文",
+      "giftShopRedemption": "ギフトショップ利用",
+      "membership": "メンバーシップ"
+    },
+    "membershipUpdated": "メンバーシップを更新しました",
+    "membershipUpdateError": "メンバーシップの更新に失敗しました",
+    "pointsGranted": "ポイントを付与しました",
+    "genericError": "エラーが発生しました",
+    "details": {
+      "title": "詳細",
+      "externalId": "外部ID",
+      "name": "氏名",
+      "email": "メールアドレス",
+      "phone": "電話番号",
+      "country": "国",
+      "dateOfBirth": "生年月日",
+      "marketingOptIn": "マーケティング配信の同意",
+      "yes": "はい",
+      "no": "いいえ",
+      "customerSince": "登録日"
+    },
+    "totals": {
+      "title": "集計",
+      "orders": "注文数",
+      "totalSpent": "合計購入金額",
+      "totalDiscounts": "合計割引額",
+      "pointsBalance": "ポイント残高",
+      "pointsEarnedLifetime": "累計獲得ポイント",
+      "pointsRedeemed": "利用ポイント",
+      "pointsExpired": "失効ポイント"
+    },
+    "membership": {
+      "title": "メンバーシップ",
+      "noMembershipPlaceholder": "メンバーシップなし",
+      "enteredOn": "加入日",
+      "unknown": "不明",
+      "protectedUntil": "ランク保証期限"
+    },
+    "customAttributes": {
+      "title": "カスタム属性"
+    },
+    "activity": {
+      "title": "アクティビティ",
+      "empty": "アクティビティはまだありません。",
+      "orderSummary": "— 合計{total}、{discount}割引",
+      "pointsEarnedSuffix": "、{points}ポイント獲得",
+      "pointsRedeemedSuffix": "、{points}ポイント利用",
+      "giftShopRedemption": "{quantity}x {item} — {points}ポイント消費",
+      "membershipJoined": "{scheme}に加入 — {tier}"
+    },
+    "loyaltyPoints": {
+      "title": "ポイント",
+      "grantButton": "ポイントを付与",
+      "empty": "獲得したポイントはまだありません。",
+      "source": "付与元",
+      "order": "注文",
+      "manualGrant": "手動付与",
+      "redemptionRefund": "利用返金",
+      "legacy": "レガシー",
+      "earned": "獲得",
+      "remaining": "残高",
+      "status": "ステータス",
+      "statusActive": "有効",
+      "statusExpired": "失効",
+      "statusCancelled": "取消",
+      "earnedAt": "獲得日時",
+      "expires": "有効期限",
+      "never": "無期限"
+    },
+    "grantDialog": {
+      "header": "ポイントを付与",
+      "pointsLabel": "ポイント数",
+      "pointsInvalid": "0より大きい整数のポイント数を入力してください",
+      "expiresLabel": "有効期限(任意)",
+      "reasonLabel": "理由(任意)",
+      "reasonPlaceholder": "例: カスタマーサービスによる特別対応",
+      "submit": "付与"
+    },
+    "orders": {
+      "title": "注文",
+      "empty": "注文はまだありません。",
+      "order": "注文",
+      "placed": "注文日",
+      "total": "合計金額",
+      "discount": "割引額",
+      "pointsEarned": "獲得ポイント",
+      "pointsRedeemed": "利用ポイント"
+    }
+  }
+}

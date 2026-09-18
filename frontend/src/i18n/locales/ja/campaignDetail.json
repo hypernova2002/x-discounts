@@ -1,0 +1,30 @@
+{
+  "campaignDetail": {
+    "loadError": "キャンペーンの読み込みに失敗しました",
+    "enabledToast": "キャンペーンを有効にしました",
+    "pausedToast": "キャンペーンを一時停止しました",
+    "archivedToast": "キャンペーンをアーカイブしました",
+    "unarchivedToast": "キャンペーンのアーカイブを解除しました",
+    "updateError": "キャンペーンの更新に失敗しました",
+    "pauseButton": "一時停止",
+    "enableButton": "有効にする",
+    "archiveButton": "アーカイブ",
+    "unarchiveButton": "アーカイブ解除",
+    "editButton": "編集",
+    "detailsTitle": "詳細",
+    "validFromLabel": "開始日",
+    "noStartDate": "開始日なし",
+    "validUntilLabel": "終了日",
+    "noEndDate": "終了日なし",
+    "createdLabel": "作成日",
+    "discountsTitle": "割引",
+    "newDiscountButton": "新規割引",
+    "noDiscountsHint": "このキャンペーンにはまだ割引がありません。",
+    "nameColumn": "名前",
+    "kindColumn": "種類",
+    "keyColumn": "キー",
+    "statusColumn": "ステータス",
+    "statusEnabled": "有効",
+    "statusDisabled": "無効"
+  }
+}
