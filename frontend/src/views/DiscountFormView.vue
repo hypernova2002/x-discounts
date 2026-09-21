@@ -1,5 +1,5 @@
 <script setup>
-import { computed, reactive, ref, onMounted } from 'vue'
+import { computed, reactive, ref, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import AppShell from '@/components/AppShell.vue'
@@ -7,6 +7,7 @@ import PageHeader from '@/components/PageHeader.vue'
 import BaseCard from '@/components/base/BaseCard.vue'
 import BaseInputText from '@/components/base/BaseInputText.vue'
 import BaseInputNumber from '@/components/base/BaseInputNumber.vue'
+import BaseTextarea from '@/components/base/BaseTextarea.vue'
 import BaseToggleSwitch from '@/components/base/BaseToggleSwitch.vue'
 import BaseSelect from '@/components/base/BaseSelect.vue'
 import BaseSelectButton from '@/components/base/BaseSelectButton.vue'
@@ -15,15 +16,26 @@ import BaseButton from '@/components/base/BaseButton.vue'
 import BaseMessage from '@/components/base/BaseMessage.vue'
 import ConditionTreeEditor from '@/components/discounts/ConditionTreeEditor.vue'
 import EffectEditor from '@/components/discounts/EffectEditor.vue'
+import UnsavedChangesDialog from '@/components/UnsavedChangesDialog.vue'
 import { useAuthStore } from '@/stores/auth'
-import { ApiError } from '@/lib/api'
-import { getDiscount, createDiscount, updateDiscount, listDiscounts, addCompatibleDiscount, removeCompatibleDiscount } from '@/api/discounts'
+import { ApiError, apiFileUrl } from '@/lib/api'
+import {
+  getDiscount,
+  createDiscount,
+  updateDiscount,
+  listDiscounts,
+  addCompatibleDiscount,
+  removeCompatibleDiscount,
+  uploadCouponDesignImage,
+} from '@/api/discounts'
 import { listCampaigns } from '@/api/campaigns'
 import { listCustomers } from '@/api/customers'
 import { discountInputSchema } from '@/models/discount'
 import { toFieldErrors } from '@/models/formErrors'
 import { couponCodeGeneratePayload } from '@/services/couponCodes'
 import { useBaseToast } from '@/composables/useBaseToast'
+import { useUnsavedChangesGuard } from '@/composables/useUnsavedChangesGuard'
+import { sanitizeHtml } from '@/lib/sanitizeHtml'
 import { isoToZonedInput, zonedInputToIso } from '@/lib/timezone'
 
 const route = useRoute()
@@ -140,11 +152,22 @@ const form = reactive({
     issued_until: '',
     valid_from: '',
     valid_until: '',
+    design_html: '',
   },
   loyalty: { active_from: '', active_until: '', points_expire_after_days: null },
   couponCode: { code: '', customerId: null, count: 10, customerIds: [], prefix: '', suffix: '', maxRedemptions: 1 },
   effects: [],
 })
+
+// Snapshotted right after the form reflects "what's actually saved" (at
+// declaration for a new discount, after load() for an existing one).
+const initialSnapshot = ref(JSON.stringify(form))
+
+function isDirty() {
+  return JSON.stringify(form) !== initialSnapshot.value
+}
+
+const { showDialog: showUnsavedDialog, confirmLeave, cancelLeave, bypassOnce } = useUnsavedChangesGuard(isDirty)
 
 function defaultEffect() {
   if (form.kind === 'loyalty') {
@@ -158,6 +181,29 @@ function addEffect() {
 }
 function removeEffect(i) {
   form.effects.splice(i, 1)
+}
+
+// Coupon design image — same upload-after-save pattern as GiftShopItemFormView.vue's
+// photo (a separate multipart request, not part of the main JSON payload).
+const existingDesignImageUrl = ref(null)
+const designImageFile = ref(null)
+const designImagePreviewUrl = ref(null)
+
+function onDesignImageSelected(event) {
+  const file = event.target.files?.[0]
+  if (!file) return
+  designImageFile.value = file
+  if (designImagePreviewUrl.value) URL.revokeObjectURL(designImagePreviewUrl.value)
+  designImagePreviewUrl.value = URL.createObjectURL(file)
+}
+
+onBeforeUnmount(() => {
+  if (designImagePreviewUrl.value) URL.revokeObjectURL(designImagePreviewUrl.value)
+})
+
+async function uploadDesignImageIfSelected(id) {
+  if (!designImageFile.value) return
+  await uploadCouponDesignImage(id, designImageFile.value, { token: auth.token, projectId: auth.project?.id })
 }
 
 async function load() {
@@ -191,7 +237,9 @@ async function load() {
         issued_until: isoToZonedInput(data.coupon.issued_until, auth.project?.timezone),
         valid_from: isoToZonedInput(data.coupon.valid_from, auth.project?.timezone),
         valid_until: isoToZonedInput(data.coupon.valid_until, auth.project?.timezone),
+        design_html: data.coupon.design_html || '',
       }
+      existingDesignImageUrl.value = data.coupon.design_image_url
     }
     if (data.loyalty) {
       form.loyalty = {
@@ -209,6 +257,7 @@ async function load() {
     }))
 
     compatibleDiscountIds.value = (data.compatible_discounts || []).map((d) => d.id)
+    initialSnapshot.value = JSON.stringify(form)
   } catch (e) {
     loadError.value = e instanceof ApiError ? e.message : t('discountForm.loadError')
   } finally {
@@ -260,6 +309,7 @@ function buildPayload() {
       issued_until: zonedInputToIso(form.coupon.issued_until, auth.project?.timezone),
       valid_from: zonedInputToIso(form.coupon.valid_from, auth.project?.timezone),
       valid_until: zonedInputToIso(form.coupon.valid_until, auth.project?.timezone),
+      design_html: form.coupon.design_html || null,
       ...(isEdit.value ? {} : couponCodePayload()),
     }
   } else {
@@ -301,11 +351,15 @@ async function submit() {
   try {
     if (isEdit.value) {
       await updateDiscount(discountId.value, body, { token: auth.token, projectId: auth.project?.id })
+      await uploadDesignImageIfSelected(discountId.value)
       toast.add({ severity: 'success', summary: t('discountForm.updatedToast'), life: 3000 })
+      bypassOnce()
       router.push(returnRoute() || { name: 'discount-show', params: { id: discountId.value } })
     } else {
       const discount = await createDiscount(body, { token: auth.token, projectId: auth.project?.id })
+      await uploadDesignImageIfSelected(discount.id)
       toast.add({ severity: 'success', summary: t('discountForm.createdToast'), life: 3000 })
+      bypassOnce()
       router.push(returnRoute() || { name: 'discount-show', params: { id: discount.id } })
     }
   } catch (e) {
@@ -473,6 +527,41 @@ function cancel() {
         </template>
       </BaseCard>
 
+      <BaseCard v-if="form.kind === 'coupon'">
+        <template #title>{{ $t('discountForm.designTitle') }}</template>
+        <template #content>
+          <p class="design-hint">{{ $t('discountForm.designHint') }}</p>
+
+          <div class="field">
+            <label for="design_image">{{ $t('discountForm.designImageLabel') }}</label>
+            <img
+              v-if="designImagePreviewUrl"
+              :src="designImagePreviewUrl"
+              :alt="$t('discountForm.newDesignImageAlt')"
+              class="design-image-preview"
+            />
+            <img
+              v-else-if="existingDesignImageUrl"
+              :src="apiFileUrl(existingDesignImageUrl)"
+              :alt="$t('discountForm.currentDesignImageAlt')"
+              class="design-image-preview"
+            />
+            <input id="design_image" type="file" accept="image/png,image/jpeg,image/webp,image/gif" @change="onDesignImageSelected" />
+          </div>
+
+          <div class="field">
+            <label for="design_html">{{ $t('discountForm.designHtmlLabel') }}</label>
+            <BaseTextarea id="design_html" v-model="form.coupon.design_html" rows="6" auto-resize />
+          </div>
+
+          <div v-if="form.coupon.design_html" class="field">
+            <span class="preview-label">{{ $t('discountForm.designPreviewLabel') }}</span>
+            <!-- eslint-disable-next-line vue/no-v-html -- the one deliberate v-html in this app; sanitizeHtml() is the only thing ever passed to it -->
+            <div class="design-preview" v-html="sanitizeHtml(form.coupon.design_html)" />
+          </div>
+        </template>
+      </BaseCard>
+
       <BaseCard v-if="form.kind === 'coupon' && !isEdit">
         <template #title>{{ $t('discountForm.couponCodesTitle') }}</template>
         <template #content>
@@ -615,6 +704,8 @@ function cancel() {
         <BaseButton type="submit" :label="isEdit ? $t('discountForm.saveButton') : $t('discountForm.createButton')" :loading="saving" />
       </div>
     </form>
+
+    <UnsavedChangesDialog :visible="showUnsavedDialog" @stay="cancelLeave" @discard="confirmLeave" />
   </AppShell>
 </template>
 
@@ -661,6 +752,33 @@ function cancel() {
   color: var(--color-text-muted);
   font-size: 0.875rem;
   margin: 0 0 1rem;
+}
+
+.design-hint {
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+  margin: 0 0 1rem;
+}
+
+.design-image-preview {
+  width: 10rem;
+  height: 10rem;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  margin-bottom: 0.5rem;
+}
+
+.preview-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.design-preview {
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-subtle);
 }
 
 .effects-list {

@@ -72,6 +72,7 @@ export const OrderSchema = z
     total_points_earned: z.number(),
     cancelled_at: z.string().nullable(),
     created_at: z.string(),
+    status: z.enum(['active', 'cancelled', 'refunded', 'partially_refunded']),
     customer: OrderCustomerSchema,
     line_items: z.array(OrderLineItemSchema),
     discounts: z.array(OrderDiscountSchema),

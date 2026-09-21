@@ -1,0 +1,11 @@
+{
+  "coupons": {
+    "totalCouponsMetric": "クーポン総数",
+    "totalRedemptionsMetric": "合計利用回数",
+    "previousPeriodCaption": "前の期間",
+    "chartTitle": "1日あたりのクーポン利用回数",
+    "chartSeriesLabel": "利用回数",
+    "noChartData": "この期間の利用データはありません",
+    "analyticsLoadError": "クーポンの分析データの読み込みに失敗しました"
+  }
+}

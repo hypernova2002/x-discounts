@@ -9,6 +9,7 @@ class CouponRequest < Dry::Struct
   attribute? :issued_until, JsonModel::Types::String.optional
   attribute? :valid_from, JsonModel::Types::String.optional
   attribute? :valid_until, JsonModel::Types::String.optional
+  attribute? :design_html, JsonModel::Types::String.optional
 
   # All optional — a coupon can be created with zero codes and have them added later
   # via the dedicated coupon_codes endpoint. When given, this is the exact same

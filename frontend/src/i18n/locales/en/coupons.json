@@ -1,0 +1,11 @@
+{
+  "coupons": {
+    "totalCouponsMetric": "Total Coupons",
+    "totalRedemptionsMetric": "Total Redemptions",
+    "previousPeriodCaption": "previous period",
+    "chartTitle": "Coupon redemptions per day",
+    "chartSeriesLabel": "Redemptions",
+    "noChartData": "No redemption data for this period",
+    "analyticsLoadError": "Failed to load coupon analytics"
+  }
+}

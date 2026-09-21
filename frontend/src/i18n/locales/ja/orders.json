@@ -11,6 +11,23 @@
     "total": "注文合計",
     "discount": "割引",
     "created": "注文日時",
-    "searchPlaceholder": "注文を検索"
+    "searchPlaceholder": "注文を検索",
+    "statusColumn": "ステータス",
+    "status": {
+      "active": "有効",
+      "cancelled": "キャンセル済み",
+      "refunded": "返金済み",
+      "partially_refunded": "一部返金済み"
+    },
+    "totalOrdersMetric": "注文総数",
+    "totalRevenueMetric": "合計売上",
+    "totalDiscountGivenMetric": "合計割引額",
+    "averageOrderValueMetric": "平均注文額",
+    "previousPeriodCaption": "前の期間",
+    "chartTitle": "1日あたりの注文数と売上",
+    "ordersSeriesLabel": "注文数",
+    "revenueSeriesLabel": "売上",
+    "noChartData": "この期間の注文データはありません",
+    "analyticsLoadError": "注文の分析データの読み込みに失敗しました"
   }
 }

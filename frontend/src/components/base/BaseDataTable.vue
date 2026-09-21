@@ -49,13 +49,13 @@ const pt = {
   // Column must be used raw at call sites, and cell styling has to live here.
   column: {
     headerCell: [
-      'group border-b border-border bg-bg-subtle px-3 py-2 text-left text-xs font-normal text-text-muted',
+      'group border-b border-border bg-bg-subtle px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-text-muted',
       'data-[p-sortable-column=true]:cursor-pointer data-[p-sortable-column=true]:select-none',
       'data-[p-sortable-column=true]:hover:text-text',
     ].join(' '),
     columnHeaderContent: 'inline-flex items-center gap-1',
     sorticon: 'h-3 w-3 text-text-disabled group-hover:text-text-muted group-data-[p-sorted=true]:text-primary',
-    bodyCell: 'px-3 py-2 align-middle text-sm text-text',
+    bodyCell: 'px-3 py-1.5 align-middle text-sm text-text',
     footerCell: 'border-t border-border px-3 py-2 text-sm font-medium text-text',
     columnTitle: 'inline-flex items-center gap-1',
   },

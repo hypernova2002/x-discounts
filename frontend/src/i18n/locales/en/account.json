@@ -7,6 +7,8 @@
     "loadError": "Failed to load account",
     "updatedSuccess": "Account updated",
     "genericError": "Something went wrong",
-    "nameRequired": "Name is required"
+    "nameRequired": "Name is required",
+    "otpRequiredLabel": "Require two-factor authentication for all users",
+    "otpRequiredHint": "When enabled, every user in this account must set up an authenticator app before they can use anything else."
   }
 }

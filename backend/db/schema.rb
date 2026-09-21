@@ -6,6 +6,7 @@ Sequel.migration do
       column :created_at, "timestamp with time zone", :null=>false
       column :updated_at, "timestamp with time zone", :null=>false
       column :public_id, "text", :null=>false
+      column :otp_required, "boolean", :default=>false, :null=>false
       
       index [:public_id], :name=>:accounts_public_id_unique, :unique=>true
     end
@@ -40,6 +41,9 @@ Sequel.migration do
       column :password_digest, "text"
       column :public_id, "text", :null=>false
       column :locale, "text", :default=>"en", :null=>false
+      column :otp_secret, "text"
+      column :otp_enabled, "boolean", :default=>false, :null=>false
+      column :otp_backup_codes, "jsonb", :default=>Sequel::LiteralString.new("'[]'::jsonb"), :null=>false
       
       index [:account_id]
       index [:email], :unique=>true
@@ -126,6 +130,18 @@ Sequel.migration do
       
       index [:project_id]
       index [:public_id], :name=>:membership_schemes_public_id_unique, :unique=>true
+    end
+    
+    create_table(:otp_challenges) do
+      primary_key :id
+      foreign_key :user_id, :users, :null=>false, :key=>[:id]
+      column :token_digest, "text", :null=>false
+      column :expires_at, "timestamp without time zone", :null=>false
+      column :created_at, "timestamp without time zone", :null=>false
+      column :updated_at, "timestamp without time zone", :null=>false
+      
+      index [:token_digest], :unique=>true
+      index [:user_id]
     end
     
     create_table(:project_memberships) do
@@ -500,5 +516,6 @@ self << "INSERT INTO \"schema_migrations\" (\"filename\") VALUES ('2026091612000
 self << "INSERT INTO \"schema_migrations\" (\"filename\") VALUES ('20260916130001_add_archived_to_campaigns.rb')"
 self << "INSERT INTO \"schema_migrations\" (\"filename\") VALUES ('20260916140001_add_public_id_to_redemptions.rb')"
 self << "INSERT INTO \"schema_migrations\" (\"filename\") VALUES ('20260919120001_add_timezone_to_projects.rb')"
+self << "INSERT INTO \"schema_migrations\" (\"filename\") VALUES ('20260920090001_add_otp_to_users_and_accounts.rb')"
                 end
               end

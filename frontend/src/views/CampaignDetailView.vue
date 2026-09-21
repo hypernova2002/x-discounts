@@ -4,9 +4,10 @@ import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import AppShell from '@/components/AppShell.vue'
 import PageHeader from '@/components/PageHeader.vue'
-import CampaignStatusTags from '@/components/CampaignStatusTags.vue'
+import LifecycleStatus from '@/components/LifecycleStatus.vue'
+import DiscountKindTag from '@/components/DiscountKindTag.vue'
 import BaseCard from '@/components/base/BaseCard.vue'
-import BaseTag from '@/components/base/BaseTag.vue'
+import MetricCard from '@/components/base/MetricCard.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import BaseMessage from '@/components/base/BaseMessage.vue'
 import BaseTable from '@/components/base/BaseTable.vue'
@@ -15,7 +16,7 @@ import { ApiError } from '@/lib/api'
 import { getCampaign, updateCampaign } from '@/api/campaigns'
 import { listDiscounts } from '@/api/discounts'
 import { useBaseToast } from '@/composables/useBaseToast'
-import { formatDateTime } from '@/lib/format'
+import { formatDateTime, formatNumber, formatCurrency } from '@/lib/format'
 
 const route = useRoute()
 const router = useRouter()
@@ -77,6 +78,13 @@ function editCampaign() {
   router.push({ name: 'campaign-edit', params: { id: campaign.value.id } })
 }
 
+// Same per-kind validity-field lookup as DiscountKindTable.vue (promotion/
+// loyalty: active_from/active_until, coupon: valid_from/valid_until).
+function validityFields(discount) {
+  if (discount.kind === 'coupon') return { from: discount.coupon?.valid_from, until: discount.coupon?.valid_until }
+  return { from: discount[discount.kind]?.active_from, until: discount[discount.kind]?.active_until }
+}
+
 function viewDiscount(discount) {
   router.push({ name: 'discount-show', params: { id: discount.id } })
 }
@@ -104,6 +112,7 @@ const discountColumns = computed(() => [
     },
   },
   { field: 'key', header: t('campaignDetail.keyColumn'), sortable: true, filter: { type: 'string' } },
+  { field: 'redemption_count', header: t('campaignDetail.redemptionsColumn'), sortable: true, filter: { type: 'number' } },
   {
     field: 'enabled',
     header: t('campaignDetail.statusColumn'),
@@ -129,7 +138,7 @@ onMounted(loadCampaign)
       <PageHeader>
         <template #title>
           <h2>{{ campaign.name }}</h2>
-          <CampaignStatusTags :campaign="campaign" />
+          <LifecycleStatus :enabled="campaign.enabled" :archived="campaign.archived" :from="campaign.valid_from" :until="campaign.valid_until" />
         </template>
         <template #actions>
           <BaseButton
@@ -157,6 +166,12 @@ onMounted(loadCampaign)
         </template>
       </BaseCard>
 
+      <div v-if="campaign.discount_summary" class="summary-cards">
+        <MetricCard :label="$t('campaignDetail.discountsMetric')" :value="formatNumber(campaign.discount_summary.count)" />
+        <MetricCard :label="$t('campaignDetail.redemptionsMetric')" :value="formatNumber(campaign.discount_summary.redemption_count)" />
+        <MetricCard :label="$t('campaignDetail.discountedMetric')" :value="formatCurrency(campaign.discount_summary.discounted_amount)" />
+      </div>
+
       <BaseCard class="section-card">
         <template #title>{{ $t('campaignDetail.discountsTitle') }}</template>
         <template #content>
@@ -170,9 +185,10 @@ onMounted(loadCampaign)
             @refresh="loadDiscounts"
             @create="newDiscount"
           >
-            <template #cell-kind="{ data }"><BaseTag :value="data.kind" /></template>
+            <template #cell-kind="{ data }"><DiscountKindTag :kind="data.kind" /></template>
+            <template #cell-redemption_count="{ data }">{{ formatNumber(data.redemption_count) }}</template>
             <template #cell-enabled="{ data }">
-              <BaseTag v-if="!data.enabled" severity="secondary" :value="$t('campaignDetail.statusDisabled')" />
+              <LifecycleStatus compact :enabled="data.enabled" :from="validityFields(data).from" :until="validityFields(data).until" />
             </template>
             <template #cell-actions="{ data }">
               <BaseButton text icon="pi pi-pencil" :aria-label="$t('campaignDetail.editButton')" @click.stop="editDiscount(data)" />
@@ -184,3 +200,12 @@ onMounted(loadCampaign)
     </template>
   </AppShell>
 </template>
+
+<style scoped>
+.summary-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+</style>

@@ -12,6 +12,15 @@
     "noMembership": "None",
     "country": "Country",
     "created": "Creation time",
-    "marketingOptIn": "Marketing opt-in"
+    "marketingOptIn": "Marketing opt-in",
+    "totalCustomersMetric": "Total Customers",
+    "activeCustomersMetric": "Active Customers",
+    "totalSpentMetric": "Total Spent",
+    "newCustomersMetric": "New Customers",
+    "previousPeriodCaption": "previous period",
+    "chartTitle": "New customers per day",
+    "chartSeriesLabel": "New customers",
+    "noChartData": "No new customers in this period",
+    "analyticsLoadError": "Failed to load customer analytics"
   }
 }

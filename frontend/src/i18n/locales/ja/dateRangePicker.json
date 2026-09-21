@@ -1,0 +1,11 @@
+{
+  "dateRangePicker": {
+    "days7": "7日間",
+    "days30": "30日間",
+    "days90": "90日間",
+    "custom": "カスタム",
+    "fromLabel": "開始日",
+    "toLabel": "終了日",
+    "rangeLabel": "{from} 〜 {to}"
+  }
+}

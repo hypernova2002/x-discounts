@@ -52,13 +52,20 @@ module Coupons
       attrs
     end
 
+    # Rebuilds kind_config wholesale from the request's editable fields — but
+    # design_image_filename/content_type/byte_size are set independently via
+    # Coupons::AttachDesignImageService (the image-upload endpoint), never part
+    # of this JSON payload, so they'd silently vanish on the next unrelated
+    # coupon-field edit if not carried forward explicitly here.
     def coupon_kind_config
+      image_keys = @discount.kind_config.slice("design_image_filename", "design_image_content_type", "design_image_byte_size")
       {
         issued_from: @request.coupon.issued_from,
         issued_until: @request.coupon.issued_until,
         valid_from: @request.coupon.valid_from,
-        valid_until: @request.coupon.valid_until
-      }.compact
+        valid_until: @request.coupon.valid_until,
+        design_html: Coupons::HtmlSanitizer.sanitize(@request.coupon.design_html)
+      }.compact.merge(image_keys)
     end
 
     def replace_effects

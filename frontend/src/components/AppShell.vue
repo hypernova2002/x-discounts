@@ -25,15 +25,33 @@ function go(name) {
 }
 
 function toMenuItem(section) {
-  return { label: t(section.labelKey), icon: section.icon, routeNames: section.routeNames, command: () => go(section.to.name) }
+  return { label: t(section.labelKey), icon: section.icon, routeNames: section.routeNames, nested: section.nested, command: () => go(section.to.name) }
 }
 
-const navItems = computed(() => [
-  ...NAV_SECTIONS.filter((s) => !s.group).map(toMenuItem),
-  { separator: true },
-  { label: t('nav.admin'), items: NAV_SECTIONS.filter((s) => s.group === 'admin').map(toMenuItem) },
-  { label: t('nav.account'), items: NAV_SECTIONS.filter((s) => s.group === 'account').map(toMenuItem) },
-])
+// Each group renders as a labeled block (OpenVue Menu's `{ label, items }`
+// shape) at the point in NAV_SECTIONS where its first member appears — so
+// "campaigns" renders inline near the top (where its old flat entry used to
+// sit), while admin/account still land at the bottom, separated, exactly as
+// before. Adding a new group is just tagging its sections with `group` and
+// naming it here — no other change needed.
+const GROUP_LABELS = { campaigns: 'nav.campaigns', admin: 'nav.admin', account: 'nav.account' }
+const SEPARATOR_BEFORE_GROUP = 'admin'
+
+const navItems = computed(() => {
+  const items = []
+  const seenGroups = new Set()
+  for (const section of NAV_SECTIONS) {
+    if (!section.group) {
+      items.push(toMenuItem(section))
+      continue
+    }
+    if (seenGroups.has(section.group)) continue
+    seenGroups.add(section.group)
+    if (section.group === SEPARATOR_BEFORE_GROUP) items.push({ separator: true })
+    items.push({ label: t(GROUP_LABELS[section.group]), items: NAV_SECTIONS.filter((s) => s.group === section.group).map(toMenuItem) })
+  }
+  return items
+})
 
 const currentSection = computed(() => findSection(route.name))
 
@@ -128,6 +146,7 @@ onMounted(() => {
           v-tooltip.bottom="t('nav.projectTimezoneTooltip')"
           class="app-shell__timezone-tag"
         />
+        <BaseButton text icon="pi pi-user" :aria-label="t('nav.userSettings')" v-tooltip.bottom="t('nav.userSettings')" @click="go('user-settings')" />
         <BaseButton text :label="t('nav.signOut')" @click="logout" />
       </div>
     </header>

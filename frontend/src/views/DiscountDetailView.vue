@@ -19,8 +19,9 @@ import BaseMessage from '@/components/base/BaseMessage.vue'
 import ConditionSummary from '@/components/discounts/ConditionSummary.vue'
 import KeyValueEditor from '@/components/discounts/KeyValueEditor.vue'
 import { useAuthStore } from '@/stores/auth'
-import { ApiError } from '@/lib/api'
+import { ApiError, apiFileUrl } from '@/lib/api'
 import { getDiscount, deleteDiscount } from '@/api/discounts'
+import { sanitizeHtml } from '@/lib/sanitizeHtml'
 import { listCouponCodes, generateCouponCodes, deleteCouponCode } from '@/api/couponCodes'
 import { listCustomers } from '@/api/customers'
 import { validateDiscounts } from '@/api/discountRedemption'
@@ -364,7 +365,7 @@ onMounted(loadDiscount)
           </template>
         </BaseCard>
 
-        <BaseCard v-else>
+        <BaseCard v-else-if="discount.kind === 'loyalty'">
           <template #title>{{ $t('discountDetail.loyaltyTitle') }}</template>
           <template #content>
             <dl class="details">
@@ -373,6 +374,20 @@ onMounted(loadDiscount)
               <dt>{{ $t('discountDetail.activeUntilLabel') }}</dt>
               <dd>{{ discount.loyalty.active_until ? formatDateTime(discount.loyalty.active_until, auth.project?.timezone) : $t('discountDetail.noEndDate') }}</dd>
             </dl>
+          </template>
+        </BaseCard>
+
+        <BaseCard v-if="discount.kind === 'coupon' && (discount.coupon.design_image_url || discount.coupon.design_html)">
+          <template #title>{{ $t('discountDetail.designTitle') }}</template>
+          <template #content>
+            <img
+              v-if="discount.coupon.design_image_url"
+              :src="apiFileUrl(discount.coupon.design_image_url)"
+              :alt="$t('discountDetail.designImageAlt')"
+              class="design-image-preview"
+            />
+            <!-- eslint-disable-next-line vue/no-v-html -- the one deliberate v-html in this app; sanitizeHtml() is the only thing ever passed to it -->
+            <div v-if="discount.coupon.design_html" class="design-preview" v-html="sanitizeHtml(discount.coupon.design_html)" />
           </template>
         </BaseCard>
 
@@ -629,6 +644,22 @@ onMounted(loadDiscount)
 
 .section-card {
   margin-bottom: 1.5rem;
+}
+
+.design-image-preview {
+  width: 10rem;
+  height: 10rem;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  margin-bottom: 0.5rem;
+}
+
+.design-preview {
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-subtle);
 }
 
 .coupon-code {

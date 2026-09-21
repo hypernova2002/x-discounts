@@ -13,6 +13,7 @@ const validCampaign = {
   valid_until: null,
   created_at: '2026-01-01T00:00:00Z',
   updated_at: '2026-01-01T00:00:00Z',
+  discount_kinds: [],
 }
 
 describe('CampaignSchema', () => {
@@ -29,6 +30,16 @@ describe('CampaignSchema', () => {
   it('rejects a response missing a required field', () => {
     const { name, ...withoutName } = validCampaign
     expect(() => CampaignSchema.parse(withoutName)).toThrow()
+  })
+
+  it('accepts a response with no discount_summary (list responses omit it)', () => {
+    expect(() => CampaignSchema.parse(validCampaign)).not.toThrow()
+    expect(CampaignSchema.parse(validCampaign).discount_summary).toBeUndefined()
+  })
+
+  it('accepts a response with discount_summary, including a string money amount (Rails serializes BigDecimal as a string)', () => {
+    const withSummary = { ...validCampaign, discount_summary: { count: 4, redemption_count: 1284, discounted_amount: '12430.5' } }
+    expect(() => CampaignSchema.parse(withSummary)).not.toThrow()
   })
 })
 

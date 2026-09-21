@@ -12,6 +12,15 @@
     "noMembership": "なし",
     "country": "国",
     "created": "作成日時",
-    "marketingOptIn": "マーケティング配信の同意"
+    "marketingOptIn": "マーケティング配信の同意",
+    "totalCustomersMetric": "顧客総数",
+    "activeCustomersMetric": "アクティブ顧客数",
+    "totalSpentMetric": "合計購入金額",
+    "newCustomersMetric": "新規顧客数",
+    "previousPeriodCaption": "前の期間",
+    "chartTitle": "1日あたりの新規顧客数",
+    "chartSeriesLabel": "新規顧客数",
+    "noChartData": "この期間の新規顧客はいません",
+    "analyticsLoadError": "顧客の分析データの読み込みに失敗しました"
   }
 }

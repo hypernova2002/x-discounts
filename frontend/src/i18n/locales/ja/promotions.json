@@ -1,0 +1,12 @@
+{
+  "promotions": {
+    "totalRunningMetric": "実施中のプロモーション数",
+    "totalDiscountsMetric": "プロモーションによる割引総額",
+    "previousPeriodCaption": "前の期間",
+    "chartTitle": "1日あたりのプロモーション利用状況と獲得額",
+    "usageSeriesLabel": "利用回数",
+    "earningsSeriesLabel": "獲得額",
+    "noChartData": "この期間の利用データはありません",
+    "analyticsLoadError": "プロモーションの分析データの読み込みに失敗しました"
+  }
+}

@@ -37,6 +37,8 @@ Rails.application.routes.draw do
           collection { get :export }
         end
         resources :discounts, only: %i[index show create update destroy] do
+          get :design_image, on: :member
+          post :design_image, action: :upload_design_image, on: :member
           resources :compatible_discounts, only: %i[create destroy], controller: "discount_compatibilities"
           resources :coupon_codes, only: %i[index create destroy]
         end
@@ -56,6 +58,13 @@ Rails.application.routes.draw do
           collection { get :export }
         end
         get "exports/project" => "exports#project"
+        get "analytics/coupons" => "analytics#coupons"
+        get "analytics/promotions" => "analytics#promotions"
+        get "analytics/loyalty" => "analytics#loyalty"
+        get "analytics/loyalty/active_redemptions" => "analytics#loyalty_active_redemptions"
+        get "analytics/customers" => "analytics#customers"
+        get "analytics/campaigns" => "analytics#campaigns"
+        get "analytics/orders" => "analytics#orders"
         resources :membership_schemes, only: %i[index show create update] do
           resources :tiers, only: %i[create update], controller: "membership_tiers"
           collection { post :evaluate }

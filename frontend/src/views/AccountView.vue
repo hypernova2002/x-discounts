@@ -10,6 +10,7 @@ import BaseDialog from '@/components/base/BaseDialog.vue'
 import BaseInputText from '@/components/base/BaseInputText.vue'
 import BaseSelect from '@/components/base/BaseSelect.vue'
 import BaseMessage from '@/components/base/BaseMessage.vue'
+import BaseToggleSwitch from '@/components/base/BaseToggleSwitch.vue'
 import { useAuthStore } from '@/stores/auth'
 import { ApiError } from '@/lib/api'
 import { useAsync } from '@/composables/useAsync'
@@ -35,10 +36,14 @@ watch(accountError, (e) => {
 })
 
 const accountForm = ref({ name: '' })
+const otpRequired = ref(false)
 watch(
   account,
   (a) => {
-    if (a) accountForm.value = { name: a.name }
+    if (a) {
+      accountForm.value = { name: a.name }
+      otpRequired.value = a.otp_required
+    }
   },
   { immediate: true },
 )
@@ -57,7 +62,7 @@ async function saveAccount() {
 
   savingAccount.value = true
   try {
-    await updateAccount(result.data, { token: auth.token, projectId: auth.project?.id })
+    await updateAccount({ ...result.data, otp_required: otpRequired.value }, { token: auth.token, projectId: auth.project?.id })
     toast.add({ severity: 'success', summary: t('account.updatedSuccess'), life: 3000 })
   } catch (e) {
     accountErrors.value = e instanceof ApiError ? toFieldErrors(e) : { _root: t('account.genericError') }
@@ -142,6 +147,11 @@ async function submitProject() {
             <BaseInputText id="account-name" v-model="accountForm.name" :invalid="!!accountErrors.name" :disabled="accountLoading" />
             <small v-if="accountErrors.name" class="field-error">{{ accountErrors.name }}</small>
           </div>
+          <div class="toggle-field">
+            <BaseToggleSwitch id="account-otp-required" v-model="otpRequired" />
+            <label for="account-otp-required">{{ $t('account.otpRequiredLabel') }}</label>
+          </div>
+          <p class="toggle-hint">{{ $t('account.otpRequiredHint') }}</p>
           <BaseMessage v-if="accountErrors._root" severity="error" :closable="false">{{ accountErrors._root }}</BaseMessage>
           <div class="form-actions">
             <BaseButton type="submit" :label="$t('account.saveButton')" :loading="savingAccount" />
@@ -206,6 +216,23 @@ async function submitProject() {
 .field-error {
   color: var(--color-danger);
   font-size: 0.8125rem;
+}
+
+.toggle-field {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+.toggle-field label {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.toggle-hint {
+  margin: -0.5rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
 }
 
 .form-actions {

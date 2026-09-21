@@ -11,6 +11,23 @@
     "total": "Order total",
     "discount": "Discount",
     "created": "Order time",
-    "searchPlaceholder": "Search orders"
+    "searchPlaceholder": "Search orders",
+    "statusColumn": "Status",
+    "status": {
+      "active": "Active",
+      "cancelled": "Cancelled",
+      "refunded": "Refunded",
+      "partially_refunded": "Partially refunded"
+    },
+    "totalOrdersMetric": "Total Orders",
+    "totalRevenueMetric": "Total Revenue",
+    "totalDiscountGivenMetric": "Total Discount Given",
+    "averageOrderValueMetric": "Average Order Value",
+    "previousPeriodCaption": "previous period",
+    "chartTitle": "Orders and revenue per day",
+    "ordersSeriesLabel": "Orders",
+    "revenueSeriesLabel": "Revenue",
+    "noChartData": "No order data for this period",
+    "analyticsLoadError": "Failed to load order analytics"
   }
 }

@@ -1,0 +1,18 @@
+{
+  "discountKindTable": {
+    "nameColumn": "Name",
+    "campaignColumn": "Campaign",
+    "redemptionsColumn": "Total Redemptions",
+    "usageColumn": "Usage",
+    "usageOfMax": "{count} of {max}",
+    "usageUnlimited": "Unlimited",
+    "startDateColumn": "Start Date",
+    "endDateColumn": "End Date",
+    "statusColumn": "Status",
+    "actionsColumn": "Actions",
+    "editButton": "Edit",
+    "searchPlaceholder": "Search",
+    "loadError": "Failed to load discounts",
+    "emptyHint": "No discounts found"
+  }
+}

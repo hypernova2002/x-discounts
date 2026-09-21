@@ -6,6 +6,10 @@
     "nameColumn": "Name",
     "emailColumn": "Email",
     "localeColumn": "Language",
+    "otpColumn": "Two-factor",
+    "actionsColumn": "Actions",
+    "otpEnabled": "Enabled",
+    "otpDisabled": "Disabled",
     "searchPlaceholder": "Search users",
     "newUserDialogHeader": "New user",
     "nameLabel": "Name",
@@ -15,6 +19,16 @@
     "createdSuccess": "User created",
     "genericError": "Something went wrong",
     "nameRequired": "Name is required",
-    "emailRequired": "Email is required"
+    "emailRequired": "Email is required",
+    "resetPasswordButton": "Reset password",
+    "resetOtpButton": "Reset two-factor",
+    "resetPasswordDialogHeader": "Reset password",
+    "newPasswordLabel": "New password",
+    "confirmPasswordLabel": "Confirm password",
+    "resetPasswordSuccess": "Password reset",
+    "resetOtpSuccess": "Two-factor authentication reset for this user",
+    "newPasswordTooShort": "Password must be at least 8 characters",
+    "confirmPasswordRequired": "Please confirm the password",
+    "passwordsDontMatch": "Passwords don't match"
   }
 }

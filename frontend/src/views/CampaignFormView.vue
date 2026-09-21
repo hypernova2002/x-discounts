@@ -36,6 +36,7 @@ import BaseButton from '@/components/base/BaseButton.vue'
 import BaseMessage from '@/components/base/BaseMessage.vue'
 import BaseTable from '@/components/base/BaseTable.vue'
 import BaseTag from '@/components/base/BaseTag.vue'
+import UnsavedChangesDialog from '@/components/UnsavedChangesDialog.vue'
 import { useAuthStore } from '@/stores/auth'
 import { ApiError } from '@/lib/api'
 import { getCampaign, createCampaign, updateCampaign } from '@/api/campaigns'
@@ -43,6 +44,7 @@ import { listDiscounts } from '@/api/discounts'
 import { campaignInputSchema } from '@/models/campaign'
 import { toFieldErrors } from '@/models/formErrors'
 import { useBaseToast } from '@/composables/useBaseToast'
+import { useUnsavedChangesGuard } from '@/composables/useUnsavedChangesGuard'
 import { isoToZonedInput, zonedInputToIso } from '@/lib/timezone'
 
 const route = useRoute()
@@ -66,6 +68,18 @@ const form = reactive({
   valid_until: '',
 })
 
+// Snapshotted right after the form reflects "what's actually saved" (on mount
+// for a new campaign, after load() for an existing one) — isDirty compares
+// against this, not against empty defaults, so editing an existing campaign
+// back to its original values doesn't still read as dirty.
+const initialSnapshot = ref(JSON.stringify(form))
+
+function isDirty() {
+  return JSON.stringify(form) !== initialSnapshot.value
+}
+
+const { showDialog: showUnsavedDialog, confirmLeave, cancelLeave, bypassOnce } = useUnsavedChangesGuard(isDirty)
+
 async function load() {
   loading.value = true
   try {
@@ -74,6 +88,10 @@ async function load() {
     form.enabled = data.enabled
     form.valid_from = isoToZonedInput(data.valid_from, auth.project?.timezone)
     form.valid_until = isoToZonedInput(data.valid_until, auth.project?.timezone)
+    // The dirty baseline is always "what the server has," whether or not a
+    // draft ends up applied on top of it — a draft carrying real unsaved
+    // edits should still read as dirty, not as freshly clean.
+    initialSnapshot.value = JSON.stringify(form)
 
     // A pending draft (left just before navigating off to edit one of this
     // campaign's discounts) wins over what the server has, so unsaved edits
@@ -105,11 +123,13 @@ async function loadDiscounts() {
 
 function editDiscount(discount) {
   saveCampaignDraft(campaignId.value, form)
+  bypassOnce()
   router.push({ name: 'discount-edit', params: { id: discount.id }, query: { return_to: 'campaign-edit' } })
 }
 
 function newDiscount() {
   saveCampaignDraft(campaignId.value, form)
+  bypassOnce()
   router.push({ name: 'discount-new', query: { campaign_id: campaignId.value, return_to: 'campaign-edit' } })
 }
 
@@ -168,10 +188,12 @@ async function submit() {
       await updateCampaign(campaignId.value, result.data, { token: auth.token, projectId: auth.project?.id })
       clearCampaignDraft()
       toast.add({ severity: 'success', summary: t('campaignForm.updatedToast'), life: 3000 })
+      bypassOnce()
       router.push({ name: 'campaign-show', params: { id: campaignId.value } })
     } else {
       const campaign = await createCampaign(result.data, { token: auth.token, projectId: auth.project?.id })
       toast.add({ severity: 'success', summary: t('campaignForm.createdToast'), life: 3000 })
+      bypassOnce()
       router.push({ name: 'campaign-show', params: { id: campaign.id } })
     }
   } catch (e) {
@@ -257,6 +279,8 @@ function cancel() {
         </BaseTable>
       </template>
     </BaseCard>
+
+    <UnsavedChangesDialog :visible="showUnsavedDialog" @stay="cancelLeave" @discard="confirmLeave" />
   </AppShell>
 </template>
 

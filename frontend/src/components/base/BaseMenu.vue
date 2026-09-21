@@ -40,7 +40,8 @@ const pt = {
   itemContent: 'rounded-md',
   itemLink: ({ context }) => ({
     class: [
-      'flex items-center gap-3 rounded-md border-l-2 border-l-transparent pl-2.5 pr-3 py-2 text-sm no-underline outline-none transition-colors',
+      'flex items-center gap-3 rounded-md border-l-2 border-l-transparent pr-3 py-2 text-sm no-underline outline-none transition-colors',
+      context.item?.nested ? 'pl-6' : 'pl-2.5',
       'focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1',
       isActive(context.item)
         ? 'border-l-primary bg-primary-subtle text-primary font-medium'
@@ -53,7 +54,7 @@ const pt = {
     ],
   }),
   itemIcon: ({ context }) => ({
-    class: ['text-base shrink-0', isActive(context.item) ? 'text-primary' : 'text-text-muted'],
+    class: ['shrink-0', context.item?.nested ? 'text-sm' : 'text-base', isActive(context.item) ? 'text-primary' : 'text-text-muted'],
   }),
   itemLabel: 'truncate',
   submenuLabel: 'px-3 pt-4 pb-1 text-xs font-semibold uppercase tracking-wide text-text-muted',

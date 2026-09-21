@@ -2,6 +2,10 @@
   "nav": {
     "dashboard": "Dashboard",
     "campaigns": "Campaigns",
+    "allCampaigns": "All Campaigns",
+    "coupons": "Coupons",
+    "promotions": "Promotions",
+    "loyaltyPoints": "Loyalty Points",
     "orders": "Orders",
     "customers": "Customers",
     "memberships": "Memberships",
@@ -13,6 +17,7 @@
     "account": "Account",
     "projectSettings": "Project settings",
     "accountSettings": "Account settings",
+    "userSettings": "My settings",
     "toggleMenu": "Toggle menu",
     "switchProject": "Switch project",
     "switchProjectError": "Couldn't switch project",

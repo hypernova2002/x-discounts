@@ -2,6 +2,10 @@
   "nav": {
     "dashboard": "ダッシュボード",
     "campaigns": "キャンペーン",
+    "allCampaigns": "すべてのキャンペーン",
+    "coupons": "クーポン",
+    "promotions": "プロモーション",
+    "loyaltyPoints": "ロイヤルティポイント",
     "orders": "注文",
     "customers": "顧客",
     "memberships": "メンバーシップ",
@@ -13,6 +17,7 @@
     "account": "アカウント",
     "projectSettings": "プロジェクト設定",
     "accountSettings": "アカウント設定",
+    "userSettings": "マイ設定",
     "toggleMenu": "メニューを切り替える",
     "switchProject": "プロジェクトを切り替える",
     "switchProjectError": "プロジェクトを切り替えられませんでした",

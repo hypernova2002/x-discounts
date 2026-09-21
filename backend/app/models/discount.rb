@@ -80,6 +80,57 @@ class Discount < Sequel::Model
     kind_config["points_expire_after_days"]
   end
 
+  # Coupon-only: the customer-facing "design" (spec section 5). design_html is
+  # already sanitized before it's ever written here (see Coupons::CreateService/
+  # UpdateService) — this reader doesn't re-sanitize, it just surfaces what's
+  # stored. The image's own bytes live on local disk (Coupons::AttachDesignImageService,
+  # same bespoke pattern as GiftShopItem's photo), keyed by this discount's own
+  # public_id — only the upload metadata lives in kind_config.
+  def design_html
+    kind_config["design_html"]
+  end
+
+  def design_image_filename
+    kind_config["design_image_filename"]
+  end
+
+  def design_image_content_type
+    kind_config["design_image_content_type"]
+  end
+
+  def design_image_byte_size
+    kind_config["design_image_byte_size"]
+  end
+
+  def design_image?
+    design_image_filename.present?
+  end
+
+  def design_image_path
+    return nil unless design_image?
+
+    Rails.root.join("storage", "coupon_designs", "#{public_id}#{File.extname(design_image_filename)}")
+  end
+
+  # Refund-aware, same philosophy as CouponCode#redemption_count — a refunded
+  # usage no longer counts. OrderDiscount (not Redemption, which only exists for
+  # coupon-kind discounts) is the universal per-discount-application row across
+  # all three kinds, so this works for promotion/loyalty discounts too. Delegates
+  # to OrderDiscount#refunded? rather than re-deriving it, since loyalty rows are
+  # refunded via a ledger clawback, not a DiscountRefund record like the other
+  # two kinds — getting that distinction right belongs in one place.
+  def redemption_count
+    OrderDiscount.where(discount_id: id).all.count { |od| !od.refunded? }
+  end
+
+  # "Currently running" for a promotion/loyalty discount — enabled and within its
+  # own active_from/active_until window, mirroring Campaign#active?'s date-window
+  # shape. Coupon uses valid_from/valid_until instead, so this only makes sense
+  # for the two kinds that share active_from/active_until.
+  def active?(now = Time.now.utc)
+    enabled && (active_from.nil? || active_from <= now) && (active_until.nil? || now <= active_until)
+  end
+
   private
 
   def parse_time(value)

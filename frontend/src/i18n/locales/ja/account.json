@@ -7,6 +7,8 @@
     "loadError": "アカウントの読み込みに失敗しました",
     "updatedSuccess": "アカウントを更新しました",
     "genericError": "エラーが発生しました",
-    "nameRequired": "名前を入力してください"
+    "nameRequired": "名前を入力してください",
+    "otpRequiredLabel": "すべてのユーザーに二段階認証を必須にする",
+    "otpRequiredHint": "有効にすると、このアカウントのすべてのユーザーは、他の操作を行う前に認証アプリを設定する必要があります。"
   }
 }

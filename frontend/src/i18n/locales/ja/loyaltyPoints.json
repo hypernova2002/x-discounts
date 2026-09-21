@@ -1,0 +1,17 @@
+{
+  "loyaltyPoints": {
+    "totalQuantityMetric": "合計獲得ポイント数",
+    "previousPeriodCaption": "前の期間",
+    "chartTitle": "1日あたりのロイヤルティポイント付与数",
+    "chartSeriesLabel": "付与ポイント数",
+    "noChartData": "この期間の利用データはありません",
+    "activeRedemptionsTitle": "有効なポイント",
+    "customerColumn": "顧客",
+    "quantityColumn": "合計獲得ポイント数",
+    "expirationColumn": "有効期限",
+    "searchPlaceholder": "顧客を検索",
+    "noActiveRedemptions": "有効なポイントはありません",
+    "analyticsLoadError": "ロイヤルティの分析データの読み込みに失敗しました",
+    "activeRedemptionsLoadError": "有効なポイントの読み込みに失敗しました"
+  }
+}

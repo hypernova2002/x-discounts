@@ -1,0 +1,18 @@
+{
+  "discountKindTable": {
+    "nameColumn": "名前",
+    "campaignColumn": "キャンペーン",
+    "redemptionsColumn": "合計利用回数",
+    "usageColumn": "利用状況",
+    "usageOfMax": "{max}回中{count}回",
+    "usageUnlimited": "無制限",
+    "startDateColumn": "開始日",
+    "endDateColumn": "終了日",
+    "statusColumn": "ステータス",
+    "actionsColumn": "操作",
+    "editButton": "編集",
+    "searchPlaceholder": "検索",
+    "loadError": "割引の読み込みに失敗しました",
+    "emptyHint": "割引が見つかりません"
+  }
+}

@@ -1,5 +1,9 @@
 import { z } from 'zod'
 
+// Money fields are Postgres numeric columns — Rails serializes BigDecimal as a
+// JSON string (same reasoning as the identical `money` type in models/order.js).
+const money = z.union([z.number(), z.string()])
+
 // Response shape. .passthrough() so a harmless new backend field never breaks
 // parsing — this is a drift safety net, not an untrusted-input boundary (the
 // backend already validates everything server-side).
@@ -14,6 +18,13 @@ export const CampaignSchema = z
     valid_until: z.string().nullable(),
     created_at: z.string(),
     updated_at: z.string(),
+    discount_kinds: z.array(z.enum(['promotion', 'coupon', 'loyalty'])),
+    // Only present on campaigns#show (CampaignSummaryResource) — a real
+    // aggregate query, deliberately left off the list response. See the
+    // Phase 1 plan's backend section for why.
+    discount_summary: z
+      .object({ count: z.number(), redemption_count: z.number(), discounted_amount: money })
+      .optional(),
   })
   .passthrough()
 

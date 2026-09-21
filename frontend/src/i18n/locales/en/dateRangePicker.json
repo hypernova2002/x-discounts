@@ -1,0 +1,11 @@
+{
+  "dateRangePicker": {
+    "days7": "7 days",
+    "days30": "30 days",
+    "days90": "90 days",
+    "custom": "Custom",
+    "fromLabel": "From date",
+    "toLabel": "To date",
+    "rangeLabel": "{from} – {to}"
+  }
+}

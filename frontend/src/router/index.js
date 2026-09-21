@@ -7,10 +7,15 @@ const router = createRouter({
     { path: '/login', name: 'login', component: () => import('../views/LoginView.vue'), meta: { public: true } },
     { path: '/signup', name: 'signup', component: () => import('../views/SignupView.vue'), meta: { public: true } },
     { path: '/select-project', name: 'select-project', component: () => import('../views/SelectProjectView.vue') },
+    { path: '/otp-setup', name: 'otp-setup', component: () => import('../views/OtpSetupView.vue') },
     { path: '/', name: 'dashboard', component: () => import('../views/DashboardView.vue') },
+    { path: '/settings', name: 'user-settings', component: () => import('../views/UserSettingsView.vue') },
     { path: '/account', name: 'account', component: () => import('../views/AccountView.vue') },
     { path: '/project-settings', name: 'project-settings', component: () => import('../views/ProjectSettingsView.vue') },
     { path: '/campaigns', name: 'campaigns', component: () => import('../views/CampaignsView.vue') },
+    { path: '/campaigns/coupons', name: 'campaigns-coupons', component: () => import('../views/CouponsView.vue') },
+    { path: '/campaigns/promotions', name: 'campaigns-promotions', component: () => import('../views/PromotionsView.vue') },
+    { path: '/campaigns/loyalty', name: 'campaigns-loyalty', component: () => import('../views/LoyaltyPointsView.vue') },
     { path: '/campaigns/new', name: 'campaign-new', component: () => import('../views/CampaignFormView.vue') },
     { path: '/campaigns/:id/edit', name: 'campaign-edit', component: () => import('../views/CampaignFormView.vue') },
     { path: '/campaigns/:id', name: 'campaign-show', component: () => import('../views/CampaignDetailView.vue') },
@@ -47,6 +52,10 @@ router.beforeEach(async (to) => {
 
   if (auth.isAuthenticated && !auth.hasProject && to.name !== 'select-project' && !to.meta.public) {
     return { name: 'select-project', query: { redirect: to.fullPath } }
+  }
+
+  if (auth.isAuthenticated && auth.hasProject && auth.needsOtpSetup && to.name !== 'otp-setup') {
+    return { name: 'otp-setup', query: { redirect: to.fullPath } }
   }
 })
 

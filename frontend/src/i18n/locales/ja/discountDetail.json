@@ -36,6 +36,8 @@
     "statusInactive": "非アクティブ",
     "promotionTitle": "プロモーション",
     "couponTitle": "クーポン",
+    "designTitle": "デザイン",
+    "designImageAlt": "クーポンデザイン画像",
     "loyaltyTitle": "ロイヤルティ",
     "activeFromLabel": "有効開始日",
     "activeUntilLabel": "有効終了日",

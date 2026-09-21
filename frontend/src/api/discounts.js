@@ -1,4 +1,4 @@
-import { apiFetch } from '@/lib/api'
+import { apiFetch, apiUpload } from '@/lib/api'
 import { DiscountSchema, DiscountListSchema } from '@/models/discount'
 
 const BASE = '/api/v1/admin/discounts'
@@ -27,6 +27,10 @@ export function updateDiscount(id, input, { token, projectId }) {
 
 export function deleteDiscount(id, { token, projectId }) {
   return apiFetch(`${BASE}/${id}`, { method: 'DELETE', token, projectId })
+}
+
+export function uploadCouponDesignImage(id, file, { token, projectId }) {
+  return apiUpload(`${BASE}/${id}/design_image`, { token, projectId, fieldName: 'design_image', file }).then((data) => DiscountSchema.parse(data))
 }
 
 // Explicit exceptions letting two otherwise-exclusive (stackable: false) discounts

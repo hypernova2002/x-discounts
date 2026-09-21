@@ -1,0 +1,17 @@
+{
+  "loyaltyPoints": {
+    "totalQuantityMetric": "Total Redemption Quantity",
+    "previousPeriodCaption": "previous period",
+    "chartTitle": "Loyalty point redemptions per day",
+    "chartSeriesLabel": "Points granted",
+    "noChartData": "No redemption data for this period",
+    "activeRedemptionsTitle": "Active redemptions",
+    "customerColumn": "Customer",
+    "quantityColumn": "Total Redemption Quantity",
+    "expirationColumn": "Expiration Date",
+    "searchPlaceholder": "Search customers",
+    "noActiveRedemptions": "No active redemptions",
+    "analyticsLoadError": "Failed to load loyalty analytics",
+    "activeRedemptionsLoadError": "Failed to load active redemptions"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "lifecycleStatus": {
+    "pending": "Pending",
+    "active": "Active",
+    "expired": "Expired",
+    "paused": "Paused",
+    "archived": "Archived",
+    "starts": "Starts {date}",
+    "ended": "Ended {date}",
+    "endsInDays": "Ends in {days} days",
+    "endsToday": "Ends today"
+  }
+}

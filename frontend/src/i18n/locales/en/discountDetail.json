@@ -36,6 +36,8 @@
     "statusInactive": "inactive",
     "promotionTitle": "Promotion",
     "couponTitle": "Coupon",
+    "designTitle": "Design",
+    "designImageAlt": "Coupon design image",
     "loyaltyTitle": "Loyalty",
     "activeFromLabel": "Active from",
     "activeUntilLabel": "Active until",

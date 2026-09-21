@@ -6,6 +6,10 @@
     "nameColumn": "名前",
     "emailColumn": "メールアドレス",
     "localeColumn": "表示言語",
+    "otpColumn": "二段階認証",
+    "actionsColumn": "操作",
+    "otpEnabled": "有効",
+    "otpDisabled": "無効",
     "searchPlaceholder": "ユーザーを検索",
     "newUserDialogHeader": "新規ユーザー",
     "nameLabel": "名前",
@@ -15,6 +19,16 @@
     "createdSuccess": "ユーザーを作成しました",
     "genericError": "エラーが発生しました",
     "nameRequired": "名前を入力してください",
-    "emailRequired": "メールアドレスを入力してください"
+    "emailRequired": "メールアドレスを入力してください",
+    "resetPasswordButton": "パスワードをリセット",
+    "resetOtpButton": "二段階認証をリセット",
+    "resetPasswordDialogHeader": "パスワードをリセット",
+    "newPasswordLabel": "新しいパスワード",
+    "confirmPasswordLabel": "パスワード（確認）",
+    "resetPasswordSuccess": "パスワードをリセットしました",
+    "resetOtpSuccess": "このユーザーの二段階認証をリセットしました",
+    "newPasswordTooShort": "パスワードは8文字以上で入力してください",
+    "confirmPasswordRequired": "確認用パスワードを入力してください",
+    "passwordsDontMatch": "パスワードが一致しません"
   }
 }

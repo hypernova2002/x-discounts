@@ -7,6 +7,7 @@ export const AccountSchema = z
   .object({
     id: z.string(),
     name: z.string(),
+    otp_required: z.boolean(),
     created_at: z.string(),
     updated_at: z.string(),
   })

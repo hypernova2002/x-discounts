@@ -1,0 +1,12 @@
+{
+  "promotions": {
+    "totalRunningMetric": "Total Running Promotions",
+    "totalDiscountsMetric": "Total Discounts from Promotions",
+    "previousPeriodCaption": "previous period",
+    "chartTitle": "Promotion usage and earnings per day",
+    "usageSeriesLabel": "Usage",
+    "earningsSeriesLabel": "Earnings",
+    "noChartData": "No usage data for this period",
+    "analyticsLoadError": "Failed to load promotion analytics"
+  }
+}

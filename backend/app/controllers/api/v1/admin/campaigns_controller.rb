@@ -18,7 +18,7 @@ module Api
         end
 
         def show
-          render json: CampaignResource.new(@campaign).to_h
+          render json: CampaignSummaryResource.new(@campaign).to_h
         end
 
         def export

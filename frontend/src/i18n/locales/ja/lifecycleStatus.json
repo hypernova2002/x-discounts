@@ -1,0 +1,13 @@
+{
+  "lifecycleStatus": {
+    "pending": "開始前",
+    "active": "実施中",
+    "expired": "終了",
+    "paused": "一時停止",
+    "archived": "アーカイブ済み",
+    "starts": "{date} 開始",
+    "ended": "{date} 終了",
+    "endsInDays": "あと{days}日で終了",
+    "endsToday": "本日終了"
+  }
+}

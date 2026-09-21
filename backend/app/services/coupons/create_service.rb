@@ -54,7 +54,8 @@ module Coupons
         issued_from: @request.coupon.issued_from,
         issued_until: @request.coupon.issued_until,
         valid_from: @request.coupon.valid_from,
-        valid_until: @request.coupon.valid_until
+        valid_until: @request.coupon.valid_until,
+        design_html: Coupons::HtmlSanitizer.sanitize(@request.coupon.design_html)
       }.compact
     end
 

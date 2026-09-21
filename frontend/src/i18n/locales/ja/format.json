@@ -1,0 +1,7 @@
+{
+  "format": {
+    "todayAt": "今日 {time}",
+    "yesterdayAt": "昨日 {time}",
+    "fullTimestamp": "{date} {time}"
+  }
+}
