@@ -7,6 +7,7 @@ import {
   CustomerAnalyticsSchema,
   CampaignAnalyticsSchema,
   OrderAnalyticsSchema,
+  AttentionSchema,
 } from '@/models/analytics'
 
 const BASE = '/api/v1/admin/analytics'
@@ -41,4 +42,8 @@ export function getCampaignAnalytics({ from, to, token, projectId }) {
 
 export function getOrderAnalytics({ from, to, token, projectId }) {
   return apiFetch(`${BASE}/orders${rangeQuery({ from, to })}`, { token, projectId }).then((data) => OrderAnalyticsSchema.parse(data))
+}
+
+export function getAttentionItems({ token, projectId }) {
+  return apiFetch(`${BASE}/attention`, { token, projectId }).then((data) => AttentionSchema.parse(data))
 }

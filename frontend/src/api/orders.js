@@ -3,9 +3,12 @@ import { OrderSchema, OrderListSchema } from '@/models/order'
 
 const BASE = '/api/v1/admin/orders'
 
-export function listOrders({ customerExternalId, token, projectId } = {}) {
-  const path = customerExternalId ? `${BASE}?customer_external_id=${encodeURIComponent(customerExternalId)}` : BASE
-  return apiFetch(path, { token, projectId }).then((data) => OrderListSchema.parse(data).orders)
+export function listOrders({ customerExternalId, perPage, token, projectId } = {}) {
+  const params = new URLSearchParams()
+  if (customerExternalId) params.set('customer_external_id', customerExternalId)
+  if (perPage) params.set('per_page', perPage)
+  const query = params.toString()
+  return apiFetch(`${BASE}${query ? `?${query}` : ''}`, { token, projectId }).then((data) => OrderListSchema.parse(data).orders)
 }
 
 export function getOrder(id, { token, projectId }) {

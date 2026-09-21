@@ -81,3 +81,20 @@ const ActiveRedemptionSchema = z
   .passthrough()
 
 export const ActiveLoyaltyRedemptionsSchema = z.object({ active_redemptions: z.array(ActiveRedemptionSchema) }).passthrough()
+
+export const AttentionSchema = z
+  .object({
+    campaigns: z.array(z.object({ id: z.string(), name: z.string(), until: z.string() }).passthrough()),
+    discounts: z.array(
+      z
+        .object({
+          id: z.string(),
+          name: z.string(),
+          kind: z.enum(['promotion', 'coupon', 'loyalty']),
+          until: z.string(),
+          campaign: z.object({ id: z.string(), name: z.string() }),
+        })
+        .passthrough(),
+    ),
+  })
+  .passthrough()

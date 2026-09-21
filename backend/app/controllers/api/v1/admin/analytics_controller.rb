@@ -8,6 +8,10 @@ module Api
 
         REFUNDED = ->(od) { od.refunded? }
         CANCELLED = ->(order) { order.cancelled_at.present? }
+        # How many days out counts as "ending soon" for the dashboard's needs-
+        # attention list — matches lib/lifecycleStatus.js's own
+        # ENDS_SOON_THRESHOLD_DAYS convention on the frontend.
+        ENDING_SOON_DAYS = 14
 
         def coupons
           from, to = parse_range!
@@ -80,6 +84,38 @@ module Api
                 customer: { id: lot.customer.public_id, external_id: lot.customer.external_id, name: lot.customer.name },
                 quantity: lot.points_remaining,
                 expires_at: lot.expires_at
+              }
+            end
+          }
+        end
+
+        # Not date-range scoped — a live snapshot, same shape as
+        # #loyalty_active_redemptions. valid_until/active_until are jsonb-backed
+        # accessors on Discount (see Discount#valid_until/#active_until), not
+        # real columns, so — consistent with how #active_campaigns and
+        # #running_promotions above already work — this loads enabled
+        # campaigns/discounts and filters with those existing accessors in Ruby
+        # rather than a SQL range query.
+        def attention
+          now = Time.now.utc
+          soon = now + (ENDING_SOON_DAYS * 24 * 60 * 60)
+          ending_soon = ->(until_at) { until_at && until_at > now && until_at <= soon }
+
+          campaigns = current_project.campaigns_dataset.where(enabled: true, archived: false).all
+                                      .select { |c| ending_soon.call(c.valid_until) }
+
+          discounts = current_project.discounts_dataset.where(enabled: true).all
+                                      .select { |d| ending_soon.call(d.kind == "coupon" ? d.valid_until : d.active_until) }
+
+          render json: {
+            campaigns: campaigns.map { |c| { id: c.public_id, name: c.name, until: c.valid_until } },
+            discounts: discounts.map do |d|
+              {
+                id: d.public_id,
+                name: d.name,
+                kind: d.kind,
+                until: d.kind == "coupon" ? d.valid_until : d.active_until,
+                campaign: { id: d.campaign.public_id, name: d.campaign.name }
               }
             end
           }

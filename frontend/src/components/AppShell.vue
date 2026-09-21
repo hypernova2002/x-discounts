@@ -167,7 +167,13 @@ onMounted(() => {
 .app-shell {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  height: 100vh;
+  /* Fixes the shell to exactly the viewport height so it never grows taller
+     than the screen — without this, min-height alone would let tall page
+     content push #app/body past 100vh, and the browser's own document
+     scrollbar (not app-shell__content's) would end up scrolling the topbar
+     and sidebar away along with the page. */
+  overflow: hidden;
 }
 
 .app-shell__topbar {
@@ -288,9 +294,10 @@ onMounted(() => {
 .app-shell__content {
   flex: 1;
   min-width: 0;
-  max-width: 960px;
+  max-width: 1600px;
   margin: 0 auto;
-  padding: 2rem 1.5rem;
+  padding: 1.5rem 1.25rem;
+  overflow-y: auto;
 }
 
 @media (max-width: 900px) {

@@ -65,6 +65,7 @@ Rails.application.routes.draw do
         get "analytics/customers" => "analytics#customers"
         get "analytics/campaigns" => "analytics#campaigns"
         get "analytics/orders" => "analytics#orders"
+        get "analytics/attention" => "analytics#attention"
         resources :membership_schemes, only: %i[index show create update] do
           resources :tiers, only: %i[create update], controller: "membership_tiers"
           collection { post :evaluate }
