@@ -16,11 +16,14 @@ export const useAuthStore = defineStore('auth', {
     projects: [],
     loading: false,
     error: null,
+    otpChallengeToken: null,
+    otpRequired: false,
   }),
 
   getters: {
     isAuthenticated: (state) => !!state.token,
     hasProject: (state) => !!state.project,
+    needsOtpSetup: (state) => state.otpRequired && !!state.user && !state.user.otp_enabled,
   },
 
   actions: {
@@ -57,13 +60,14 @@ export const useAuthStore = defineStore('auth', {
     async authenticate(path, payload) {
       this.loading = true
       this.error = null
+      this.otpChallengeToken = null
       try {
         const data = await apiFetch(path, { method: 'POST', body: payload })
-        this.token = data.token
-        this.user = data.user
-        setLocale(this.user?.locale)
-        localStorage.setItem(TOKEN_KEY, this.token)
-        await this.resolveProject()
+        if (data.otp_required) {
+          this.otpChallengeToken = data.otp_challenge_token
+          return
+        }
+        await this._applySession(data)
       } catch (e) {
         this.error = e instanceof ApiError ? e.message : 'Unable to reach the API'
         throw e
@@ -72,11 +76,38 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
+    async verifyOtp(code) {
+      this.loading = true
+      this.error = null
+      try {
+        const data = await apiFetch('/api/v1/login/otp', {
+          method: 'POST',
+          body: { otp_challenge_token: this.otpChallengeToken, code },
+        })
+        await this._applySession(data)
+        this.otpChallengeToken = null
+      } catch (e) {
+        this.error = e instanceof ApiError ? e.message : 'Unable to reach the API'
+        throw e
+      } finally {
+        this.loading = false
+      }
+    },
+
+    async _applySession(data) {
+      this.token = data.token
+      this.user = data.user
+      setLocale(this.user?.locale)
+      localStorage.setItem(TOKEN_KEY, this.token)
+      await this.resolveProject()
+    },
+
     async loadMe(projectId) {
       const data = await apiFetch('/api/v1/me', { token: this.token, projectId })
       this.user = data.user
       this.project = data.project
       this.role = data.role
+      this.otpRequired = data.otp_required
       setLocale(this.user?.locale)
     },
 
@@ -131,6 +162,8 @@ export const useAuthStore = defineStore('auth', {
       this.role = null
       this.projects = []
       this.error = null
+      this.otpChallengeToken = null
+      this.otpRequired = false
       localStorage.removeItem(TOKEN_KEY)
       localStorage.removeItem(PROJECT_KEY)
       useCustomAttributes().invalidate()

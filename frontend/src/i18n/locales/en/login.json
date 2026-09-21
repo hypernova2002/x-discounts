@@ -5,6 +5,11 @@
     "emailLabel": "Email",
     "passwordLabel": "Password",
     "submitButton": "Sign in",
-    "signupLink": "Need an account? Sign up"
+    "signupLink": "Need an account? Sign up",
+    "otpTitle": "Two-factor authentication",
+    "otpHint": "Enter the 6-digit code from your authenticator app, or one of your backup codes.",
+    "otpCodeLabel": "Code",
+    "otpSubmitButton": "Verify",
+    "backToLoginLink": "Back to login"
   }
 }

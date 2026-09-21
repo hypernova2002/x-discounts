@@ -5,6 +5,6 @@
 # rather than redeclaring the shared fields.
 class MinimalUserResource < UserResource
   def select(key, _value)
-    %w[id name email locale].include?(key.to_s)
+    %w[id name email locale otp_enabled].include?(key.to_s)
   end
 end

@@ -9,8 +9,13 @@ Rails.application.routes.draw do
   namespace :api do
     namespace :v1 do
       get "me" => "me#show"
+      patch "me/password" => "me#update_password"
+      post "me/otp/setup" => "me#otp_setup"
+      post "me/otp/enable" => "me#otp_enable"
+      post "me/otp/disable" => "me#otp_disable"
       post "signup" => "signups#create"
       post "login" => "sessions#create"
+      post "login/otp" => "sessions#verify_otp"
       delete "logout" => "sessions#destroy"
       post "discounts/validate" => "discount_validations#create"
       post "discounts/redeem" => "discount_redemptions#create"
@@ -19,7 +24,12 @@ Rails.application.routes.draw do
 
       namespace :admin do
         resource :account, only: %i[show update], controller: "account"
-        resources :users, only: %i[index show create update destroy]
+        resources :users, only: %i[index show create update destroy] do
+          member do
+            patch :reset_password
+            post :reset_otp
+          end
+        end
         resources :projects, only: %i[index show create update destroy]
         resources :project_memberships, only: %i[index show create update destroy]
         resources :api_keys, only: %i[index show create destroy]

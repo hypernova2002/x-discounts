@@ -10,6 +10,8 @@ module ErrorCodes
     not_found: { status: 404, default_message: "Resource could not be found." },
     project_context_required: { status: 400, default_message: "A project must be selected (send X-Project-Id)." },
     validation_failed: { status: 422, default_message: "One or more fields are invalid." },
-    conflict: { status: 409, default_message: "This conflicts with an existing resource." }
+    conflict: { status: 409, default_message: "This conflicts with an existing resource." },
+    invalid_otp: { status: 401, default_message: "The verification code is incorrect or has expired." },
+    otp_required_by_account: { status: 403, default_message: "Your account requires two-factor authentication to remain enabled." }
   }.freeze
 end

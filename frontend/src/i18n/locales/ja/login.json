@@ -5,6 +5,11 @@
     "emailLabel": "メールアドレス",
     "passwordLabel": "パスワード",
     "submitButton": "サインイン",
-    "signupLink": "アカウントをお持ちでない方はこちら"
+    "signupLink": "アカウントをお持ちでない方はこちら",
+    "otpTitle": "二段階認証",
+    "otpHint": "認証アプリに表示される6桁のコード、またはバックアップコードのいずれかを入力してください。",
+    "otpCodeLabel": "コード",
+    "otpSubmitButton": "確認",
+    "backToLoginLink": "ログインに戻る"
   }
 }

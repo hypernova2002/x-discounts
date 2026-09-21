@@ -1,0 +1,19 @@
+{
+  "userSettings": {
+    "title": "My settings",
+    "profileTitle": "Profile",
+    "passwordTitle": "Password",
+    "otpTitle": "Two-factor authentication",
+    "saveButton": "Save",
+    "currentPasswordLabel": "Current password",
+    "newPasswordLabel": "New password",
+    "confirmPasswordLabel": "Confirm new password",
+    "profileUpdatedSuccess": "Profile updated",
+    "passwordUpdatedSuccess": "Password updated",
+    "genericError": "Something went wrong",
+    "currentPasswordRequired": "Please enter your current password",
+    "newPasswordTooShort": "Password must be at least 8 characters",
+    "confirmPasswordRequired": "Please confirm the new password",
+    "passwordsDontMatch": "Passwords don't match"
+  }
+}

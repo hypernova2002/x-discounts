@@ -10,6 +10,7 @@ module Schemas
         id: { type: :string, readOnly: true },
         name: { type: :string },
         email: { type: :string },
+        otp_enabled: { type: :boolean, readOnly: true },
         created_at: { type: :string, format: "date-time", readOnly: true },
         updated_at: { type: :string, format: "date-time", readOnly: true }
       }

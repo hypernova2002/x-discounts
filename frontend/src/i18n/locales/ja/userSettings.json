@@ -1,0 +1,19 @@
+{
+  "userSettings": {
+    "title": "マイ設定",
+    "profileTitle": "プロフィール",
+    "passwordTitle": "パスワード",
+    "otpTitle": "二段階認証",
+    "saveButton": "保存",
+    "currentPasswordLabel": "現在のパスワード",
+    "newPasswordLabel": "新しいパスワード",
+    "confirmPasswordLabel": "新しいパスワード（確認）",
+    "profileUpdatedSuccess": "プロフィールを更新しました",
+    "passwordUpdatedSuccess": "パスワードを更新しました",
+    "genericError": "エラーが発生しました",
+    "currentPasswordRequired": "現在のパスワードを入力してください",
+    "newPasswordTooShort": "パスワードは8文字以上で入力してください",
+    "confirmPasswordRequired": "新しいパスワード（確認）を入力してください",
+    "passwordsDontMatch": "パスワードが一致しません"
+  }
+}

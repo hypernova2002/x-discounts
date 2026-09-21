@@ -1,0 +1,25 @@
+{
+  "otpEnrollment": {
+    "setupTitle": "Set up two-factor authentication",
+    "setupSubtitle": "Your account requires this before you can continue",
+    "idleHint": "Protect your account with a code from an authenticator app, in addition to your password.",
+    "enableButton": "Enable two-factor authentication",
+    "scanHint": "Scan this QR code with an authenticator app (like Google Authenticator or Authy), then enter the 6-digit code it shows.",
+    "manualEntryHint": "Or enter this code manually:",
+    "qrAlt": "QR code for two-factor authentication setup",
+    "codeLabel": "6-digit code",
+    "codeRequired": "Please enter a code",
+    "confirmButton": "Confirm",
+    "backupCodesWarning": "Save these backup codes somewhere safe. Each one can be used once to sign in if you lose access to your authenticator app — they won't be shown again.",
+    "savedCodesButton": "I've saved these codes",
+    "enabledStatus": "Two-factor authentication is enabled",
+    "disableButton": "Disable two-factor authentication",
+    "cancelButton": "Cancel",
+    "currentPasswordLabel": "Current password",
+    "currentPasswordRequired": "Please enter your current password",
+    "disabledSuccess": "Two-factor authentication disabled",
+    "requiredHint": "Your account requires two-factor authentication to stay enabled. Ask an account admin to turn off the requirement if you need to disable it.",
+    "setupError": "Failed to start two-factor setup",
+    "genericError": "Something went wrong"
+  }
+}

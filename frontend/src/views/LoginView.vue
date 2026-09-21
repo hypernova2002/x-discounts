@@ -10,6 +10,7 @@ import BaseCard from '@/components/base/BaseCard.vue'
 
 const email = ref('')
 const password = ref('')
+const code = ref('')
 const auth = useAuthStore()
 const router = useRouter()
 const route = useRoute()
@@ -17,20 +18,37 @@ const route = useRoute()
 async function submit() {
   try {
     await auth.login(email.value.trim(), password.value)
+    if (!auth.otpChallengeToken) router.push(route.query.redirect || { name: 'dashboard' })
+  } catch {
+    // error is surfaced via auth.error in the template
+  }
+}
+
+async function submitOtp() {
+  try {
+    await auth.verifyOtp(code.value.trim())
     router.push(route.query.redirect || { name: 'dashboard' })
   } catch {
     // error is surfaced via auth.error in the template
   }
+}
+
+function backToLogin() {
+  auth.otpChallengeToken = null
+  auth.error = null
+  password.value = ''
+  code.value = ''
 }
 </script>
 
 <template>
   <div class="auth-page">
     <BaseCard class="auth-card">
-      <template #title>{{ $t('login.appName') }}</template>
-      <template #subtitle>{{ $t('login.subtitle') }}</template>
+      <template v-if="!auth.otpChallengeToken" #title>{{ $t('login.appName') }}</template>
+      <template v-if="!auth.otpChallengeToken" #subtitle>{{ $t('login.subtitle') }}</template>
+      <template v-else #title>{{ $t('login.otpTitle') }}</template>
       <template #content>
-        <form class="auth-form" @submit.prevent="submit">
+        <form v-if="!auth.otpChallengeToken" class="auth-form" @submit.prevent="submit">
           <label for="email">{{ $t('login.emailLabel') }}</label>
           <BaseInputText id="email" v-model="email" type="email" autofocus />
           <label for="password">{{ $t('login.passwordLabel') }}</label>
@@ -38,6 +56,16 @@ async function submit() {
           <BaseMessage v-if="auth.error" severity="error" :closable="false">{{ auth.error }}</BaseMessage>
           <BaseButton type="submit" :label="$t('login.submitButton')" :loading="auth.loading" />
           <RouterLink class="auth-link" to="/signup">{{ $t('login.signupLink') }}</RouterLink>
+        </form>
+        <form v-else class="auth-form" @submit.prevent="submitOtp">
+          <p class="auth-hint">{{ $t('login.otpHint') }}</p>
+          <label for="otp-code">{{ $t('login.otpCodeLabel') }}</label>
+          <BaseInputText id="otp-code" v-model="code" autofocus autocomplete="one-time-code" />
+          <BaseMessage v-if="auth.error" severity="error" :closable="false">{{ auth.error }}</BaseMessage>
+          <BaseButton type="submit" :label="$t('login.otpSubmitButton')" :loading="auth.loading" />
+          <button type="button" class="auth-link auth-link--button" @click="backToLogin">
+            {{ $t('login.backToLoginLink') }}
+          </button>
         </form>
       </template>
     </BaseCard>
@@ -63,9 +91,22 @@ async function submit() {
   gap: 1rem;
 }
 
+.auth-hint {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+}
+
 .auth-link {
   text-align: center;
   font-size: 0.875rem;
   color: var(--p-primary-color, #10b981);
+}
+
+.auth-link--button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font: inherit;
 }
 </style>

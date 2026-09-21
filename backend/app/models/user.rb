@@ -1,12 +1,16 @@
 # frozen_string_literal: true
 
 require "bcrypt"
+require "rotp"
+require "digest"
+require "securerandom"
 
 class User < Sequel::Model
   PUBLIC_ID_PREFIX = "usr"
   # See frontend/src/i18n — each locale here needs a matching set of JSON files
   # under frontend/src/i18n/locales/<code>.
   LOCALES = %w[en ja].freeze
+  BACKUP_CODE_COUNT = 8
 
   include PublicIdentifiable
 
@@ -44,7 +48,39 @@ class User < Sequel::Model
     validate_password
   end
 
+  def otp_provisioning_uri
+    ROTP::TOTP.new(otp_secret, issuer: "x-discounts").provisioning_uri(email)
+  end
+
+  def generate_otp_secret!
+    update(otp_secret: ROTP::Base32.random)
+  end
+
+  def verify_otp(code)
+    return false unless otp_secret
+
+    ROTP::TOTP.new(otp_secret).verify(code.to_s.strip, drift_behind: 30, drift_ahead: 30).present? || consume_backup_code!(code)
+  end
+
+  def enable_otp!
+    codes = Array.new(BACKUP_CODE_COUNT) { SecureRandom.hex(5) }
+    update(otp_enabled: true, otp_backup_codes: codes.map { |c| Digest::SHA256.hexdigest(c) })
+    codes
+  end
+
+  def disable_otp!
+    update(otp_enabled: false, otp_secret: nil, otp_backup_codes: [])
+  end
+
   private
+
+  def consume_backup_code!(code)
+    digest = Digest::SHA256.hexdigest(code.to_s.strip)
+    return false unless otp_backup_codes.include?(digest)
+
+    update(otp_backup_codes: otp_backup_codes - [digest])
+    true
+  end
 
   def validate_password
     return unless password

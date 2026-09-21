@@ -10,7 +10,8 @@ module Schemas
       properties: {
         id: { type: :string, readOnly: true },
         name: { type: :string },
-        email: { type: :string }
+        email: { type: :string },
+        otp_enabled: { type: :boolean, readOnly: true }
       }
     )
   end

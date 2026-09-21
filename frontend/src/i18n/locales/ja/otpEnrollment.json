@@ -1,0 +1,25 @@
+{
+  "otpEnrollment": {
+    "setupTitle": "二段階認証を設定",
+    "setupSubtitle": "続行する前に設定が必要です",
+    "idleHint": "パスワードに加えて、認証アプリのコードでアカウントを保護します。",
+    "enableButton": "二段階認証を有効にする",
+    "scanHint": "認証アプリ（Google AuthenticatorやAuthyなど）でこのQRコードをスキャンし、表示される6桁のコードを入力してください。",
+    "manualEntryHint": "または、次のコードを手動で入力してください：",
+    "qrAlt": "二段階認証設定用のQRコード",
+    "codeLabel": "6桁のコード",
+    "codeRequired": "コードを入力してください",
+    "confirmButton": "確認",
+    "backupCodesWarning": "これらのバックアップコードは安全な場所に保存してください。認証アプリにアクセスできなくなった場合、それぞれ1回だけログインに使用できます。二度と表示されません。",
+    "savedCodesButton": "保存しました",
+    "enabledStatus": "二段階認証が有効です",
+    "disableButton": "二段階認証を無効にする",
+    "cancelButton": "キャンセル",
+    "currentPasswordLabel": "現在のパスワード",
+    "currentPasswordRequired": "現在のパスワードを入力してください",
+    "disabledSuccess": "二段階認証を無効にしました",
+    "requiredHint": "このアカウントでは二段階認証を有効のままにする必要があります。無効にする場合はアカウント管理者に依頼して要件をオフにしてもらってください。",
+    "setupError": "二段階認証の設定を開始できませんでした",
+    "genericError": "エラーが発生しました"
+  }
+}

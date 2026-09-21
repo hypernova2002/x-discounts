@@ -36,6 +36,10 @@ gem "rack-cors"
 # slow adaptive hashing is the correct tool here.
 gem "bcrypt", "~> 3.1.7"
 
+# TOTP two-factor auth (RFC 6238) — code generation/verification and the otpauth:// URI used
+# to provision an authenticator app's QR code.
+gem "rotp", "~> 6.3"
+
 # Request models: deserialize + type-cast + validate incoming JSON into plain objects
 # (ActiveModel::Validations under the hood), with JSON Schema generation as a side benefit.
 gem "json_model_rb", require: "json_model"

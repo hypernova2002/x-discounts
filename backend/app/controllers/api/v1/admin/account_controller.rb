@@ -12,7 +12,10 @@ module Api
 
         def update
           account = current_user.account
-          account.set(name: body.key?(:name) ? body[:name] : account.name)
+          account.set(
+            name: body.key?(:name) ? body[:name] : account.name,
+            otp_required: body.key?(:otp_required) ? body[:otp_required] : account.otp_required
+          )
           raise ValidationError.from_model(account) unless account.valid?
 
           account.save

@@ -4,8 +4,8 @@ module Api
   module V1
     module Admin
       class UsersController < BaseController
-        before_action -> { require_account_admin! }, only: %i[create destroy]
-        before_action :set_user, only: %i[show update destroy]
+        before_action -> { require_account_admin! }, only: %i[create destroy reset_password reset_otp]
+        before_action :set_user, only: %i[show update destroy reset_password reset_otp]
 
         def index
           dataset = current_user.account.users_dataset.order(:id)
@@ -44,6 +44,21 @@ module Api
         def destroy
           @user.destroy
           head :no_content
+        end
+
+        def reset_password
+          request = AdminResetPasswordRequest.new(body)
+          @user.password = request.password
+          @user.password_confirmation = request.password_confirmation
+          raise ValidationError.from_model(@user) unless @user.valid?
+
+          @user.save
+          head :no_content
+        end
+
+        def reset_otp
+          @user.disable_otp!
+          render json: UserResource.new(@user).to_h
         end
 
         private
