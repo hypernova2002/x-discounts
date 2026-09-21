@@ -29,9 +29,10 @@ function toMenuItem(section) {
 }
 
 const navItems = computed(() => [
-  ...NAV_SECTIONS.filter((s) => !s.admin).map(toMenuItem),
+  ...NAV_SECTIONS.filter((s) => !s.group).map(toMenuItem),
   { separator: true },
-  { label: t('nav.admin'), items: NAV_SECTIONS.filter((s) => s.admin).map(toMenuItem) },
+  { label: t('nav.admin'), items: NAV_SECTIONS.filter((s) => s.group === 'admin').map(toMenuItem) },
+  { label: t('nav.account'), items: NAV_SECTIONS.filter((s) => s.group === 'account').map(toMenuItem) },
 ])
 
 const currentSection = computed(() => findSection(route.name))

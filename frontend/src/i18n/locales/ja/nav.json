@@ -1,8 +1,6 @@
 {
   "nav": {
     "dashboard": "ダッシュボード",
-    "projects": "プロジェクト",
-    "users": "ユーザー",
     "campaigns": "キャンペーン",
     "orders": "注文",
     "customers": "顧客",
@@ -12,6 +10,9 @@
     "signOut": "サインアウト",
     "language": "言語",
     "admin": "管理",
+    "account": "アカウント",
+    "projectSettings": "プロジェクト設定",
+    "accountSettings": "アカウント設定",
     "toggleMenu": "メニューを切り替える",
     "switchProject": "プロジェクトを切り替える",
     "switchProjectError": "プロジェクトを切り替えられませんでした",

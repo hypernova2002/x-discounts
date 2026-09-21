@@ -2,7 +2,7 @@
   "users": {
     "title": "ユーザー",
     "newUserButton": "新規ユーザー",
-    "idColumn": "ID",
+    "idColumn": "ユーザーID",
     "nameColumn": "名前",
     "emailColumn": "メールアドレス",
     "localeColumn": "表示言語",

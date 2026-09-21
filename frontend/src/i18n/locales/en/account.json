@@ -1,0 +1,12 @@
+{
+  "account": {
+    "title": "Account",
+    "detailsTitle": "Account details",
+    "nameLabel": "Name",
+    "saveButton": "Save",
+    "loadError": "Failed to load account",
+    "updatedSuccess": "Account updated",
+    "genericError": "Something went wrong",
+    "nameRequired": "Name is required"
+  }
+}

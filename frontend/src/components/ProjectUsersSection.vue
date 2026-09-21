@@ -1,7 +1,5 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
-import AppShell from '@/components/AppShell.vue'
-import PageHeader from '@/components/PageHeader.vue'
 import BaseTable from '@/components/base/BaseTable.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import BaseDialog from '@/components/base/BaseDialog.vue'
@@ -17,6 +15,10 @@ import { userInputSchema } from '@/models/user'
 import { toFieldErrors } from '@/models/formErrors'
 import { useBaseToast } from '@/composables/useBaseToast.js'
 
+// A mountable section, not a route-level page — used inside
+// ProjectSettingsView.vue's own BaseCard, which already supplies the
+// AppShell/PageHeader/title this component used to own back when it was
+// UsersView.vue's own standalone route.
 const auth = useAuthStore()
 const toast = useBaseToast()
 const { t } = useI18n()
@@ -29,13 +31,13 @@ watch(error, (e) => {
 
 const columns = computed(() => [
   { field: 'id', header: t('users.idColumn'), sortable: true, hideable: false },
-  { field: 'name', header: t('users.nameColumn'), sortable: true },
-  { field: 'email', header: t('users.emailColumn'), sortable: true },
+  { field: 'name', header: t('users.nameColumn'), sortable: true, filter: { type: 'string' } },
+  { field: 'email', header: t('users.emailColumn'), sortable: true, filter: { type: 'string' } },
   {
     field: 'locale',
     header: t('users.localeColumn'),
     sortable: true,
-    filterOptions: AVAILABLE_LOCALES.map((l) => ({ label: l.label, value: l.code })),
+    filter: { type: 'enum', options: AVAILABLE_LOCALES.map((l) => ({ label: l.label, value: l.code })) },
   },
 ])
 
@@ -75,14 +77,17 @@ async function createUser() {
 </script>
 
 <template>
-  <AppShell>
-    <PageHeader>
-      <template #actions>
-        <BaseButton :label="$t('users.newUserButton')" @click="openCreate" />
-      </template>
-    </PageHeader>
-
-    <BaseTable :data="users || []" :columns="columns" :loading="loading" row-key="id" :search-placeholder="$t('users.searchPlaceholder')" @refresh="reload">
+  <div>
+    <BaseTable
+      :data="users || []"
+      :columns="columns"
+      :loading="loading"
+      row-key="id"
+      :search-placeholder="$t('users.searchPlaceholder')"
+      :create-label="$t('users.newUserButton')"
+      @refresh="reload"
+      @create="openCreate"
+    >
       <template #cell-locale="{ data }">{{ AVAILABLE_LOCALES.find((l) => l.code === data.locale)?.label ?? data.locale }}</template>
     </BaseTable>
 
@@ -98,7 +103,7 @@ async function createUser() {
         <BaseButton type="submit" :label="$t('users.createButton')" :loading="creating" />
       </form>
     </BaseDialog>
-  </AppShell>
+  </div>
 </template>
 
 <style scoped>

@@ -28,15 +28,28 @@ export const NAV_SECTIONS = [
     to: { name: 'gift-shop' },
     routeNames: ['gift-shop', 'gift-shop-item-new', 'gift-shop-item-edit'],
   },
-  { id: 'projects', labelKey: 'nav.projects', icon: 'pi pi-folder', to: { name: 'projects' }, routeNames: ['projects'], admin: true },
-  { id: 'users', labelKey: 'nav.users', icon: 'pi pi-shield', to: { name: 'users' }, routeNames: ['users'], admin: true },
   {
     id: 'customAttributes',
     labelKey: 'nav.customAttributes',
     icon: 'pi pi-sliders-h',
     to: { name: 'custom-attributes' },
     routeNames: ['custom-attributes'],
-    admin: true,
+  },
+  {
+    id: 'projectSettings',
+    labelKey: 'nav.projectSettings',
+    icon: 'pi pi-cog',
+    to: { name: 'project-settings' },
+    routeNames: ['project-settings'],
+    group: 'admin',
+  },
+  {
+    id: 'account',
+    labelKey: 'nav.accountSettings',
+    icon: 'pi pi-building',
+    to: { name: 'account' },
+    routeNames: ['account'],
+    group: 'account',
   },
 ]
 

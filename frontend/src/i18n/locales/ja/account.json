@@ -1,0 +1,12 @@
+{
+  "account": {
+    "title": "アカウント",
+    "detailsTitle": "アカウント情報",
+    "nameLabel": "名前",
+    "saveButton": "保存",
+    "loadError": "アカウントの読み込みに失敗しました",
+    "updatedSuccess": "アカウントを更新しました",
+    "genericError": "エラーが発生しました",
+    "nameRequired": "名前を入力してください"
+  }
+}

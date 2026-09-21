@@ -2,10 +2,10 @@
   "users": {
     "title": "Users",
     "newUserButton": "New user",
-    "idColumn": "ID",
+    "idColumn": "User ID",
     "nameColumn": "Name",
     "emailColumn": "Email",
-    "localeColumn": "Locale",
+    "localeColumn": "Language",
     "searchPlaceholder": "Search users",
     "newUserDialogHeader": "New user",
     "nameLabel": "Name",
