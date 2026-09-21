@@ -2,16 +2,16 @@
   "customers": {
     "title": "Customers",
     "loadError": "Failed to load customers",
-    "exportButton": "Export",
+    "exportButton": "Export customers",
     "searchPlaceholder": "Search customers",
     "exportError": "Failed to export customers",
-    "externalId": "External ID",
+    "externalId": "Customer ID",
     "name": "Name",
     "email": "Email",
     "membership": "Membership",
     "noMembership": "None",
     "country": "Country",
-    "created": "Created",
+    "created": "Creation time",
     "marketingOptIn": "Marketing opt-in"
   }
 }

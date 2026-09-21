@@ -30,6 +30,7 @@ import { couponCodeGeneratePayload } from '@/services/couponCodes'
 import { attrsToObject, lineItemsToPayload } from '@/services/cartAttrs'
 import { useBaseToast } from '@/composables/useBaseToast'
 import { formatNumber, formatDateTime } from '@/lib/format'
+import { zonedInputToIso } from '@/lib/timezone'
 
 const route = useRoute()
 const router = useRouter()
@@ -154,10 +155,14 @@ async function revokeCode(code) {
 }
 
 const couponCodeColumns = computed(() => [
-  { field: 'code', header: t('discountDetail.codeColumn'), sortable: true, hideable: false },
-  { field: 'customer', header: t('discountDetail.assignedToColumn') },
-  { field: 'redemption_count', header: t('discountDetail.redemptionsColumn') },
-  { field: 'actions', header: '', hideable: false },
+  { field: 'code', header: t('discountDetail.codeColumn'), sortable: true, hideable: false, filter: { type: 'string' } },
+  {
+    field: 'customer',
+    header: t('discountDetail.assignedToColumn'),
+    filter: { type: 'string', accessor: (row) => row.customer?.external_id ?? '' },
+  },
+  { field: 'redemption_count', header: t('discountDetail.redemptionsColumn'), filter: { type: 'number' } },
+  { field: 'actions', header: t('discountDetail.actionsColumn'), hideable: false },
 ])
 
 async function copyCode(code) {
@@ -237,11 +242,6 @@ const customerAttrs = ref([])
 const couponCode = ref('')
 const asOf = ref('')
 
-function localInputToIso(local) {
-  if (!local) return undefined
-  return local.length === 16 ? `${local}:00.000Z` : local
-}
-
 function addLineItem() {
   lineItems.value = [...lineItems.value, defaultLineItem()]
 }
@@ -255,7 +255,7 @@ function buildPayload() {
     line_items: lineItemsToPayload(lineItems.value),
     customer: { external_id: customerExternalId.value, ...attrsToObject(customerAttrs.value) },
     coupon_codes: couponCode.value ? [couponCode.value] : [],
-    as_of: localInputToIso(asOf.value),
+    as_of: zonedInputToIso(asOf.value, auth.project?.timezone) ?? undefined,
   }
 }
 
@@ -331,7 +331,7 @@ onMounted(loadDiscount)
                 />
               </dd>
               <dt>{{ $t('discountDetail.createdLabel') }}</dt>
-              <dd>{{ formatDateTime(discount.created_at) }}</dd>
+              <dd>{{ formatDateTime(discount.created_at, auth.project?.timezone) }}</dd>
             </dl>
           </template>
         </BaseCard>
@@ -341,9 +341,9 @@ onMounted(loadDiscount)
           <template #content>
             <dl class="details">
               <dt>{{ $t('discountDetail.activeFromLabel') }}</dt>
-              <dd>{{ formatDateTime(discount.promotion.active_from) }}</dd>
+              <dd>{{ formatDateTime(discount.promotion.active_from, auth.project?.timezone) }}</dd>
               <dt>{{ $t('discountDetail.activeUntilLabel') }}</dt>
-              <dd>{{ discount.promotion.active_until ? formatDateTime(discount.promotion.active_until) : $t('discountDetail.noEndDate') }}</dd>
+              <dd>{{ discount.promotion.active_until ? formatDateTime(discount.promotion.active_until, auth.project?.timezone) : $t('discountDetail.noEndDate') }}</dd>
             </dl>
           </template>
         </BaseCard>
@@ -356,9 +356,9 @@ onMounted(loadDiscount)
               <dd>{{ $t('discountDetail.codesAvailableOfTotal', { available: discount.coupon_code_stats.available, total: discount.coupon_code_stats.total }) }}</dd>
               <dt>{{ $t('discountDetail.validLabel') }}</dt>
               <dd>
-                {{ discount.coupon.valid_from ? formatDateTime(discount.coupon.valid_from) : $t('discountDetail.anytime') }}
+                {{ discount.coupon.valid_from ? formatDateTime(discount.coupon.valid_from, auth.project?.timezone) : $t('discountDetail.anytime') }}
                 &ndash;
-                {{ discount.coupon.valid_until ? formatDateTime(discount.coupon.valid_until) : $t('discountDetail.noEnd') }}
+                {{ discount.coupon.valid_until ? formatDateTime(discount.coupon.valid_until, auth.project?.timezone) : $t('discountDetail.noEnd') }}
               </dd>
             </dl>
           </template>
@@ -369,9 +369,9 @@ onMounted(loadDiscount)
           <template #content>
             <dl class="details">
               <dt>{{ $t('discountDetail.activeFromLabel') }}</dt>
-              <dd>{{ formatDateTime(discount.loyalty.active_from) }}</dd>
+              <dd>{{ formatDateTime(discount.loyalty.active_from, auth.project?.timezone) }}</dd>
               <dt>{{ $t('discountDetail.activeUntilLabel') }}</dt>
-              <dd>{{ discount.loyalty.active_until ? formatDateTime(discount.loyalty.active_until) : $t('discountDetail.noEndDate') }}</dd>
+              <dd>{{ discount.loyalty.active_until ? formatDateTime(discount.loyalty.active_until, auth.project?.timezone) : $t('discountDetail.noEndDate') }}</dd>
             </dl>
           </template>
         </BaseCard>

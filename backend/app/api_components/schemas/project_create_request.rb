@@ -8,7 +8,8 @@ module Schemas
       type: :object,
       required: %w[name],
       properties: {
-        name: { type: :string }
+        name: { type: :string },
+        timezone: { type: :string }
       }
     )
   end

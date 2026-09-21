@@ -9,7 +9,8 @@
     "columns": {
       "rank": "ランク",
       "name": "名前",
-      "autoJoin": "自動加入"
+      "autoJoin": "自動加入",
+      "actions": "アクション"
     },
     "autoJoinAutomatic": "自動",
     "autoJoinManual": "手動のみ",

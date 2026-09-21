@@ -9,6 +9,7 @@ module Schemas
       properties: {
         id: { type: :string, readOnly: true },
         name: { type: :string },
+        timezone: { type: :string },
         created_at: { type: :string, format: "date-time", readOnly: true },
         updated_at: { type: :string, format: "date-time", readOnly: true }
       }

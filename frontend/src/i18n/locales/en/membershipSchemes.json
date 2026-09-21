@@ -5,7 +5,7 @@
     "columns": {
       "name": "Name",
       "tiers": "Tiers",
-      "created": "Created"
+      "created": "Creation time"
     },
     "loadError": "Failed to load membership schemes",
     "searchPlaceholder": "Search membership schemes"

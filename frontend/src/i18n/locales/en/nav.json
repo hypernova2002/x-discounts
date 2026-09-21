@@ -14,6 +14,7 @@
     "admin": "Admin",
     "toggleMenu": "Toggle menu",
     "switchProject": "Switch project",
-    "switchProjectError": "Couldn't switch project"
+    "switchProjectError": "Couldn't switch project",
+    "projectTimezoneTooltip": "Dates and times across this project are shown in this timezone"
   }
 }

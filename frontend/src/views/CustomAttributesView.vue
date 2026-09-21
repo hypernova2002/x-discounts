@@ -51,9 +51,9 @@ watch(error, (e) => {
 
 const columns = computed(() => [
   { field: 'entity', header: t('customAttributes.columns.entity'), hideable: false },
-  { field: 'key', header: t('customAttributes.columns.key'), sortable: true, hideable: false },
-  { field: 'data_type', header: t('customAttributes.columns.type'), sortable: true, filterOptions: DATA_TYPE_OPTIONS.value },
-  { field: 'actions', header: '', hideable: false },
+  { field: 'key', header: t('customAttributes.columns.key'), sortable: true, hideable: false, filter: { type: 'string' } },
+  { field: 'data_type', header: t('customAttributes.columns.type'), sortable: true, filter: { type: 'enum', options: DATA_TYPE_OPTIONS.value } },
+  { field: 'actions', header: t('customAttributes.columns.actions'), hideable: false },
 ])
 
 const showCreate = ref(false)
@@ -106,11 +106,7 @@ async function deleteAttribute(attribute) {
 
 <template>
   <AppShell>
-    <PageHeader>
-      <template #actions>
-        <BaseButton :label="$t('customAttributes.newAttributeButton')" @click="openCreate" />
-      </template>
-    </PageHeader>
+    <PageHeader />
 
     <div class="filter-row">
       <BaseSelect
@@ -124,7 +120,16 @@ async function deleteAttribute(attribute) {
       />
     </div>
 
-    <BaseTable :data="attributes || []" :columns="columns" :loading="loading" row-key="id" :search-placeholder="$t('customAttributes.searchPlaceholder')" @refresh="reload">
+    <BaseTable
+      :data="attributes || []"
+      :columns="columns"
+      :loading="loading"
+      row-key="id"
+      :search-placeholder="$t('customAttributes.searchPlaceholder')"
+      :create-label="$t('customAttributes.newAttributeButton')"
+      @refresh="reload"
+      @create="openCreate"
+    >
       <template #cell-entity="{ data }"><BaseTag :value="data.entity" /></template>
       <template #cell-actions="{ data }">
         <BaseButton text severity="danger" :label="$t('customAttributes.deleteButton')" @click="deleteAttribute(data)" />

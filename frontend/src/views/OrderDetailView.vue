@@ -198,13 +198,13 @@ onMounted(loadOrder)
           <BaseTag v-if="order.cancelled_at" severity="danger" :value="$t('orderDetail.cancelledTag')" />
         </template>
         <template #actions>
-          <span class="page-header__date">{{ formatDateTime(order.created_at) }}</span>
+          <span class="page-header__date">{{ formatDateTime(order.created_at, auth.project?.timezone) }}</span>
           <BaseButton v-if="!order.cancelled_at" text severity="danger" :label="$t('orderDetail.cancelButton')" @click="openCancel" />
         </template>
       </PageHeader>
 
       <BaseMessage v-if="order.cancelled_at" severity="warn" :closable="false">
-        {{ $t('orderDetail.cancelledOn', { date: formatDateTime(order.cancelled_at) }) }}
+        {{ $t('orderDetail.cancelledOn', { date: formatDateTime(order.cancelled_at, auth.project?.timezone) }) }}
       </BaseMessage>
 
       <div class="detail-grid">
@@ -363,7 +363,7 @@ onMounted(loadOrder)
         <div v-for="(entry, i) in historyTarget.entries" :key="i" class="history-entry">
           <div class="history-entry__amount">
             {{ entry.amount_off != null ? $t('orderDetail.amountOff', { amount: formatNumber(entry.amount_off) }) : $t('orderDetail.pointsAmount', { points: formatNumber(entry.points) }) }}
-            <span class="history-entry__date">{{ formatDateTime(entry.refunded_at) }}</span>
+            <span class="history-entry__date">{{ formatDateTime(entry.refunded_at, auth.project?.timezone) }}</span>
           </div>
           <div v-if="entry.reason" class="history-entry__reason">"{{ entry.reason }}"</div>
           <div class="history-entry__actor">{{ $t('orderDetail.byActor', { actor: entry.performed_by || $t('orderDetail.unknownActor') }) }}</div>

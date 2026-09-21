@@ -21,10 +21,11 @@
     "newDiscountButton": "New discount",
     "noDiscountsHint": "No discounts in this campaign yet.",
     "nameColumn": "Name",
-    "kindColumn": "Kind",
+    "kindColumn": "Type",
     "keyColumn": "Key",
     "statusColumn": "Status",
     "statusEnabled": "enabled",
-    "statusDisabled": "disabled"
+    "statusDisabled": "disabled",
+    "actionsColumn": "Actions"
   }
 }

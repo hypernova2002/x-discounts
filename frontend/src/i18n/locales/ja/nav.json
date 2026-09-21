@@ -14,6 +14,7 @@
     "admin": "管理",
     "toggleMenu": "メニューを切り替える",
     "switchProject": "プロジェクトを切り替える",
-    "switchProjectError": "プロジェクトを切り替えられませんでした"
+    "switchProjectError": "プロジェクトを切り替えられませんでした",
+    "projectTimezoneTooltip": "このプロジェクトの日時はすべてこのタイムゾーンで表示されます"
   }
 }

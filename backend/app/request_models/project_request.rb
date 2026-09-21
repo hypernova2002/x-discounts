@@ -6,4 +6,5 @@ class ProjectRequest < Dry::Struct
   transform_keys(&:to_sym)
 
   attribute :name, JsonModel::Types::String.constrained(min_size: 1)
+  attribute? :timezone, JsonModel::Types::String.optional
 end

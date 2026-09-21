@@ -5,7 +5,7 @@
     "columns": {
       "name": "名前",
       "tiers": "会員ランク",
-      "created": "作成日"
+      "created": "作成日時"
     },
     "loadError": "会員プログラムの読み込みに失敗しました",
     "searchPlaceholder": "会員プログラムを検索"

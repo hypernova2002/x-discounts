@@ -81,30 +81,41 @@ function viewDiscount(discount) {
   router.push({ name: 'discount-show', params: { id: discount.id } })
 }
 
+function editDiscount(discount) {
+  router.push({ name: 'discount-edit', params: { id: discount.id } })
+}
+
 function newDiscount() {
   router.push({ name: 'discount-new', query: { campaign_id: campaign.value.id } })
 }
 
 const discountColumns = computed(() => [
-  { field: 'name', header: t('campaignDetail.nameColumn'), sortable: true, hideable: false },
+  { field: 'name', header: t('campaignDetail.nameColumn'), sortable: true, hideable: false, filter: { type: 'string' } },
   {
     field: 'kind',
     header: t('campaignDetail.kindColumn'),
-    filterOptions: [
-      { label: t('discountForm.kindPromotion'), value: 'promotion' },
-      { label: t('discountForm.kindCoupon'), value: 'coupon' },
-      { label: t('discountForm.kindLoyalty'), value: 'loyalty' },
-    ],
+    filter: {
+      type: 'enum',
+      options: [
+        { label: t('discountForm.kindPromotion'), value: 'promotion' },
+        { label: t('discountForm.kindCoupon'), value: 'coupon' },
+        { label: t('discountForm.kindLoyalty'), value: 'loyalty' },
+      ],
+    },
   },
-  { field: 'key', header: t('campaignDetail.keyColumn'), sortable: true },
+  { field: 'key', header: t('campaignDetail.keyColumn'), sortable: true, filter: { type: 'string' } },
   {
     field: 'enabled',
     header: t('campaignDetail.statusColumn'),
-    filterOptions: [
-      { label: t('campaignDetail.statusEnabled'), value: true },
-      { label: t('campaignDetail.statusDisabled'), value: false },
-    ],
+    filter: {
+      type: 'enum',
+      options: [
+        { label: t('campaignDetail.statusEnabled'), value: true },
+        { label: t('campaignDetail.statusDisabled'), value: false },
+      ],
+    },
   },
+  { field: 'actions', header: t('campaignDetail.actionsColumn'), hideable: false },
 ])
 
 onMounted(loadCampaign)
@@ -137,27 +148,34 @@ onMounted(loadCampaign)
         <template #content>
           <dl class="details">
             <dt>{{ $t('campaignDetail.validFromLabel') }}</dt>
-            <dd>{{ campaign.valid_from ? formatDateTime(campaign.valid_from) : $t('campaignDetail.noStartDate') }}</dd>
+            <dd>{{ campaign.valid_from ? formatDateTime(campaign.valid_from, auth.project?.timezone) : $t('campaignDetail.noStartDate') }}</dd>
             <dt>{{ $t('campaignDetail.validUntilLabel') }}</dt>
-            <dd>{{ campaign.valid_until ? formatDateTime(campaign.valid_until) : $t('campaignDetail.noEndDate') }}</dd>
+            <dd>{{ campaign.valid_until ? formatDateTime(campaign.valid_until, auth.project?.timezone) : $t('campaignDetail.noEndDate') }}</dd>
             <dt>{{ $t('campaignDetail.createdLabel') }}</dt>
-            <dd>{{ formatDateTime(campaign.created_at) }}</dd>
+            <dd>{{ formatDateTime(campaign.created_at, auth.project?.timezone) }}</dd>
           </dl>
         </template>
       </BaseCard>
 
       <BaseCard class="section-card">
-        <template #title>
-          <div class="flex items-center justify-between">
-            <span>{{ $t('campaignDetail.discountsTitle') }}</span>
-            <BaseButton size="small" :label="$t('campaignDetail.newDiscountButton')" @click="newDiscount" />
-          </div>
-        </template>
+        <template #title>{{ $t('campaignDetail.discountsTitle') }}</template>
         <template #content>
-          <BaseTable :data="discounts" :columns="discountColumns" :loading="discountsLoading" row-key="id" @row-click="viewDiscount($event.data)" @refresh="loadDiscounts">
+          <BaseTable
+            :data="discounts"
+            :columns="discountColumns"
+            :loading="discountsLoading"
+            row-key="id"
+            :create-label="$t('campaignDetail.newDiscountButton')"
+            @row-click="viewDiscount($event.data)"
+            @refresh="loadDiscounts"
+            @create="newDiscount"
+          >
             <template #cell-kind="{ data }"><BaseTag :value="data.kind" /></template>
             <template #cell-enabled="{ data }">
               <BaseTag v-if="!data.enabled" severity="secondary" :value="$t('campaignDetail.statusDisabled')" />
+            </template>
+            <template #cell-actions="{ data }">
+              <BaseButton text icon="pi pi-pencil" :aria-label="$t('campaignDetail.editButton')" @click.stop="editDiscount(data)" />
             </template>
             <template #empty>{{ $t('campaignDetail.noDiscountsHint') }}</template>
           </BaseTable>

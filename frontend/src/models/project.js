@@ -7,6 +7,7 @@ export const ProjectSchema = z
   .object({
     id: z.string(),
     name: z.string(),
+    timezone: z.string(),
     created_at: z.string(),
     updated_at: z.string(),
   })
@@ -19,5 +20,6 @@ export const ProjectListSchema = z.object({ projects: z.array(ProjectSchema) }).
 export function projectInputSchema(t) {
   return z.object({
     name: z.string().min(1, t('projects.nameRequired')),
+    timezone: z.string().optional(),
   })
 }

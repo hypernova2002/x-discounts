@@ -5,9 +5,10 @@
     "searchPlaceholder": "キーで検索",
     "allEntitiesPlaceholder": "すべての対象エンティティ",
     "columns": {
-      "entity": "対象エンティティ",
+      "entity": "対象",
       "key": "キー",
-      "type": "型"
+      "type": "型",
+      "actions": "アクション"
     },
     "deleteButton": "削除",
     "newAttributeDialogTitle": "新規カスタム属性",

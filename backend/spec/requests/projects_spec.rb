@@ -40,7 +40,20 @@ RSpec.describe "Projects API", type: :openapi do
         schema Schemas::Project
         let(:request_body) { { name: "New Project" } }
 
-        run_test!
+        run_test! do
+          body = JSON.parse(response.body)
+          expect(body["timezone"]).to eq("UTC")
+        end
+      end
+
+      response 201, "project created with an explicit timezone" do
+        schema Schemas::Project
+        let(:request_body) { { name: "New Project", timezone: "Asia/Tokyo" } }
+
+        run_test! do
+          body = JSON.parse(response.body)
+          expect(body["timezone"]).to eq("Asia/Tokyo")
+        end
       end
 
       response 403, "not an account admin" do
@@ -85,13 +98,32 @@ RSpec.describe "Projects API", type: :openapi do
       security [{ BearerAuth: [] }]
 
       request_body required: true, content: {
-        "application/json" => { schema: { type: :object, properties: { name: { type: :string } } } }
+        "application/json" => { schema: { type: :object, properties: { name: { type: :string }, timezone: { type: :string } } } }
       }
 
       response 200, "project updated" do
         schema Schemas::Project
         let(:id) { api_key.project.public_id }
         let(:request_body) { { name: "Renamed" } }
+
+        run_test!
+      end
+
+      response 200, "project timezone updated" do
+        schema Schemas::Project
+        let(:id) { api_key.project.public_id }
+        let(:request_body) { { timezone: "Asia/Tokyo" } }
+
+        run_test! do
+          body = JSON.parse(response.body)
+          expect(body["timezone"]).to eq("Asia/Tokyo")
+        end
+      end
+
+      response 422, "invalid timezone" do
+        schema Schemas::Error
+        let(:id) { api_key.project.public_id }
+        let(:request_body) { { timezone: "Not/AZone" } }
 
         run_test!
       end

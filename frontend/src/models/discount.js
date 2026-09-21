@@ -86,8 +86,8 @@ export function discountInputSchema(t, { isEdit = false } = {}) {
   const base = baseDiscountFields(t)
   if (isEdit) base.key = z.string().nullable().refine((v) => !!v, { message: t('discountForm.keyRequired') })
 
-  // A blank datetime-local input converts to `null` (see localInputToIso in the
-  // form view), not `''` — same reasoning as campaign_id/key above.
+  // A blank datetime-local input converts to `null` (see zonedInputToIso in
+  // @/lib/timezone), not `''` — same reasoning as campaign_id/key above.
   const requiredActiveFrom = z.string().nullable().refine((v) => !!v, { message: t('discountForm.activeFromRequired') })
 
   return z.discriminatedUnion('kind', [

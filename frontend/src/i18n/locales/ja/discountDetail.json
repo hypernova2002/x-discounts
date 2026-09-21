@@ -64,6 +64,7 @@
     "codeColumn": "コード",
     "assignedToColumn": "割り当て先",
     "redemptionsColumn": "利用回数",
+    "actionsColumn": "アクション",
     "anyone": "誰でも",
     "redemptionsOfMax": "{max}回中{count}回",
     "revokeButton": "無効化",

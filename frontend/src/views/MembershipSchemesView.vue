@@ -5,7 +5,6 @@ import { useI18n } from 'vue-i18n'
 import AppShell from '@/components/AppShell.vue'
 import PageHeader from '@/components/PageHeader.vue'
 import BaseTable from '@/components/base/BaseTable.vue'
-import BaseButton from '@/components/base/BaseButton.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useAsync } from '@/composables/useAsync'
 import { listMembershipSchemes } from '@/api/membershipSchemes'
@@ -24,9 +23,9 @@ watch(error, (e) => {
 })
 
 const columns = computed(() => [
-  { field: 'name', header: t('membershipSchemes.columns.name'), sortable: true, hideable: false },
-  { field: 'tiers', header: t('membershipSchemes.columns.tiers') },
-  { field: 'created_at', header: t('membershipSchemes.columns.created'), sortable: true },
+  { field: 'name', header: t('membershipSchemes.columns.name'), sortable: true, hideable: false, filter: { type: 'string' } },
+  { field: 'tiers', header: t('membershipSchemes.columns.tiers'), filter: { type: 'number', accessor: (row) => row.tiers.length } },
+  { field: 'created_at', header: t('membershipSchemes.columns.created'), sortable: true, filter: { type: 'date' } },
 ])
 
 function createScheme() {
@@ -40,11 +39,7 @@ function viewScheme(scheme) {
 
 <template>
   <AppShell>
-    <PageHeader>
-      <template #actions>
-        <BaseButton :label="$t('membershipSchemes.newSchemeButton')" @click="createScheme" />
-      </template>
-    </PageHeader>
+    <PageHeader />
 
     <BaseTable
       :data="schemes || []"
@@ -52,11 +47,13 @@ function viewScheme(scheme) {
       :loading="loading"
       row-key="id"
       :search-placeholder="$t('membershipSchemes.searchPlaceholder')"
+      :create-label="$t('membershipSchemes.newSchemeButton')"
       @row-click="viewScheme($event.data)"
       @refresh="reload"
+      @create="createScheme"
     >
       <template #cell-tiers="{ data }">{{ data.tiers.map((tier) => tier.name).join(', ') || '—' }}</template>
-      <template #cell-created_at="{ data }">{{ formatDate(data.created_at) }}</template>
+      <template #cell-created_at="{ data }">{{ formatDate(data.created_at, auth.project?.timezone) }}</template>
     </BaseTable>
   </AppShell>
 </template>

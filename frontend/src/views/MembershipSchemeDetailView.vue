@@ -53,17 +53,20 @@ async function loadScheme() {
 onMounted(loadScheme)
 
 const tierColumns = computed(() => [
-  { field: 'rank', header: t('membershipSchemeDetail.columns.rank'), sortable: true, hideable: false },
-  { field: 'name', header: t('membershipSchemeDetail.columns.name'), sortable: true, hideable: false },
+  { field: 'rank', header: t('membershipSchemeDetail.columns.rank'), sortable: true, hideable: false, filter: { type: 'number' } },
+  { field: 'name', header: t('membershipSchemeDetail.columns.name'), sortable: true, hideable: false, filter: { type: 'string' } },
   {
     field: 'auto_assignable',
     header: t('membershipSchemeDetail.columns.autoJoin'),
-    filterOptions: [
-      { label: t('membershipSchemeDetail.autoJoinAutomatic'), value: true },
-      { label: t('membershipSchemeDetail.autoJoinManual'), value: false },
-    ],
+    filter: {
+      type: 'enum',
+      options: [
+        { label: t('membershipSchemeDetail.autoJoinAutomatic'), value: true },
+        { label: t('membershipSchemeDetail.autoJoinManual'), value: false },
+      ],
+    },
   },
-  { field: 'actions', header: '', hideable: false },
+  { field: 'actions', header: t('membershipSchemeDetail.columns.actions'), hideable: false },
 ])
 
 // --- add tier ---

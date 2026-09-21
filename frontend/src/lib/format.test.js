@@ -41,4 +41,17 @@ describe('formatDateTime', () => {
     const d = new Date(2026, 8, 5, 9, 5)
     expect(formatDateTime(d)).toBe('2026-09-05 09:05')
   })
+
+  it('formats in the given IANA zone, not local time, with DST applied correctly', () => {
+    const summer = '2026-07-15T12:00:00.000Z' // EDT (UTC-4)
+    const winter = '2026-01-15T12:00:00.000Z' // EST (UTC-5)
+
+    expect(formatDateTime(summer, 'America/New_York')).toBe('2026-07-15 08:00')
+    expect(formatDateTime(winter, 'America/New_York')).toBe('2026-01-15 07:00')
+    expect(formatDateTime(summer, 'Asia/Tokyo')).toBe('2026-07-15 21:00')
+  })
+
+  it('formats midnight as 00:00, not 24:00', () => {
+    expect(formatDateTime('2026-07-15T00:00:00.000Z', 'UTC')).toBe('2026-07-15 00:00')
+  })
 })

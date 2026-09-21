@@ -24,6 +24,7 @@ import { discountInputSchema } from '@/models/discount'
 import { toFieldErrors } from '@/models/formErrors'
 import { couponCodeGeneratePayload } from '@/services/couponCodes'
 import { useBaseToast } from '@/composables/useBaseToast'
+import { isoToZonedInput, zonedInputToIso } from '@/lib/timezone'
 
 const route = useRoute()
 const router = useRouter()
@@ -152,14 +153,6 @@ function defaultEffect() {
   return { effect_type: 'percentage_off', scope: 'cart', target_condition: null, config: { percentage: 10 } }
 }
 
-function isoToLocalInput(iso) {
-  return iso ? iso.slice(0, 16) : ''
-}
-function localInputToIso(local) {
-  if (!local) return null
-  return local.length === 16 ? `${local}:00.000Z` : local
-}
-
 function addEffect() {
   form.effects.push(defaultEffect())
 }
@@ -188,22 +181,22 @@ async function load() {
 
     if (data.promotion) {
       form.promotion = {
-        active_from: isoToLocalInput(data.promotion.active_from),
-        active_until: isoToLocalInput(data.promotion.active_until),
+        active_from: isoToZonedInput(data.promotion.active_from, auth.project?.timezone),
+        active_until: isoToZonedInput(data.promotion.active_until, auth.project?.timezone),
       }
     }
     if (data.coupon) {
       form.coupon = {
-        issued_from: isoToLocalInput(data.coupon.issued_from),
-        issued_until: isoToLocalInput(data.coupon.issued_until),
-        valid_from: isoToLocalInput(data.coupon.valid_from),
-        valid_until: isoToLocalInput(data.coupon.valid_until),
+        issued_from: isoToZonedInput(data.coupon.issued_from, auth.project?.timezone),
+        issued_until: isoToZonedInput(data.coupon.issued_until, auth.project?.timezone),
+        valid_from: isoToZonedInput(data.coupon.valid_from, auth.project?.timezone),
+        valid_until: isoToZonedInput(data.coupon.valid_until, auth.project?.timezone),
       }
     }
     if (data.loyalty) {
       form.loyalty = {
-        active_from: isoToLocalInput(data.loyalty.active_from),
-        active_until: isoToLocalInput(data.loyalty.active_until),
+        active_from: isoToZonedInput(data.loyalty.active_from, auth.project?.timezone),
+        active_until: isoToZonedInput(data.loyalty.active_until, auth.project?.timezone),
         points_expire_after_days: data.loyalty.points_expire_after_days,
       }
     }
@@ -258,25 +251,37 @@ function buildPayload() {
 
   if (form.kind === 'promotion') {
     payload.promotion = {
-      active_from: localInputToIso(form.promotion.active_from),
-      active_until: localInputToIso(form.promotion.active_until),
+      active_from: zonedInputToIso(form.promotion.active_from, auth.project?.timezone),
+      active_until: zonedInputToIso(form.promotion.active_until, auth.project?.timezone),
     }
   } else if (form.kind === 'coupon') {
     payload.coupon = {
-      issued_from: localInputToIso(form.coupon.issued_from),
-      issued_until: localInputToIso(form.coupon.issued_until),
-      valid_from: localInputToIso(form.coupon.valid_from),
-      valid_until: localInputToIso(form.coupon.valid_until),
+      issued_from: zonedInputToIso(form.coupon.issued_from, auth.project?.timezone),
+      issued_until: zonedInputToIso(form.coupon.issued_until, auth.project?.timezone),
+      valid_from: zonedInputToIso(form.coupon.valid_from, auth.project?.timezone),
+      valid_until: zonedInputToIso(form.coupon.valid_until, auth.project?.timezone),
       ...(isEdit.value ? {} : couponCodePayload()),
     }
   } else {
     payload.loyalty = {
-      active_from: localInputToIso(form.loyalty.active_from),
-      active_until: localInputToIso(form.loyalty.active_until),
+      active_from: zonedInputToIso(form.loyalty.active_from, auth.project?.timezone),
+      active_until: zonedInputToIso(form.loyalty.active_until, auth.project?.timezone),
       points_expire_after_days: form.loyalty.points_expire_after_days || null,
     }
   }
   return payload
+}
+
+// Reached from a campaign's own "Edit campaign" screen (its Discounts table
+// passes `return_to=campaign-edit` when linking here) means both cancelling
+// and saving should hand control back to that screen — not the discount's
+// own detail page, which is where every other entry point into this form
+// sends you.
+function returnRoute() {
+  if (route.query.return_to === 'campaign-edit' && form.campaign_id) {
+    return { name: 'campaign-edit', params: { id: form.campaign_id } }
+  }
+  return null
 }
 
 async function submit() {
@@ -297,11 +302,11 @@ async function submit() {
     if (isEdit.value) {
       await updateDiscount(discountId.value, body, { token: auth.token, projectId: auth.project?.id })
       toast.add({ severity: 'success', summary: t('discountForm.updatedToast'), life: 3000 })
-      router.push({ name: 'discount-show', params: { id: discountId.value } })
+      router.push(returnRoute() || { name: 'discount-show', params: { id: discountId.value } })
     } else {
       const discount = await createDiscount(body, { token: auth.token, projectId: auth.project?.id })
       toast.add({ severity: 'success', summary: t('discountForm.createdToast'), life: 3000 })
-      router.push({ name: 'discount-show', params: { id: discount.id } })
+      router.push(returnRoute() || { name: 'discount-show', params: { id: discount.id } })
     }
   } catch (e) {
     errors.value = e instanceof ApiError ? toFieldErrors(e) : { _root: t('discountForm.genericError') }
@@ -311,7 +316,9 @@ async function submit() {
 }
 
 function cancel() {
-  if (form.campaign_id) {
+  if (returnRoute()) {
+    router.push(returnRoute())
+  } else if (form.campaign_id) {
     router.push({ name: 'campaign-show', params: { id: form.campaign_id } })
   } else {
     router.push({ name: 'campaigns' })

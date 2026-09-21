@@ -32,26 +32,32 @@ watch(error, (e) => {
 })
 
 const columns = computed(() => [
-  { field: 'name', header: t('campaigns.nameColumn'), sortable: true, hideable: false },
+  { field: 'name', header: t('campaigns.nameColumn'), sortable: true, hideable: false, filter: { type: 'string' } },
   {
     field: 'enabled',
     header: t('campaigns.statusColumn'),
-    filterOptions: [
-      { label: t('campaigns.statusEnabled'), value: true },
-      { label: t('campaignStatusTags.paused'), value: false },
-    ],
+    filter: {
+      type: 'enum',
+      options: [
+        { label: t('campaigns.statusEnabled'), value: true },
+        { label: t('campaignStatusTags.paused'), value: false },
+      ],
+    },
   },
-  { field: 'valid_from', header: t('campaigns.validFromColumn'), sortable: true },
-  { field: 'valid_until', header: t('campaigns.validUntilColumn'), sortable: true },
+  { field: 'valid_from', header: t('campaigns.validFromColumn'), sortable: true, filter: { type: 'date' } },
+  { field: 'valid_until', header: t('campaigns.validUntilColumn'), sortable: true, filter: { type: 'date' } },
   {
     field: 'archived',
     header: t('campaigns.archivedColumn'),
-    filterOptions: [
-      { label: t('campaignStatusTags.archived'), value: true },
-      { label: t('campaigns.notArchived'), value: false },
-    ],
+    filter: {
+      type: 'enum',
+      options: [
+        { label: t('campaignStatusTags.archived'), value: true },
+        { label: t('campaigns.notArchived'), value: false },
+      ],
+    },
   },
-  { field: 'actions', header: '', hideable: false },
+  { field: 'actions', header: t('campaigns.actionsColumn'), hideable: false },
 ])
 
 function createCampaign() {
@@ -90,8 +96,6 @@ async function exportCampaigns() {
           <BaseToggleSwitch v-model="showArchived" @update:model-value="onShowArchivedChange" />
           {{ $t('campaigns.showArchivedLabel') }}
         </label>
-        <BaseButton text :label="$t('campaigns.exportButton')" :loading="exporting" @click="exportCampaigns" />
-        <BaseButton :label="$t('campaigns.newCampaign')" @click="createCampaign" />
       </template>
     </PageHeader>
 
@@ -101,14 +105,19 @@ async function exportCampaigns() {
       :loading="loading"
       row-key="id"
       :search-placeholder="$t('campaigns.searchPlaceholder')"
+      :create-label="$t('campaigns.newCampaign')"
+      :export-label="$t('campaigns.exportButton')"
+      :exporting="exporting"
       @row-click="viewCampaign($event.data)"
       @refresh="reload"
+      @create="createCampaign"
+      @export="exportCampaigns"
     >
       <template #cell-enabled="{ data }">
         <CampaignStatusTags :campaign="data" />
       </template>
-      <template #cell-valid_from="{ data }">{{ data.valid_from ? formatDateTime(data.valid_from) : '—' }}</template>
-      <template #cell-valid_until="{ data }">{{ data.valid_until ? formatDateTime(data.valid_until) : '—' }}</template>
+      <template #cell-valid_from="{ data }">{{ data.valid_from ? formatDateTime(data.valid_from, auth.project?.timezone) : '—' }}</template>
+      <template #cell-valid_until="{ data }">{{ data.valid_until ? formatDateTime(data.valid_until, auth.project?.timezone) : '—' }}</template>
       <template #cell-archived="{ data }">{{ data.archived ? $t('campaignStatusTags.archived') : $t('campaigns.notArchived') }}</template>
       <template #cell-actions="{ data }">
         <BaseButton text icon="pi pi-pencil" :aria-label="$t('campaigns.editButton')" @click.stop="editCampaign(data)" />

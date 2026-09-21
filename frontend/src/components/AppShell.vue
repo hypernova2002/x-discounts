@@ -121,6 +121,12 @@ onMounted(() => {
           class="app-shell__project"
           @update:model-value="switchProject"
         />
+        <BaseTag
+          v-if="auth.project?.timezone"
+          :value="auth.project.timezone"
+          v-tooltip.bottom="t('nav.projectTimezoneTooltip')"
+          class="app-shell__timezone-tag"
+        />
         <BaseButton text :label="t('nav.signOut')" @click="logout" />
       </div>
     </header>
@@ -311,7 +317,8 @@ onMounted(() => {
     gap: 0.375rem;
   }
 
-  .app-shell__role-tag {
+  .app-shell__role-tag,
+  .app-shell__timezone-tag {
     display: none;
   }
 }

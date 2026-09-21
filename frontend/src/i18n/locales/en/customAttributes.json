@@ -5,9 +5,10 @@
     "searchPlaceholder": "Search by key",
     "allEntitiesPlaceholder": "All entities",
     "columns": {
-      "entity": "Entity",
+      "entity": "Applies to",
       "key": "Key",
-      "type": "Type"
+      "type": "Type",
+      "actions": "Actions"
     },
     "deleteButton": "Delete",
     "newAttributeDialogTitle": "New custom attribute",

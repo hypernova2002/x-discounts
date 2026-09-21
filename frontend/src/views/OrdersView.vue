@@ -6,7 +6,6 @@ import AppShell from '@/components/AppShell.vue'
 import PageHeader from '@/components/PageHeader.vue'
 import EntityLink from '@/components/EntityLink.vue'
 import BaseTable from '@/components/base/BaseTable.vue'
-import BaseButton from '@/components/base/BaseButton.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useAsync } from '@/composables/useAsync'
 import { listOrders, exportOrders as exportOrdersRequest } from '@/api/orders'
@@ -27,12 +26,12 @@ watch(error, (e) => {
 })
 
 const columns = computed(() => [
-  { field: 'id', header: t('orders.order'), sortable: true, hideable: false },
-  { field: 'customer', header: t('orders.customer'), hideable: false },
-  { field: 'line_items', header: t('orders.items') },
-  { field: 'total_amount', header: t('orders.total'), sortable: true },
-  { field: 'total_discount_amount', header: t('orders.discount'), sortable: true },
-  { field: 'created_at', header: t('orders.created'), sortable: true },
+  { field: 'id', header: t('orders.order'), sortable: true, hideable: false, filter: { type: 'string' } },
+  { field: 'customer', header: t('orders.customer'), hideable: false, filter: { type: 'string', accessor: (row) => row.customer.external_id } },
+  { field: 'line_items', header: t('orders.items'), filter: { type: 'number', accessor: (row) => row.line_items.length } },
+  { field: 'total_amount', header: t('orders.total'), sortable: true, filter: { type: 'number' } },
+  { field: 'total_discount_amount', header: t('orders.discount'), sortable: true, filter: { type: 'number' } },
+  { field: 'created_at', header: t('orders.created'), sortable: true, filter: { type: 'date' } },
 ])
 
 function createOrder() {
@@ -61,12 +60,7 @@ async function exportOrders() {
 
 <template>
   <AppShell>
-    <PageHeader>
-      <template #actions>
-        <BaseButton text :label="$t('orders.exportButton')" :loading="exporting" @click="exportOrders" />
-        <BaseButton :label="$t('orders.newOrder')" @click="createOrder" />
-      </template>
-    </PageHeader>
+    <PageHeader />
 
     <BaseTable
       :data="orders || []"
@@ -74,8 +68,13 @@ async function exportOrders() {
       :loading="loading"
       row-key="id"
       :search-placeholder="$t('orders.searchPlaceholder')"
+      :create-label="$t('orders.newOrder')"
+      :export-label="$t('orders.exportButton')"
+      :exporting="exporting"
       @row-click="viewOrder($event.data)"
       @refresh="reload"
+      @create="createOrder"
+      @export="exportOrders"
     >
       <template #cell-customer="{ data }">
         <EntityLink @click="viewCustomer(data.customer)">{{ data.customer.external_id }}</EntityLink>
@@ -83,7 +82,7 @@ async function exportOrders() {
       <template #cell-line_items="{ data }">{{ data.line_items.length }}</template>
       <template #cell-total_amount="{ data }">{{ formatNumber(data.total_amount) }}</template>
       <template #cell-total_discount_amount="{ data }">{{ formatNumber(data.total_discount_amount) }}</template>
-      <template #cell-created_at="{ data }">{{ formatDateTime(data.created_at) }}</template>
+      <template #cell-created_at="{ data }">{{ formatDateTime(data.created_at, auth.project?.timezone) }}</template>
     </BaseTable>
   </AppShell>
 </template>

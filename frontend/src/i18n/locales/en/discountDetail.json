@@ -64,6 +64,7 @@
     "codeColumn": "Code",
     "assignedToColumn": "Assigned to",
     "redemptionsColumn": "Redemptions",
+    "actionsColumn": "Actions",
     "anyone": "anyone",
     "redemptionsOfMax": "{count} of {max}",
     "revokeButton": "Revoke",

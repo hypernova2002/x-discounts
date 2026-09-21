@@ -61,14 +61,14 @@
       "manualGrant": "Manual grant",
       "redemptionRefund": "Redemption refund",
       "legacy": "Legacy",
-      "earned": "Earned",
-      "remaining": "Remaining",
+      "earned": "Points earned",
+      "remaining": "Points remaining",
       "status": "Status",
       "statusActive": "Active",
       "statusExpired": "Expired",
       "statusCancelled": "Cancelled",
-      "earnedAt": "Earned at",
-      "expires": "Expires",
+      "earnedAt": "Earned time",
+      "expires": "Expiration time",
       "never": "Never"
     },
     "grantDialog": {
@@ -83,10 +83,10 @@
     "orders": {
       "title": "Orders",
       "empty": "No orders yet.",
-      "order": "Order",
-      "placed": "Placed",
-      "total": "Total spent",
-      "discount": "Discount applied",
+      "order": "Order ID",
+      "placed": "Order time",
+      "total": "Order total",
+      "discount": "Discount",
       "pointsEarned": "Points earned",
       "pointsRedeemed": "Points redeemed"
     }

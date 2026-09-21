@@ -13,24 +13,41 @@ export function formatNumber(value) {
   return new Intl.NumberFormat(currentLocale(), { maximumFractionDigits: 2 }).format(num)
 }
 
-function pad(n) {
-  return String(n).padStart(2, '0')
+// Extracts Y/M/D/h/m as seen in `timezone` (an IANA identifier, e.g. the
+// current project's) — or, when `timezone` is omitted, in the browser's own
+// local zone (Intl.DateTimeFormat's default when `timeZone` isn't passed),
+// which is the pre-existing/legacy behavior every call site had before any
+// caller threaded a project timezone through. `hourCycle: 'h23'` (not
+// `hour12: false`) specifically to avoid a well-known Intl quirk where
+// midnight formats as hour "24" instead of "00" in some engines.
+function dateParts(value, timezone) {
+  const d = new Date(value)
+  if (Number.isNaN(d.getTime())) return null
+  const parts = new Intl.DateTimeFormat(currentLocale(), {
+    timeZone: timezone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).formatToParts(d)
+  const get = (type) => parts.find((p) => p.type === type)?.value
+  return { year: get('year'), month: get('month'), day: get('day'), hour: get('hour'), minute: get('minute') }
 }
 
-// ISO-style date, in local time (not UTC, unlike Date#toISOString) so it
-// matches what toLocaleString() was showing before — just shorter and
-// unambiguous: "2026-09-17".
-export function formatDate(value) {
+// ISO-style date: "2026-09-17".
+export function formatDate(value, timezone) {
   if (!value) return ''
-  const d = new Date(value)
-  if (Number.isNaN(d.getTime())) return ''
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+  const p = dateParts(value, timezone)
+  if (!p) return ''
+  return `${p.year}-${p.month}-${p.day}`
 }
 
-// ISO-style date + 24h time, local time: "2026-09-17 13:14".
-export function formatDateTime(value) {
+// ISO-style date + 24h time: "2026-09-17 13:14".
+export function formatDateTime(value, timezone) {
   if (!value) return ''
-  const d = new Date(value)
-  if (Number.isNaN(d.getTime())) return ''
-  return `${formatDate(value)} ${pad(d.getHours())}:${pad(d.getMinutes())}`
+  const p = dateParts(value, timezone)
+  if (!p) return ''
+  return `${p.year}-${p.month}-${p.day} ${p.hour}:${p.minute}`
 }

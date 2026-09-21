@@ -2,16 +2,16 @@
   "customers": {
     "title": "顧客",
     "loadError": "顧客の読み込みに失敗しました",
-    "exportButton": "エクスポート",
+    "exportButton": "顧客をエクスポート",
     "searchPlaceholder": "顧客を検索",
     "exportError": "顧客のエクスポートに失敗しました",
-    "externalId": "外部ID",
+    "externalId": "顧客ID",
     "name": "氏名",
     "email": "メールアドレス",
     "membership": "メンバーシップ",
     "noMembership": "なし",
     "country": "国",
-    "created": "作成日",
+    "created": "作成日時",
     "marketingOptIn": "マーケティング配信の同意"
   }
 }

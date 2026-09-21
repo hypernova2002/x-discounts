@@ -3,14 +3,14 @@
     "title": "Orders",
     "loadError": "Failed to load orders",
     "newOrder": "New order",
-    "exportButton": "Export",
+    "exportButton": "Export orders",
     "exportError": "Failed to export orders",
-    "order": "Order",
+    "order": "Order ID",
     "customer": "Customer",
     "items": "Items",
-    "total": "Total spent",
-    "discount": "Discount applied",
-    "created": "Created",
+    "total": "Order total",
+    "discount": "Discount",
+    "created": "Order time",
     "searchPlaceholder": "Search orders"
   }
 }

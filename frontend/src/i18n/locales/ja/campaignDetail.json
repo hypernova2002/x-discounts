@@ -25,6 +25,7 @@
     "keyColumn": "キー",
     "statusColumn": "ステータス",
     "statusEnabled": "有効",
-    "statusDisabled": "無効"
+    "statusDisabled": "無効",
+    "actionsColumn": "アクション"
   }
 }

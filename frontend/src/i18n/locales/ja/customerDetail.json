@@ -61,8 +61,8 @@
       "manualGrant": "手動付与",
       "redemptionRefund": "利用返金",
       "legacy": "レガシー",
-      "earned": "獲得",
-      "remaining": "残高",
+      "earned": "獲得ポイント",
+      "remaining": "残りポイント",
       "status": "ステータス",
       "statusActive": "有効",
       "statusExpired": "失効",
@@ -83,10 +83,10 @@
     "orders": {
       "title": "注文",
       "empty": "注文はまだありません。",
-      "order": "注文",
-      "placed": "注文日",
-      "total": "合計金額",
-      "discount": "割引額",
+      "order": "注文ID",
+      "placed": "注文日時",
+      "total": "注文合計",
+      "discount": "割引",
       "pointsEarned": "獲得ポイント",
       "pointsRedeemed": "利用ポイント"
     }

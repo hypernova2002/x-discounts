@@ -9,7 +9,8 @@
     "columns": {
       "rank": "Rank",
       "name": "Name",
-      "autoJoin": "Auto-join"
+      "autoJoin": "Auto-join",
+      "actions": "Actions"
     },
     "autoJoinAutomatic": "automatic",
     "autoJoinManual": "manual only",

@@ -6,7 +6,6 @@ import AppShell from '@/components/AppShell.vue'
 import PageHeader from '@/components/PageHeader.vue'
 import BaseTable from '@/components/base/BaseTable.vue'
 import BaseTag from '@/components/base/BaseTag.vue'
-import BaseButton from '@/components/base/BaseButton.vue'
 import { useAuthStore } from '@/stores/auth'
 import { apiDownload } from '@/lib/api'
 import { useAsync } from '@/composables/useAsync'
@@ -19,7 +18,7 @@ const toast = useBaseToast()
 const router = useRouter()
 const { t } = useI18n()
 
-const { data: customers, loading, error } = useAsync(() => listCustomers({ token: auth.token, projectId: auth.project?.id }))
+const { data: customers, loading, error, reload } = useAsync(() => listCustomers({ token: auth.token, projectId: auth.project?.id }))
 
 watch(error, (e) => {
   if (e) toast.add({ severity: 'error', summary: t('customers.loadError'), detail: e.message, life: 4000 })
@@ -28,21 +27,24 @@ watch(error, (e) => {
 const exporting = ref(false)
 
 const columns = computed(() => [
-  { field: 'external_id', header: t('customers.externalId'), sortable: true, hideable: false },
-  { field: 'name', header: t('customers.name'), sortable: true },
-  { field: 'email', header: t('customers.email'), sortable: true },
+  { field: 'external_id', header: t('customers.externalId'), sortable: true, hideable: false, filter: { type: 'string' } },
+  { field: 'name', header: t('customers.name'), sortable: true, filter: { type: 'string' } },
+  { field: 'email', header: t('customers.email'), sortable: true, filter: { type: 'string' } },
   { field: 'membership', header: t('customers.membership') },
-  { field: 'country', header: t('customers.country'), sortable: true },
+  { field: 'country', header: t('customers.country'), sortable: true, filter: { type: 'string' } },
   {
     field: 'marketing_opt_in',
     header: t('customers.marketingOptIn'),
     sortable: true,
-    filterOptions: [
-      { label: t('customerDetail.details.yes'), value: true },
-      { label: t('customerDetail.details.no'), value: false },
-    ],
+    filter: {
+      type: 'enum',
+      options: [
+        { label: t('customerDetail.details.yes'), value: true },
+        { label: t('customerDetail.details.no'), value: false },
+      ],
+    },
   },
-  { field: 'created_at', header: t('customers.created'), sortable: true },
+  { field: 'created_at', header: t('customers.created'), sortable: true, filter: { type: 'date' } },
 ])
 
 function viewCustomer(customer) {
@@ -63,11 +65,7 @@ async function exportCustomers() {
 
 <template>
   <AppShell>
-    <PageHeader>
-      <template #actions>
-        <BaseButton text :label="$t('customers.exportButton')" :loading="exporting" @click="exportCustomers" />
-      </template>
-    </PageHeader>
+    <PageHeader />
 
     <BaseTable
       :data="customers || []"
@@ -75,14 +73,18 @@ async function exportCustomers() {
       :loading="loading"
       row-key="id"
       :search-placeholder="$t('customers.searchPlaceholder')"
+      :export-label="$t('customers.exportButton')"
+      :exporting="exporting"
       @row-click="viewCustomer($event.data)"
+      @refresh="reload"
+      @export="exportCustomers"
     >
       <template #cell-membership="{ data }">
         <BaseTag v-if="data.membership_tier" severity="success" :value="`${data.membership_tier.membership_scheme.name} — ${data.membership_tier.name}`" />
         <span v-else class="no-membership">{{ $t('customers.noMembership') }}</span>
       </template>
       <template #cell-marketing_opt_in="{ data }">{{ data.marketing_opt_in ? $t('customerDetail.details.yes') : $t('customerDetail.details.no') }}</template>
-      <template #cell-created_at="{ data }">{{ formatDateTime(data.created_at) }}</template>
+      <template #cell-created_at="{ data }">{{ formatDateTime(data.created_at, auth.project?.timezone) }}</template>
     </BaseTable>
   </AppShell>
 </template>

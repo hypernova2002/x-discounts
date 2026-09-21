@@ -26,7 +26,10 @@ module Api
         end
 
         def update
-          @project.set(name: body.key?(:name) ? body[:name] : @project.name)
+          @project.set(
+            name: body.key?(:name) ? body[:name] : @project.name,
+            timezone: body.key?(:timezone) ? body[:timezone] : @project.timezone
+          )
           raise ValidationError.from_model(@project) unless @project.valid?
 
           @project.save

@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@openvue/themes": "^1.0.0-rc.0",
+    "luxon": "^3.7.2",
     "openvue": "1.0.0-rc.0",
     "pinia": "^4.0.2",
     "primeicons": "^7.0.0",

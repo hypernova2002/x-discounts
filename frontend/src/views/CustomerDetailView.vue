@@ -24,6 +24,7 @@ import { grantPointsInputSchema } from '@/models/customer'
 import { toFieldErrors } from '@/models/formErrors'
 import { useBaseToast } from '@/composables/useBaseToast.js'
 import { formatNumber, formatDate, formatDateTime } from '@/lib/format'
+import { zonedInputToIso } from '@/lib/timezone'
 
 const route = useRoute()
 const router = useRouter()
@@ -77,35 +78,41 @@ const loyaltyPointLotColumns = computed(() => [
     field: 'source',
     header: t('customerDetail.loyaltyPoints.source'),
     hideable: false,
-    filterOptions: [
-      { label: t('customerDetail.loyaltyPoints.order'), value: 'order' },
-      { label: t('customerDetail.loyaltyPoints.manualGrant'), value: 'manual_grant' },
-      { label: t('customerDetail.loyaltyPoints.redemptionRefund'), value: 'redemption_refund' },
-      { label: t('customerDetail.loyaltyPoints.legacy'), value: 'legacy_backfill' },
-    ],
+    filter: {
+      type: 'enum',
+      options: [
+        { label: t('customerDetail.loyaltyPoints.order'), value: 'order' },
+        { label: t('customerDetail.loyaltyPoints.manualGrant'), value: 'manual_grant' },
+        { label: t('customerDetail.loyaltyPoints.redemptionRefund'), value: 'redemption_refund' },
+        { label: t('customerDetail.loyaltyPoints.legacy'), value: 'legacy_backfill' },
+      ],
+    },
   },
-  { field: 'points', header: t('customerDetail.loyaltyPoints.earned'), sortable: true },
-  { field: 'points_remaining', header: t('customerDetail.loyaltyPoints.remaining'), sortable: true },
+  { field: 'points', header: t('customerDetail.loyaltyPoints.earned'), sortable: true, filter: { type: 'number' } },
+  { field: 'points_remaining', header: t('customerDetail.loyaltyPoints.remaining'), sortable: true, filter: { type: 'number' } },
   {
     field: 'status',
     header: t('customerDetail.loyaltyPoints.status'),
-    filterOptions: [
-      { label: t('customerDetail.loyaltyPoints.statusActive'), value: 'active' },
-      { label: t('customerDetail.loyaltyPoints.statusExpired'), value: 'expired' },
-      { label: t('customerDetail.loyaltyPoints.statusCancelled'), value: 'cancelled' },
-    ],
+    filter: {
+      type: 'enum',
+      options: [
+        { label: t('customerDetail.loyaltyPoints.statusActive'), value: 'active' },
+        { label: t('customerDetail.loyaltyPoints.statusExpired'), value: 'expired' },
+        { label: t('customerDetail.loyaltyPoints.statusCancelled'), value: 'cancelled' },
+      ],
+    },
   },
-  { field: 'earned_at', header: t('customerDetail.loyaltyPoints.earnedAt'), sortable: true },
-  { field: 'expires_at', header: t('customerDetail.loyaltyPoints.expires'), sortable: true },
+  { field: 'earned_at', header: t('customerDetail.loyaltyPoints.earnedAt'), sortable: true, filter: { type: 'date' } },
+  { field: 'expires_at', header: t('customerDetail.loyaltyPoints.expires'), sortable: true, filter: { type: 'date' } },
 ])
 
 const customerOrderColumns = computed(() => [
-  { field: 'id', header: t('customerDetail.orders.order'), sortable: true, hideable: false },
-  { field: 'created_at', header: t('customerDetail.orders.placed'), sortable: true },
-  { field: 'total_amount', header: t('customerDetail.orders.total'), sortable: true },
-  { field: 'total_discount_amount', header: t('customerDetail.orders.discount'), sortable: true },
-  { field: 'total_points_earned', header: t('customerDetail.orders.pointsEarned'), sortable: true },
-  { field: 'total_points_redeemed', header: t('customerDetail.orders.pointsRedeemed'), sortable: true },
+  { field: 'id', header: t('customerDetail.orders.order'), sortable: true, hideable: false, filter: { type: 'string' } },
+  { field: 'created_at', header: t('customerDetail.orders.placed'), sortable: true, filter: { type: 'date' } },
+  { field: 'total_amount', header: t('customerDetail.orders.total'), sortable: true, filter: { type: 'number' } },
+  { field: 'total_discount_amount', header: t('customerDetail.orders.discount'), sortable: true, filter: { type: 'number' } },
+  { field: 'total_points_earned', header: t('customerDetail.orders.pointsEarned'), sortable: true, filter: { type: 'number' } },
+  { field: 'total_points_redeemed', header: t('customerDetail.orders.pointsRedeemed'), sortable: true, filter: { type: 'number' } },
 ])
 
 async function loadTierOptions() {
@@ -150,7 +157,7 @@ async function submitGrantPoints() {
 
   const payload = {
     points: grantPoints.value,
-    expires_at: grantExpiresAt.value ? `${grantExpiresAt.value}:00.000Z` : null,
+    expires_at: zonedInputToIso(grantExpiresAt.value, auth.project?.timezone),
     reason: grantReason.value || null,
   }
 
@@ -216,7 +223,7 @@ onMounted(loadCustomer)
               <dt>{{ $t('customerDetail.details.marketingOptIn') }}</dt>
               <dd>{{ customer.marketing_opt_in ? $t('customerDetail.details.yes') : $t('customerDetail.details.no') }}</dd>
               <dt>{{ $t('customerDetail.details.customerSince') }}</dt>
-              <dd>{{ formatDateTime(customer.created_at) }}</dd>
+              <dd>{{ formatDateTime(customer.created_at, auth.project?.timezone) }}</dd>
             </dl>
           </template>
         </BaseCard>
@@ -262,14 +269,15 @@ onMounted(loadCustomer)
             </div>
             <dl v-if="customer.membership_tier" class="details membership-details">
               <dt>{{ $t('customerDetail.membership.enteredOn') }}</dt>
-              <dd>{{ customer.membership_tier_entered_at ? formatDate(customer.membership_tier_entered_at) : $t('customerDetail.membership.unknown') }}</dd>
+              <dd>{{ customer.membership_tier_entered_at ? formatDate(customer.membership_tier_entered_at, auth.project?.timezone) : $t('customerDetail.membership.unknown') }}</dd>
               <template v-if="customer.membership_tier.grace_period_days && customer.membership_tier_entered_at">
                 <dt>{{ $t('customerDetail.membership.protectedUntil') }}</dt>
                 <dd>
                   {{
                     formatDate(
                       new Date(customer.membership_tier_entered_at).getTime() +
-                        customer.membership_tier.grace_period_days * 86400000
+                        customer.membership_tier.grace_period_days * 86400000,
+                      auth.project?.timezone
                     )
                   }}
                 </dd>
@@ -297,7 +305,7 @@ onMounted(loadCustomer)
           <p v-if="!customer.activity.length" class="empty-hint">{{ $t('customerDetail.activity.empty') }}</p>
           <BaseTimeline v-else :value="customer.activity">
             <template #opposite="{ item }">
-              <span class="activity-date">{{ formatDateTime(item.occurred_at) }}</span>
+              <span class="activity-date">{{ formatDateTime(item.occurred_at, auth.project?.timezone) }}</span>
             </template>
             <template #content="{ item }">
               <div class="activity-entry">
@@ -350,10 +358,10 @@ onMounted(loadCustomer)
                 :value="data.status"
               />
             </template>
-            <template #cell-earned_at="{ data }">{{ formatDateTime(data.earned_at) }}</template>
+            <template #cell-earned_at="{ data }">{{ formatDateTime(data.earned_at, auth.project?.timezone) }}</template>
             <template #cell-expires_at="{ data }">
               <span v-if="!data.expires_at">{{ $t('customerDetail.loyaltyPoints.never') }}</span>
-              <span v-else>{{ formatDate(data.expires_at) }}</span>
+              <span v-else>{{ formatDate(data.expires_at, auth.project?.timezone) }}</span>
             </template>
             <template #empty>{{ $t('customerDetail.loyaltyPoints.empty') }}</template>
           </BaseTable>
@@ -378,7 +386,7 @@ onMounted(loadCustomer)
         <template #title>{{ $t('customerDetail.orders.title') }}</template>
         <template #content>
           <BaseTable :data="orders" :columns="customerOrderColumns" :loading="ordersLoading" row-key="id" @row-click="viewOrder($event.data.id)" @refresh="loadOrders">
-            <template #cell-created_at="{ data }">{{ formatDateTime(data.created_at) }}</template>
+            <template #cell-created_at="{ data }">{{ formatDateTime(data.created_at, auth.project?.timezone) }}</template>
             <template #cell-total_amount="{ data }">{{ formatNumber(data.total_amount) }}</template>
             <template #cell-total_discount_amount="{ data }">{{ formatNumber(data.total_discount_amount) }}</template>
             <template #cell-total_points_earned="{ data }">{{ formatNumber(data.total_points_earned) }}</template>

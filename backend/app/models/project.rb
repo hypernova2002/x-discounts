@@ -1,7 +1,14 @@
 # frozen_string_literal: true
 
+require "tzinfo"
+
 class Project < Sequel::Model
   PUBLIC_ID_PREFIX = "proj"
+  # Full IANA identifier list (not ActiveSupport::TimeZone's ~150-entry curated
+  # MAPPING) so this never rejects a zone the frontend's timezone picker offers
+  # — that picker is built from Intl.supportedValuesOf('timeZone'), and
+  # TZInfo's list is a confirmed superset of it.
+  TIMEZONES = TZInfo::Timezone.all_identifiers.freeze
 
   include PublicIdentifiable
 
@@ -34,5 +41,6 @@ class Project < Sequel::Model
     super
     validates_presence [:name, :account_id]
     validates_unique %i[account_id name]
+    validates_includes TIMEZONES, :timezone, allow_missing: true
   end
 end

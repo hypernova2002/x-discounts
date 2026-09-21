@@ -3,14 +3,14 @@
     "title": "注文",
     "loadError": "注文の読み込みに失敗しました",
     "newOrder": "新規注文",
-    "exportButton": "エクスポート",
+    "exportButton": "注文をエクスポート",
     "exportError": "注文のエクスポートに失敗しました",
-    "order": "注文",
+    "order": "注文ID",
     "customer": "顧客",
     "items": "商品",
-    "total": "合計金額",
-    "discount": "割引額",
-    "created": "作成日",
+    "total": "注文合計",
+    "discount": "割引",
+    "created": "注文日時",
     "searchPlaceholder": "注文を検索"
   }
 }
