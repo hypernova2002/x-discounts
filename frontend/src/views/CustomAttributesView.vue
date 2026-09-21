@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 import AppShell from '@/components/AppShell.vue'
 import PageHeader from '@/components/PageHeader.vue'
 import BaseTable from '@/components/base/BaseTable.vue'
+import BaseCard from '@/components/base/BaseCard.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import BaseDialog from '@/components/base/BaseDialog.vue'
 import BaseInputText from '@/components/base/BaseInputText.vue'
@@ -120,21 +121,25 @@ async function deleteAttribute(attribute) {
       />
     </div>
 
-    <BaseTable
-      :data="attributes || []"
-      :columns="columns"
-      :loading="loading"
-      row-key="id"
-      :search-placeholder="$t('customAttributes.searchPlaceholder')"
-      :create-label="$t('customAttributes.newAttributeButton')"
-      @refresh="reload"
-      @create="openCreate"
-    >
-      <template #cell-entity="{ data }"><BaseTag :value="data.entity" /></template>
-      <template #cell-actions="{ data }">
-        <BaseButton text severity="danger" :label="$t('customAttributes.deleteButton')" @click="deleteAttribute(data)" />
+    <BaseCard class="section-card">
+      <template #content>
+        <BaseTable
+          :data="attributes || []"
+          :columns="columns"
+          :loading="loading"
+          row-key="id"
+          :search-placeholder="$t('customAttributes.searchPlaceholder')"
+          :create-label="$t('customAttributes.newAttributeButton')"
+          @refresh="reload"
+          @create="openCreate"
+        >
+          <template #cell-entity="{ data }"><BaseTag :value="data.entity" /></template>
+          <template #cell-actions="{ data }">
+            <BaseButton text severity="danger" :label="$t('customAttributes.deleteButton')" @click="deleteAttribute(data)" />
+          </template>
+        </BaseTable>
       </template>
-    </BaseTable>
+    </BaseCard>
 
     <BaseDialog v-model:visible="showCreate" :header="$t('customAttributes.newAttributeDialogTitle')" modal :style="{ width: '24rem' }">
       <form class="create-form" @submit.prevent="createAttribute">

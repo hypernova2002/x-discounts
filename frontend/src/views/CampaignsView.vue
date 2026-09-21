@@ -148,34 +148,38 @@ async function exportCampaigns() {
       </template>
     </BaseCard>
 
-    <BaseTable
-      :data="campaigns || []"
-      :columns="columns"
-      :loading="loading"
-      row-key="id"
-      :search-placeholder="$t('campaigns.searchPlaceholder')"
-      :create-label="$t('campaigns.newCampaign')"
-      :export-label="$t('campaigns.exportButton')"
-      :exporting="exporting"
-      @row-click="viewCampaign($event.data)"
-      @refresh="reload"
-      @create="createCampaign"
-      @export="exportCampaigns"
-    >
-      <template #cell-discount_kinds="{ data }">
-        <span class="discount-kinds">
-          <DiscountKindTag v-for="kind in data.discount_kinds" :key="kind" :kind="kind" />
-        </span>
+    <BaseCard class="section-card">
+      <template #content>
+        <BaseTable
+          :data="campaigns || []"
+          :columns="columns"
+          :loading="loading"
+          row-key="id"
+          :search-placeholder="$t('campaigns.searchPlaceholder')"
+          :create-label="$t('campaigns.newCampaign')"
+          :export-label="$t('campaigns.exportButton')"
+          :exporting="exporting"
+          @row-click="viewCampaign($event.data)"
+          @refresh="reload"
+          @create="createCampaign"
+          @export="exportCampaigns"
+        >
+          <template #cell-discount_kinds="{ data }">
+            <span class="discount-kinds">
+              <DiscountKindTag v-for="kind in data.discount_kinds" :key="kind" :kind="kind" />
+            </span>
+          </template>
+          <template #cell-valid_from="{ data }">{{ data.valid_from ? formatMonthDayYear(data.valid_from, auth.project?.timezone) : '—' }}</template>
+          <template #cell-valid_until="{ data }">{{ data.valid_until ? formatMonthDayYear(data.valid_until, auth.project?.timezone) : '—' }}</template>
+          <template #cell-status="{ data }">
+            <LifecycleStatus compact :enabled="data.enabled" :archived="data.archived" :from="data.valid_from" :until="data.valid_until" />
+          </template>
+          <template #cell-actions="{ data }">
+            <BaseButton text icon="pi pi-pencil" :aria-label="$t('campaigns.editButton')" @click.stop="editCampaign(data)" />
+          </template>
+        </BaseTable>
       </template>
-      <template #cell-valid_from="{ data }">{{ data.valid_from ? formatMonthDayYear(data.valid_from, auth.project?.timezone) : '—' }}</template>
-      <template #cell-valid_until="{ data }">{{ data.valid_until ? formatMonthDayYear(data.valid_until, auth.project?.timezone) : '—' }}</template>
-      <template #cell-status="{ data }">
-        <LifecycleStatus compact :enabled="data.enabled" :archived="data.archived" :from="data.valid_from" :until="data.valid_until" />
-      </template>
-      <template #cell-actions="{ data }">
-        <BaseButton text icon="pi pi-pencil" :aria-label="$t('campaigns.editButton')" @click.stop="editCampaign(data)" />
-      </template>
-    </BaseTable>
+    </BaseCard>
   </AppShell>
 </template>
 

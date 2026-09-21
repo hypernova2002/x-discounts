@@ -119,26 +119,30 @@ const hasChartData = computed(() => (analytics.value?.series || []).some((s) => 
       </template>
     </BaseCard>
 
-    <BaseTable
-      :data="customers || []"
-      :columns="columns"
-      :loading="loading"
-      row-key="id"
-      :search-placeholder="$t('customers.searchPlaceholder')"
-      :export-label="$t('customers.exportButton')"
-      :exporting="exporting"
-      @row-click="viewCustomer($event.data)"
-      @refresh="reload"
-      @export="exportCustomers"
-    >
-      <template #cell-membership="{ data }">
-        <BaseTag v-if="data.membership_tier" severity="success" :value="`${data.membership_tier.membership_scheme.name} — ${data.membership_tier.name}`" />
-        <span v-else class="no-membership">{{ $t('customers.noMembership') }}</span>
+    <BaseCard class="section-card">
+      <template #content>
+        <BaseTable
+          :data="customers || []"
+          :columns="columns"
+          :loading="loading"
+          row-key="id"
+          :search-placeholder="$t('customers.searchPlaceholder')"
+          :export-label="$t('customers.exportButton')"
+          :exporting="exporting"
+          @row-click="viewCustomer($event.data)"
+          @refresh="reload"
+          @export="exportCustomers"
+        >
+          <template #cell-membership="{ data }">
+            <BaseTag v-if="data.membership_tier" severity="success" :value="`${data.membership_tier.membership_scheme.name} — ${data.membership_tier.name}`" />
+            <span v-else class="no-membership">{{ $t('customers.noMembership') }}</span>
+          </template>
+          <template #cell-country="{ data }"><CountryFlag :code="data.country" /></template>
+          <template #cell-marketing_opt_in="{ data }">{{ data.marketing_opt_in ? $t('customerDetail.details.yes') : $t('customerDetail.details.no') }}</template>
+          <template #cell-created_at="{ data }">{{ formatDateTime(data.created_at, auth.project?.timezone) }}</template>
+        </BaseTable>
       </template>
-      <template #cell-country="{ data }"><CountryFlag :code="data.country" /></template>
-      <template #cell-marketing_opt_in="{ data }">{{ data.marketing_opt_in ? $t('customerDetail.details.yes') : $t('customerDetail.details.no') }}</template>
-      <template #cell-created_at="{ data }">{{ formatDateTime(data.created_at, auth.project?.timezone) }}</template>
-    </BaseTable>
+    </BaseCard>
   </AppShell>
 </template>
 

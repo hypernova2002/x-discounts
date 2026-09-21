@@ -276,6 +276,7 @@ onMounted(() => {
   display: flex;
   flex: 1;
   min-height: 0;
+  background: var(--color-bg-subtle);
 }
 
 .app-shell__sidebar-backdrop {
@@ -285,7 +286,7 @@ onMounted(() => {
 .app-shell__sidebar {
   width: 15rem;
   flex-shrink: 0;
-  background: var(--color-bg-subtle);
+  background: var(--color-bg);
   border-right: 1px solid var(--color-border);
   padding: 1rem 0.75rem;
   overflow-y: auto;
@@ -311,7 +312,7 @@ onMounted(() => {
     left: 0;
     bottom: 0;
     z-index: 40;
-    background: var(--color-bg-subtle);
+    background: var(--color-bg);
     transform: translateX(-100%);
     transition: transform 0.2s ease;
     box-shadow: var(--shadow-lg);

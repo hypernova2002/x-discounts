@@ -5,6 +5,7 @@ import { useRouter } from 'vue-router'
 import BaseTable from '@/components/base/BaseTable.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import BaseProgressBar from '@/components/base/BaseProgressBar.vue'
+import BaseCard from '@/components/base/BaseCard.vue'
 import EntityLink from '@/components/EntityLink.vue'
 import LifecycleStatus from '@/components/LifecycleStatus.vue'
 import { useAuthStore } from '@/stores/auth'
@@ -70,35 +71,39 @@ function viewCampaign(campaign) {
 </script>
 
 <template>
-  <BaseTable
-    :data="discounts || []"
-    :columns="columns"
-    :loading="loading"
-    row-key="id"
-    :search-placeholder="t('discountKindTable.searchPlaceholder')"
-    @row-click="viewDiscount($event.data)"
-    @refresh="reload"
-  >
-    <template #cell-campaign="{ data }">
-      <EntityLink @click="viewCampaign(data.campaign)">{{ data.campaign.name }}</EntityLink>
+  <BaseCard class="section-card">
+    <template #content>
+      <BaseTable
+        :data="discounts || []"
+        :columns="columns"
+        :loading="loading"
+        row-key="id"
+        :search-placeholder="t('discountKindTable.searchPlaceholder')"
+        @row-click="viewDiscount($event.data)"
+        @refresh="reload"
+      >
+        <template #cell-campaign="{ data }">
+          <EntityLink @click="viewCampaign(data.campaign)">{{ data.campaign.name }}</EntityLink>
+        </template>
+        <template #cell-usage="{ data }">
+          <div v-if="usagePercent(data) !== null" class="usage-cell">
+            <BaseProgressBar :value="usagePercent(data)" class="usage-cell__bar" />
+            <span class="usage-cell__text">{{ t('discountKindTable.usageOfMax', { count: formatNumber(data.redemption_count), max: formatNumber(data.max_redemptions) }) }}</span>
+          </div>
+          <span v-else>{{ t('discountKindTable.usageUnlimited') }}</span>
+        </template>
+        <template #cell-start_date="{ data }">{{ validityFields(data).from ? formatMonthDayYear(validityFields(data).from, auth.project?.timezone) : '—' }}</template>
+        <template #cell-end_date="{ data }">{{ validityFields(data).until ? formatMonthDayYear(validityFields(data).until, auth.project?.timezone) : '—' }}</template>
+        <template #cell-status="{ data }">
+          <LifecycleStatus compact :enabled="data.enabled" :from="validityFields(data).from" :until="validityFields(data).until" />
+        </template>
+        <template #cell-actions="{ data }">
+          <BaseButton text icon="pi pi-pencil" :aria-label="t('discountKindTable.editButton')" @click.stop="editDiscount(data)" />
+        </template>
+        <template #empty>{{ t('discountKindTable.emptyHint') }}</template>
+      </BaseTable>
     </template>
-    <template #cell-usage="{ data }">
-      <div v-if="usagePercent(data) !== null" class="usage-cell">
-        <BaseProgressBar :value="usagePercent(data)" class="usage-cell__bar" />
-        <span class="usage-cell__text">{{ t('discountKindTable.usageOfMax', { count: formatNumber(data.redemption_count), max: formatNumber(data.max_redemptions) }) }}</span>
-      </div>
-      <span v-else>{{ t('discountKindTable.usageUnlimited') }}</span>
-    </template>
-    <template #cell-start_date="{ data }">{{ validityFields(data).from ? formatMonthDayYear(validityFields(data).from, auth.project?.timezone) : '—' }}</template>
-    <template #cell-end_date="{ data }">{{ validityFields(data).until ? formatMonthDayYear(validityFields(data).until, auth.project?.timezone) : '—' }}</template>
-    <template #cell-status="{ data }">
-      <LifecycleStatus compact :enabled="data.enabled" :from="validityFields(data).from" :until="validityFields(data).until" />
-    </template>
-    <template #cell-actions="{ data }">
-      <BaseButton text icon="pi pi-pencil" :aria-label="t('discountKindTable.editButton')" @click.stop="editDiscount(data)" />
-    </template>
-    <template #empty>{{ t('discountKindTable.emptyHint') }}</template>
-  </BaseTable>
+  </BaseCard>
 </template>
 
 <style scoped>

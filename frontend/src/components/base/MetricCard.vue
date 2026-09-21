@@ -31,7 +31,7 @@ defineProps({
   padding: 1rem;
   border-radius: var(--radius-md);
   border: 1px solid var(--color-border);
-  background: var(--color-bg-subtle);
+  background: var(--color-bg);
 }
 
 .metric-card__label {

@@ -13,12 +13,12 @@ const emit = defineEmits(['update:modelValue'])
 
 const { t } = useI18n()
 
-const PRESETS = [
+const PRESETS = computed(() => [
   { label: t('dateRangePicker.days7'), value: '7' },
   { label: t('dateRangePicker.days30'), value: '30' },
   { label: t('dateRangePicker.days90'), value: '90' },
   { label: t('dateRangePicker.custom'), value: 'custom' },
-]
+])
 
 const preset = ref('30')
 const customFrom = ref('')

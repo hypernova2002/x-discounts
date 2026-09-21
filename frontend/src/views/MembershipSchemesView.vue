@@ -5,6 +5,7 @@ import { useI18n } from 'vue-i18n'
 import AppShell from '@/components/AppShell.vue'
 import PageHeader from '@/components/PageHeader.vue'
 import BaseTable from '@/components/base/BaseTable.vue'
+import BaseCard from '@/components/base/BaseCard.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useAsync } from '@/composables/useAsync'
 import { listMembershipSchemes } from '@/api/membershipSchemes'
@@ -41,20 +42,24 @@ function viewScheme(scheme) {
   <AppShell>
     <PageHeader />
 
-    <BaseTable
-      :data="schemes || []"
-      :columns="columns"
-      :loading="loading"
-      row-key="id"
-      :search-placeholder="$t('membershipSchemes.searchPlaceholder')"
-      :create-label="$t('membershipSchemes.newSchemeButton')"
-      @row-click="viewScheme($event.data)"
-      @refresh="reload"
-      @create="createScheme"
-    >
-      <template #cell-tiers="{ data }">{{ data.tiers.map((tier) => tier.name).join(', ') || '—' }}</template>
-      <template #cell-created_at="{ data }">{{ formatDate(data.created_at, auth.project?.timezone) }}</template>
-    </BaseTable>
+    <BaseCard class="section-card">
+      <template #content>
+        <BaseTable
+          :data="schemes || []"
+          :columns="columns"
+          :loading="loading"
+          row-key="id"
+          :search-placeholder="$t('membershipSchemes.searchPlaceholder')"
+          :create-label="$t('membershipSchemes.newSchemeButton')"
+          @row-click="viewScheme($event.data)"
+          @refresh="reload"
+          @create="createScheme"
+        >
+          <template #cell-tiers="{ data }">{{ data.tiers.map((tier) => tier.name).join(', ') || '—' }}</template>
+          <template #cell-created_at="{ data }">{{ formatDate(data.created_at, auth.project?.timezone) }}</template>
+        </BaseTable>
+      </template>
+    </BaseCard>
   </AppShell>
 </template>
 

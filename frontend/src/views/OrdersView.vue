@@ -142,29 +142,33 @@ async function exportOrders() {
       </template>
     </BaseCard>
 
-    <BaseTable
-      :data="orders || []"
-      :columns="columns"
-      :loading="loading"
-      row-key="id"
-      :search-placeholder="$t('orders.searchPlaceholder')"
-      :create-label="$t('orders.newOrder')"
-      :export-label="$t('orders.exportButton')"
-      :exporting="exporting"
-      @row-click="viewOrder($event.data)"
-      @refresh="reload"
-      @create="createOrder"
-      @export="exportOrders"
-    >
-      <template #cell-customer="{ data }">
-        <EntityLink @click="viewCustomer(data.customer)">{{ data.customer.external_id }}</EntityLink>
+    <BaseCard class="section-card">
+      <template #content>
+        <BaseTable
+          :data="orders || []"
+          :columns="columns"
+          :loading="loading"
+          row-key="id"
+          :search-placeholder="$t('orders.searchPlaceholder')"
+          :create-label="$t('orders.newOrder')"
+          :export-label="$t('orders.exportButton')"
+          :exporting="exporting"
+          @row-click="viewOrder($event.data)"
+          @refresh="reload"
+          @create="createOrder"
+          @export="exportOrders"
+        >
+          <template #cell-customer="{ data }">
+            <EntityLink @click="viewCustomer(data.customer)">{{ data.customer.external_id }}</EntityLink>
+          </template>
+          <template #cell-line_items="{ data }">{{ data.line_items.length }}</template>
+          <template #cell-total_amount="{ data }">{{ formatNumber(data.total_amount) }}</template>
+          <template #cell-total_discount_amount="{ data }">{{ formatNumber(data.total_discount_amount) }}</template>
+          <template #cell-status="{ data }"><OrderStatusTag :status="data.status" /></template>
+          <template #cell-created_at="{ data }">{{ formatDateTime(data.created_at, auth.project?.timezone) }}</template>
+        </BaseTable>
       </template>
-      <template #cell-line_items="{ data }">{{ data.line_items.length }}</template>
-      <template #cell-total_amount="{ data }">{{ formatNumber(data.total_amount) }}</template>
-      <template #cell-total_discount_amount="{ data }">{{ formatNumber(data.total_discount_amount) }}</template>
-      <template #cell-status="{ data }"><OrderStatusTag :status="data.status" /></template>
-      <template #cell-created_at="{ data }">{{ formatDateTime(data.created_at, auth.project?.timezone) }}</template>
-    </BaseTable>
+    </BaseCard>
   </AppShell>
 </template>
 
