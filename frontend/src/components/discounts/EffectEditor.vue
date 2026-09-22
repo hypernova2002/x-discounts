@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import BaseSelect from '@/components/base/BaseSelect.vue'
+import BaseSelectButton from '@/components/base/BaseSelectButton.vue'
 import BaseInputNumber from '@/components/base/BaseInputNumber.vue'
 import BaseInputText from '@/components/base/BaseInputText.vue'
 import BaseToggleSwitch from '@/components/base/BaseToggleSwitch.vue'
@@ -25,6 +26,31 @@ const SCOPE_OPTIONS = computed(() => [
   { label: t('effectEditor.scopes.cart'), value: 'cart' },
   { label: t('effectEditor.scopes.lineItem'), value: 'line_item' },
 ])
+
+// A meaningful configuration choice, not a generic dropdown (coupon-editor UX
+// pass, point 4) — icon per effect type, drawn from this app's one icon system
+// (PrimeIcons, already used elsewhere e.g. nav's pi-percentage for Promotions).
+const EFFECT_TYPE_ICONS = {
+  percentage_off: 'pi-percentage',
+  fixed_amount_off: 'pi-dollar',
+  free_item: 'pi-gift',
+  points_per_currency: 'pi-star',
+  points_flat: 'pi-star',
+  points_per_item: 'pi-star',
+  points_multiplier: 'pi-bolt',
+}
+
+// A computed (not a plain object) so it re-evaluates on a live locale switch —
+// same reactivity requirement as any other t()-driven lookup table in this app.
+const EFFECT_TYPE_DESCRIPTIONS = computed(() => ({
+  percentage_off: t('effectEditor.effectTypeDescriptions.percentageOff'),
+  fixed_amount_off: t('effectEditor.effectTypeDescriptions.fixedAmountOff'),
+  free_item: t('effectEditor.effectTypeDescriptions.freeItem'),
+  points_per_currency: t('effectEditor.effectTypeDescriptions.pointsPerCurrency'),
+  points_flat: t('effectEditor.effectTypeDescriptions.pointsFlat'),
+  points_per_item: t('effectEditor.effectTypeDescriptions.pointsPerItem'),
+  points_multiplier: t('effectEditor.effectTypeDescriptions.pointsMultiplier'),
+}))
 
 const props = defineProps({
   modelValue: { type: Object, required: true },
@@ -76,32 +102,55 @@ function setScope(scope) {
 
 <template>
   <div class="effect-editor">
-    <div class="effect-row">
+    <div class="effect-header">
       <BaseSelect
+        class="effect-type-select"
         :model-value="modelValue.effect_type"
         :options="effectTypeOptions"
         option-label="label"
         option-value="value"
         @update:model-value="setEffectType"
-      />
-      <BaseSelect
-        :model-value="modelValue.scope"
-        :options="SCOPE_OPTIONS"
-        option-label="label"
-        option-value="value"
-        :disabled="modelValue.effect_type === 'points_per_item'"
-        @update:model-value="setScope"
-      />
+      >
+        <template #value="{ value }">
+          <span class="effect-type-value">
+            <span class="effect-type-icon"><i :class="['pi', EFFECT_TYPE_ICONS[value]]" aria-hidden="true" /></span>
+            <span class="effect-type-text">
+              <span class="effect-type-label">{{ effectTypeOptions.find((o) => o.value === value)?.label }}</span>
+              <span class="effect-type-desc">{{ EFFECT_TYPE_DESCRIPTIONS[value] }}</span>
+            </span>
+          </span>
+        </template>
+        <template #option="{ option, selected }">
+          <span class="effect-type-option">
+            <span class="effect-type-icon"><i :class="['pi', EFFECT_TYPE_ICONS[option.value]]" aria-hidden="true" /></span>
+            <span class="effect-type-text">
+              <span class="effect-type-label">{{ option.label }}</span>
+              <span class="effect-type-desc">{{ EFFECT_TYPE_DESCRIPTIONS[option.value] }}</span>
+            </span>
+            <i v-if="selected" class="pi pi-check effect-type-check" aria-hidden="true" />
+          </span>
+        </template>
+      </BaseSelect>
       <BaseButton text severity="danger" icon="pi pi-trash" :label="$t('effectEditor.removeEffectButton')" @click="$emit('remove')" />
     </div>
 
+    <BaseSelectButton
+      class="effect-scope"
+      :model-value="modelValue.scope"
+      :options="SCOPE_OPTIONS"
+      option-label="label"
+      option-value="value"
+      :disabled="modelValue.effect_type === 'points_per_item'"
+      @update:model-value="setScope"
+    />
+
     <div v-if="modelValue.effect_type === 'percentage_off'" class="effect-field">
-      <label>{{ $t('effectEditor.fields.percentageOff') }}</label>
       <BaseInputNumber
         :model-value="modelValue.config.percentage"
         suffix="%"
         :min="0"
         :max="100"
+        :aria-label="$t('effectEditor.fields.percentageOff')"
         @update:model-value="(v) => updateConfig({ percentage: v })"
       />
     </div>
@@ -118,19 +167,30 @@ function setScope(scope) {
     </div>
 
     <template v-else-if="modelValue.effect_type === 'free_item'">
-      <div class="effect-config-row">
-        <div class="effect-field">
-          <label>{{ $t('effectEditor.fields.buyQuantity') }}</label>
-          <BaseInputNumber :model-value="modelValue.config.buy_quantity" :min="1" @update:model-value="(v) => updateConfig({ buy_quantity: v })" />
-        </div>
-        <div class="effect-field">
-          <label>{{ $t('effectEditor.fields.getQuantity') }}</label>
-          <BaseInputNumber :model-value="modelValue.config.get_quantity" :min="1" @update:model-value="(v) => updateConfig({ get_quantity: v })" />
-        </div>
-        <div class="effect-field effect-field--switch">
-          <label>{{ $t('effectEditor.fields.repeatable') }}</label>
+      <div class="free-item-row">
+        <span class="free-item-word">{{ $t('effectEditor.freeItemBuyWord') }}</span>
+        <BaseInputNumber
+          class="free-item-qty"
+          :model-value="modelValue.config.buy_quantity"
+          :min="1"
+          :aria-label="$t('effectEditor.fields.buyQuantity')"
+          @update:model-value="(v) => updateConfig({ buy_quantity: v })"
+        />
+        <i class="pi pi-arrow-right free-item-arrow" aria-hidden="true" />
+        <span class="free-item-word">{{ $t('effectEditor.freeItemGetWord') }}</span>
+        <BaseInputNumber
+          class="free-item-qty"
+          :model-value="modelValue.config.get_quantity"
+          :min="1"
+          :aria-label="$t('effectEditor.fields.getQuantity')"
+          @update:model-value="(v) => updateConfig({ get_quantity: v })"
+        />
+        <span class="free-item-word">{{ $t('effectEditor.freeItemFreeWord') }}</span>
+        <span class="free-item-spacer" />
+        <label class="free-item-repeatable">
           <BaseToggleSwitch :model-value="modelValue.config.repeatable" @update:model-value="(v) => updateConfig({ repeatable: v })" />
-        </div>
+          {{ $t('effectEditor.fields.repeatable') }}
+        </label>
       </div>
       <div class="effect-field">
         <label>{{ $t('effectEditor.fields.buyCondition') }}</label>
@@ -193,31 +253,85 @@ function setScope(scope) {
 
 <style scoped>
 .effect-editor {
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  padding: 1rem;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.875rem;
+  padding: 1.25rem 0;
 }
 
-.effect-row {
+.effect-header {
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
 
-/* Base* selects default to width:100%, which as a flex child with no
-   explicit flex-basis claims the whole row and squeezes everything else —
-   give each control a shrink-to-content basis instead. The button already
-   sizes to content, so it's excluded. */
-.effect-row > :not(button) {
-  flex: 1 1 10rem;
+.effect-type-select {
+  flex: 1 1 auto;
   min-width: 0;
 }
 
-.effect-row > button {
-  flex: 0 0 auto;
+/* The selected value shown on the closed select — icon + label/description
+   stack, replacing the plain text label a generic dropdown would show. */
+.effect-type-value {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  min-width: 0;
+}
+
+.effect-type-option {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  min-width: 0;
+  width: 100%;
+}
+
+.effect-type-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: var(--radius-sm);
+  background: var(--color-primary-subtle);
+  color: var(--color-primary);
+  font-size: 0.8125rem;
+}
+
+.effect-type-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  text-align: left;
+}
+
+.effect-type-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.effect-type-desc {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.effect-type-check {
+  margin-left: auto;
+  flex-shrink: 0;
+  color: var(--color-primary);
+}
+
+.effect-scope {
+  align-self: flex-start;
 }
 
 .effect-config-row {
@@ -237,16 +351,43 @@ function setScope(scope) {
   font-weight: 600;
 }
 
-.effect-field--switch {
-  flex-direction: row;
-  align-items: center;
-  gap: 0.75rem;
-}
-
 .effect-hint {
   color: var(--color-text-muted);
   font-size: 0.8125rem;
   margin: 0;
   max-width: 24rem;
+}
+
+.free-item-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.free-item-word {
+  font-size: 0.875rem;
+  color: var(--color-text);
+}
+
+.free-item-qty {
+  flex: 0 0 5rem;
+}
+
+.free-item-arrow {
+  color: var(--color-text-muted);
+  font-size: 0.8125rem;
+}
+
+.free-item-spacer {
+  flex: 1 1 auto;
+}
+
+.free-item-repeatable {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  cursor: pointer;
 }
 </style>

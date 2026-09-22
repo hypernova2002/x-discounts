@@ -33,7 +33,11 @@ function dateParts(value, timezone) {
   const d = new Date(value)
   if (Number.isNaN(d.getTime())) return null
   const parts = new Intl.DateTimeFormat(currentLocale(), {
-    timeZone: timezone,
+    // `timeZone: null` throws (RangeError) where `timeZone: undefined` is
+    // silently treated as "not specified" and falls back to the system
+    // zone — coerce so an unloaded/absent project timezone degrades
+    // gracefully instead of crashing the caller's render.
+    timeZone: timezone || undefined,
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
@@ -96,7 +100,8 @@ export function formatPercent(value) {
 function monthDayYearParts(value, timezone) {
   const d = value instanceof Date ? value : new Date(value)
   if (Number.isNaN(d.getTime())) return null
-  const parts = new Intl.DateTimeFormat(currentLocale(), { timeZone: timezone, year: 'numeric', month: 'short', day: 'numeric' }).formatToParts(d)
+  // See dateParts' comment: `null` throws, `undefined` degrades gracefully.
+  const parts = new Intl.DateTimeFormat(currentLocale(), { timeZone: timezone || undefined, year: 'numeric', month: 'short', day: 'numeric' }).formatToParts(d)
   const get = (type) => parts.find((p) => p.type === type)?.value
   return { year: get('year'), month: get('month'), day: get('day') }
 }
@@ -135,7 +140,7 @@ export function formatDateRange(from, until, timezone) {
 }
 
 function zonedDateKey(date, timezone) {
-  return new Intl.DateTimeFormat('en-CA', { timeZone: timezone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(date)
+  return new Intl.DateTimeFormat('en-CA', { timeZone: timezone || undefined, year: 'numeric', month: '2-digit', day: '2-digit' }).format(date)
 }
 
 const DAY_MS = 24 * 60 * 60 * 1000
@@ -158,16 +163,16 @@ export function formatRelativeDateTime(value, timezone, t) {
   const valueKey = zonedDateKey(d, timezone)
   const yesterdayKey = zonedDateKey(new Date(now.getTime() - DAY_MS), timezone)
 
-  const time = new Intl.DateTimeFormat(locale, { timeZone: timezone, hour: 'numeric', minute: '2-digit', hour12: true }).format(d)
+  const time = new Intl.DateTimeFormat(locale, { timeZone: timezone || undefined, hour: 'numeric', minute: '2-digit', hour12: true }).format(d)
 
   let short
   if (valueKey === todayKey) short = t('format.todayAt', { time })
   else if (valueKey === yesterdayKey) short = t('format.yesterdayAt', { time })
   else short = formatSingle(monthDayYearParts(d, timezone))
 
-  const longDate = new Intl.DateTimeFormat(locale, { timeZone: timezone, year: 'numeric', month: 'long', day: 'numeric' }).format(d)
+  const longDate = new Intl.DateTimeFormat(locale, { timeZone: timezone || undefined, year: 'numeric', month: 'long', day: 'numeric' }).format(d)
   const fullTime = new Intl.DateTimeFormat(locale, {
-    timeZone: timezone,
+    timeZone: timezone || undefined,
     hour: 'numeric',
     minute: '2-digit',
     second: '2-digit',

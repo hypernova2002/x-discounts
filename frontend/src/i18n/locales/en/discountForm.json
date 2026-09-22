@@ -41,6 +41,8 @@
     "activeFromLabel": "Active from",
     "activeUntilLabel": "Active until",
     "couponDetailsTitle": "Coupon details",
+    "issuancePeriodLabel": "Issuance period",
+    "redemptionPeriodLabel": "Redemption period",
     "issuedFromLabel": "Issued from",
     "issuedUntilLabel": "Issued until",
     "validFromLabel": "Valid from",

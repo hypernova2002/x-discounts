@@ -16,6 +16,7 @@ import BaseButton from '@/components/base/BaseButton.vue'
 import BaseMessage from '@/components/base/BaseMessage.vue'
 import ConditionTreeEditor from '@/components/discounts/ConditionTreeEditor.vue'
 import EffectEditor from '@/components/discounts/EffectEditor.vue'
+import DiscountSummarySidebar from '@/components/discounts/DiscountSummarySidebar.vue'
 import UnsavedChangesDialog from '@/components/UnsavedChangesDialog.vue'
 import { useAuthStore } from '@/stores/auth'
 import { ApiError, apiFileUrl } from '@/lib/api'
@@ -57,6 +58,15 @@ const loading = ref(false)
 const saving = ref(false)
 const loadError = ref('')
 const errors = ref({})
+
+// Which summary-sidebar section to subtly highlight, driven by plain focus
+// bubbling from each major card — purely presentational, no interaction model.
+const activeSection = ref(null)
+
+// The summary sidebar only knows how to summarize coupon/promotion discounts
+// (see DiscountSummarySidebar.vue) — loyalty's points-based effects aren't
+// covered, so loyalty keeps the original single-column layout.
+const showSummary = computed(() => ['coupon', 'promotion'].includes(form.kind))
 
 const campaigns = ref([])
 const campaignOptions = computed(() => campaigns.value.map((c) => ({ label: c.name, value: c.id })))
@@ -390,331 +400,376 @@ function cancel() {
 
     <BaseMessage v-if="loadError" severity="error" :closable="false">{{ loadError }}</BaseMessage>
 
-    <form class="discount-form" @submit.prevent="submit">
-      <BaseCard>
-        <template #title>{{ $t('discountForm.basicsTitle') }}</template>
-        <template #content>
-          <div class="field-grid">
-            <div class="field">
-              <label for="kind">{{ $t('discountForm.kindLabel') }}</label>
-              <BaseSelect id="kind" v-model="form.kind" :disabled="isEdit" :options="KIND_OPTIONS" option-label="label" option-value="value" />
+    <div class="discount-form-layout" :class="{ 'discount-form-layout--with-summary': showSummary }">
+      <form class="discount-form discount-form-main" @submit.prevent="submit">
+        <BaseCard @focusin="activeSection = 'coupon'">
+          <template #title>{{ $t('discountForm.basicsTitle') }}</template>
+          <template #content>
+            <div class="field-grid">
+              <div class="field">
+                <label for="kind">{{ $t('discountForm.kindLabel') }}</label>
+                <BaseSelect id="kind" v-model="form.kind" :disabled="isEdit" :options="KIND_OPTIONS" option-label="label" option-value="value" />
+              </div>
+              <div class="field">
+                <label for="campaign_id">{{ $t('discountForm.campaignLabel') }}</label>
+                <BaseSelect id="campaign_id" v-model="form.campaign_id" :options="campaignOptions" option-label="label" option-value="value" filter :invalid="!!errors.campaign_id" />
+                <small v-if="errors.campaign_id" class="text-danger text-[0.8125rem]">{{ errors.campaign_id }}</small>
+              </div>
+              <div class="field">
+                <label for="key">{{ isEdit ? $t('discountForm.keyLabel') : $t('discountForm.keyLabelOptional') }}</label>
+                <BaseInputText id="key" v-model="form.key" :placeholder="isEdit ? '' : $t('discountForm.keyPlaceholder')" :invalid="!!errors.key" />
+                <small v-if="errors.key" class="text-danger text-[0.8125rem]">{{ errors.key }}</small>
+              </div>
+              <div class="field">
+                <label for="name">{{ $t('discountForm.nameLabel') }}</label>
+                <BaseInputText id="name" v-model="form.name" :invalid="!!errors.name" />
+                <small v-if="errors.name" class="text-danger text-[0.8125rem]">{{ errors.name }}</small>
+              </div>
+              <div class="field field--switch">
+                <label for="stackable">{{ $t('discountForm.stackableLabel') }}</label>
+                <BaseToggleSwitch id="stackable" v-model="form.stackable" />
+              </div>
+              <div class="field field--switch">
+                <label for="refundable">{{ $t('discountForm.refundableLabel') }}</label>
+                <BaseToggleSwitch id="refundable" v-model="form.refundable" />
+              </div>
+              <div class="field field--switch">
+                <label for="enabled">{{ $t('discountForm.enabledLabel') }}</label>
+                <BaseToggleSwitch id="enabled" v-model="form.enabled" />
+              </div>
             </div>
-            <div class="field">
-              <label for="campaign_id">{{ $t('discountForm.campaignLabel') }}</label>
-              <BaseSelect id="campaign_id" v-model="form.campaign_id" :options="campaignOptions" option-label="label" option-value="value" filter :invalid="!!errors.campaign_id" />
-              <small v-if="errors.campaign_id" class="text-danger text-[0.8125rem]">{{ errors.campaign_id }}</small>
-            </div>
-            <div class="field">
-              <label for="key">{{ isEdit ? $t('discountForm.keyLabel') : $t('discountForm.keyLabelOptional') }}</label>
-              <BaseInputText id="key" v-model="form.key" :placeholder="isEdit ? '' : $t('discountForm.keyPlaceholder')" :invalid="!!errors.key" />
-              <small v-if="errors.key" class="text-danger text-[0.8125rem]">{{ errors.key }}</small>
-            </div>
-            <div class="field">
-              <label for="name">{{ $t('discountForm.nameLabel') }}</label>
-              <BaseInputText id="name" v-model="form.name" :invalid="!!errors.name" />
-              <small v-if="errors.name" class="text-danger text-[0.8125rem]">{{ errors.name }}</small>
-            </div>
-            <div class="field field--switch">
-              <label for="stackable">{{ $t('discountForm.stackableLabel') }}</label>
-              <BaseToggleSwitch id="stackable" v-model="form.stackable" />
-            </div>
-            <div class="field field--switch">
-              <label for="refundable">{{ $t('discountForm.refundableLabel') }}</label>
-              <BaseToggleSwitch id="refundable" v-model="form.refundable" />
-            </div>
-            <div class="field field--switch">
-              <label for="enabled">{{ $t('discountForm.enabledLabel') }}</label>
-              <BaseToggleSwitch id="enabled" v-model="form.enabled" />
-            </div>
-          </div>
-        </template>
-      </BaseCard>
+          </template>
+        </BaseCard>
 
-      <BaseCard v-if="isEdit">
-        <template #title>{{ $t('discountForm.stackingTitle') }}</template>
-        <template #content>
-          <p class="usage-limits-hint">
-            {{ $t('discountForm.stackingHint') }}
-          </p>
-          <div class="field">
-            <label for="compatible_discounts">{{ $t('discountForm.compatibleWithLabel') }}</label>
-            <BaseMultiSelect
-              id="compatible_discounts"
-              :model-value="compatibleDiscountIds"
-              :options="discountOptions"
+        <BaseCard v-if="form.kind === 'promotion'" @focusin="activeSection = 'availability'">
+          <template #title>{{ $t('discountForm.promotionDetailsTitle') }}</template>
+          <template #content>
+            <div class="field-grid">
+              <div class="field">
+                <label for="active_from">{{ $t('discountForm.activeFromLabel') }}</label>
+                <BaseInputText id="active_from" v-model="form.promotion.active_from" type="datetime-local" :invalid="!!errors['promotion.active_from']" />
+                <small v-if="errors['promotion.active_from']" class="text-danger text-[0.8125rem]">{{ errors['promotion.active_from'] }}</small>
+              </div>
+              <div class="field">
+                <label for="active_until">{{ $t('discountForm.activeUntilLabel') }}</label>
+                <BaseInputText id="active_until" v-model="form.promotion.active_until" type="datetime-local" />
+              </div>
+            </div>
+          </template>
+        </BaseCard>
+
+        <BaseCard v-else-if="form.kind === 'coupon'" @focusin="activeSection = 'availability'">
+          <template #title>{{ $t('discountForm.couponDetailsTitle') }}</template>
+          <template #content>
+            <p class="period-label">{{ $t('discountForm.issuancePeriodLabel') }}</p>
+            <div class="field-grid">
+              <div class="field">
+                <label for="issued_from">{{ $t('discountForm.issuedFromLabel') }}</label>
+                <BaseInputText id="issued_from" v-model="form.coupon.issued_from" type="datetime-local" />
+              </div>
+              <div class="field">
+                <label for="issued_until">{{ $t('discountForm.issuedUntilLabel') }}</label>
+                <BaseInputText id="issued_until" v-model="form.coupon.issued_until" type="datetime-local" />
+              </div>
+            </div>
+            <p class="period-label">{{ $t('discountForm.redemptionPeriodLabel') }}</p>
+            <div class="field-grid">
+              <div class="field">
+                <label for="valid_from">{{ $t('discountForm.validFromLabel') }}</label>
+                <BaseInputText id="valid_from" v-model="form.coupon.valid_from" type="datetime-local" />
+              </div>
+              <div class="field">
+                <label for="valid_until">{{ $t('discountForm.validUntilLabel') }}</label>
+                <BaseInputText id="valid_until" v-model="form.coupon.valid_until" type="datetime-local" />
+              </div>
+            </div>
+          </template>
+        </BaseCard>
+
+        <BaseCard v-if="form.kind === 'coupon' && !isEdit" @focusin="activeSection = 'availability'">
+          <template #title>{{ $t('discountForm.couponCodesTitle') }}</template>
+          <template #content>
+            <p class="usage-limits-hint">
+              {{ $t('discountForm.couponCodesHint') }}
+            </p>
+            <BaseMessage v-if="errors.coupon" severity="error" :closable="false">{{ errors.coupon }}</BaseMessage>
+            <BaseSelectButton
+              v-model="couponCodeMode"
+              :options="[
+                { label: $t('discountForm.oneoffOption'), value: 'oneoff' },
+                { label: $t('discountForm.bulkOption'), value: 'bulk' },
+              ]"
               option-label="label"
               option-value="value"
-              filter
-              :placeholder="$t('discountForm.noExceptionsPlaceholder')"
-              :loading="savingCompatibility"
-              @update:model-value="updateCompatibleDiscounts"
             />
-          </div>
-        </template>
-      </BaseCard>
 
-      <BaseCard>
-        <template #title>{{ $t('discountForm.usageLimitsTitle') }}</template>
-        <template #content>
-          <p class="usage-limits-hint">{{ $t('discountForm.usageLimitsHint') }}</p>
-          <div class="field-grid">
-            <div class="field">
-              <label for="max_redemptions">{{ $t('discountForm.maxRedemptionsLabel') }}</label>
-              <BaseInputNumber id="max_redemptions" v-model="form.max_redemptions" :min="1" :placeholder="$t('discountForm.unlimitedPlaceholder')" />
-            </div>
-            <div class="field">
-              <label for="max_redemptions_per_customer">{{ $t('discountForm.maxRedemptionsPerCustomerLabel') }}</label>
-              <BaseInputNumber id="max_redemptions_per_customer" v-model="form.max_redemptions_per_customer" :min="1" :placeholder="$t('discountForm.unlimitedPlaceholder')" />
-            </div>
-            <div class="field">
-              <label for="max_redemptions_per_day">{{ $t('discountForm.maxRedemptionsPerDayLabel') }}</label>
-              <BaseInputNumber id="max_redemptions_per_day" v-model="form.max_redemptions_per_day" :min="1" :placeholder="$t('discountForm.unlimitedPlaceholder')" />
-            </div>
-            <div class="field">
-              <label for="max_redemption_amount">{{ $t('discountForm.maxRedemptionAmountLabel') }}</label>
-              <BaseInputNumber id="max_redemption_amount" v-model="form.max_redemption_amount" :min="0" :min-fraction-digits="2" :placeholder="$t('discountForm.unlimitedPlaceholder')" />
-            </div>
-            <div class="field">
-              <label for="max_redemption_amount_per_day">{{ $t('discountForm.maxRedemptionAmountPerDayLabel') }}</label>
-              <BaseInputNumber id="max_redemption_amount_per_day" v-model="form.max_redemption_amount_per_day" :min="0" :min-fraction-digits="2" :placeholder="$t('discountForm.unlimitedPlaceholder')" />
-            </div>
-            <div class="field">
-              <label for="max_redemption_amount_per_customer">{{ $t('discountForm.maxRedemptionAmountPerCustomerLabel') }}</label>
-              <BaseInputNumber id="max_redemption_amount_per_customer" v-model="form.max_redemption_amount_per_customer" :min="0" :min-fraction-digits="2" :placeholder="$t('discountForm.unlimitedPlaceholder')" />
-            </div>
-          </div>
-        </template>
-      </BaseCard>
+            <div class="field-grid coupon-code-fields">
+              <template v-if="couponCodeMode === 'oneoff'">
+                <div class="field">
+                  <label for="coupon_code">{{ $t('discountForm.codeLabelOptional') }}</label>
+                  <BaseInputText id="coupon_code" v-model="form.couponCode.code" :placeholder="$t('discountForm.codePlaceholder')" />
+                </div>
+                <div class="field">
+                  <label for="coupon_code_customer">{{ $t('discountForm.assignCustomerLabel') }}</label>
+                  <BaseSelect
+                    id="coupon_code_customer"
+                    v-model="form.couponCode.customerId"
+                    :options="customerOptions"
+                    option-label="label"
+                    option-value="value"
+                    filter
+                    show-clear
+                    :placeholder="$t('discountForm.anyonePlaceholder')"
+                  />
+                </div>
+                <div class="field">
+                  <label for="coupon_code_max_redemptions">{{ $t('discountForm.maxRedemptionsLabel') }}</label>
+                  <BaseInputNumber id="coupon_code_max_redemptions" v-model="form.couponCode.maxRedemptions" :min="1" />
+                </div>
+              </template>
 
-      <BaseCard v-if="form.kind === 'promotion'">
-        <template #title>{{ $t('discountForm.promotionDetailsTitle') }}</template>
-        <template #content>
-          <div class="field-grid">
-            <div class="field">
-              <label for="active_from">{{ $t('discountForm.activeFromLabel') }}</label>
-              <BaseInputText id="active_from" v-model="form.promotion.active_from" type="datetime-local" :invalid="!!errors['promotion.active_from']" />
-              <small v-if="errors['promotion.active_from']" class="text-danger text-[0.8125rem]">{{ errors['promotion.active_from'] }}</small>
+              <template v-else>
+                <div class="field field--full">
+                  <BaseSelectButton
+                    v-model="couponBulkMode"
+                    :options="[
+                      { label: $t('discountForm.anonymousOption'), value: 'count' },
+                      { label: $t('discountForm.personalizedOption'), value: 'customers' },
+                    ]"
+                    option-label="label"
+                    option-value="value"
+                  />
+                </div>
+                <div v-if="couponBulkMode === 'count'" class="field">
+                  <label for="coupon_code_count">{{ $t('discountForm.howManyCodesLabel') }}</label>
+                  <BaseInputNumber id="coupon_code_count" v-model="form.couponCode.count" :min="1" :max="5000" />
+                </div>
+                <div v-else class="field field--full">
+                  <label for="coupon_code_customers">{{ $t('discountForm.customersOneCodeEachLabel') }}</label>
+                  <BaseMultiSelect
+                    id="coupon_code_customers"
+                    v-model="form.couponCode.customerIds"
+                    :options="customerOptions"
+                    option-label="label"
+                    option-value="value"
+                    filter
+                  />
+                </div>
+                <div class="field">
+                  <label for="coupon_code_prefix">{{ $t('discountForm.prefixLabel') }}</label>
+                  <BaseInputText id="coupon_code_prefix" v-model="form.couponCode.prefix" :placeholder="$t('discountForm.prefixPlaceholder')" />
+                </div>
+                <div class="field">
+                  <label for="coupon_code_suffix">{{ $t('discountForm.suffixLabel') }}</label>
+                  <BaseInputText id="coupon_code_suffix" v-model="form.couponCode.suffix" :placeholder="$t('discountForm.suffixPlaceholder')" />
+                </div>
+                <div class="field">
+                  <label for="coupon_code_bulk_max_redemptions">{{ $t('discountForm.maxRedemptionsPerCodeLabel') }}</label>
+                  <BaseInputNumber id="coupon_code_bulk_max_redemptions" v-model="form.couponCode.maxRedemptions" :min="1" />
+                </div>
+              </template>
             </div>
-            <div class="field">
-              <label for="active_until">{{ $t('discountForm.activeUntilLabel') }}</label>
-              <BaseInputText id="active_until" v-model="form.promotion.active_until" type="datetime-local" />
-            </div>
-          </div>
-        </template>
-      </BaseCard>
+          </template>
+        </BaseCard>
 
-      <BaseCard v-else-if="form.kind === 'coupon'">
-        <template #title>{{ $t('discountForm.couponDetailsTitle') }}</template>
-        <template #content>
-          <div class="field-grid">
-            <div class="field">
-              <label for="issued_from">{{ $t('discountForm.issuedFromLabel') }}</label>
-              <BaseInputText id="issued_from" v-model="form.coupon.issued_from" type="datetime-local" />
-            </div>
-            <div class="field">
-              <label for="issued_until">{{ $t('discountForm.issuedUntilLabel') }}</label>
-              <BaseInputText id="issued_until" v-model="form.coupon.issued_until" type="datetime-local" />
-            </div>
-            <div class="field">
-              <label for="valid_from">{{ $t('discountForm.validFromLabel') }}</label>
-              <BaseInputText id="valid_from" v-model="form.coupon.valid_from" type="datetime-local" />
-            </div>
-            <div class="field">
-              <label for="valid_until">{{ $t('discountForm.validUntilLabel') }}</label>
-              <BaseInputText id="valid_until" v-model="form.coupon.valid_until" type="datetime-local" />
-            </div>
-          </div>
-        </template>
-      </BaseCard>
-
-      <BaseCard v-if="form.kind === 'coupon'">
-        <template #title>{{ $t('discountForm.designTitle') }}</template>
-        <template #content>
-          <p class="design-hint">{{ $t('discountForm.designHint') }}</p>
-
-          <div class="field">
-            <label for="design_image">{{ $t('discountForm.designImageLabel') }}</label>
-            <img
-              v-if="designImagePreviewUrl"
-              :src="designImagePreviewUrl"
-              :alt="$t('discountForm.newDesignImageAlt')"
-              class="design-image-preview"
-            />
-            <img
-              v-else-if="existingDesignImageUrl"
-              :src="apiFileUrl(existingDesignImageUrl)"
-              :alt="$t('discountForm.currentDesignImageAlt')"
-              class="design-image-preview"
-            />
-            <input id="design_image" type="file" accept="image/png,image/jpeg,image/webp,image/gif" @change="onDesignImageSelected" />
-          </div>
-
-          <div class="field">
-            <label for="design_html">{{ $t('discountForm.designHtmlLabel') }}</label>
-            <BaseTextarea id="design_html" v-model="form.coupon.design_html" rows="6" auto-resize />
-          </div>
-
-          <div v-if="form.coupon.design_html" class="field">
-            <span class="preview-label">{{ $t('discountForm.designPreviewLabel') }}</span>
-            <!-- eslint-disable-next-line vue/no-v-html -- the one deliberate v-html in this app; sanitizeHtml() is the only thing ever passed to it -->
-            <div class="design-preview" v-html="sanitizeHtml(form.coupon.design_html)" />
-          </div>
-        </template>
-      </BaseCard>
-
-      <BaseCard v-if="form.kind === 'coupon' && !isEdit">
-        <template #title>{{ $t('discountForm.couponCodesTitle') }}</template>
-        <template #content>
-          <p class="usage-limits-hint">
-            {{ $t('discountForm.couponCodesHint') }}
-          </p>
-          <BaseMessage v-if="errors.coupon" severity="error" :closable="false">{{ errors.coupon }}</BaseMessage>
-          <BaseSelectButton
-            v-model="couponCodeMode"
-            :options="[
-              { label: $t('discountForm.oneoffOption'), value: 'oneoff' },
-              { label: $t('discountForm.bulkOption'), value: 'bulk' },
-            ]"
-            option-label="label"
-            option-value="value"
-          />
-
-          <div class="field-grid coupon-code-fields">
-            <template v-if="couponCodeMode === 'oneoff'">
+        <BaseCard v-if="form.kind === 'loyalty'" @focusin="activeSection = 'availability'">
+          <template #title>{{ $t('discountForm.loyaltyDetailsTitle') }}</template>
+          <template #content>
+            <div class="field-grid">
               <div class="field">
-                <label for="coupon_code">{{ $t('discountForm.codeLabelOptional') }}</label>
-                <BaseInputText id="coupon_code" v-model="form.couponCode.code" :placeholder="$t('discountForm.codePlaceholder')" />
+                <label for="loyalty_active_from">{{ $t('discountForm.activeFromLabel') }}</label>
+                <BaseInputText id="loyalty_active_from" v-model="form.loyalty.active_from" type="datetime-local" :invalid="!!errors['loyalty.active_from']" />
+                <small v-if="errors['loyalty.active_from']" class="text-danger text-[0.8125rem]">{{ errors['loyalty.active_from'] }}</small>
               </div>
               <div class="field">
-                <label for="coupon_code_customer">{{ $t('discountForm.assignCustomerLabel') }}</label>
-                <BaseSelect
-                  id="coupon_code_customer"
-                  v-model="form.couponCode.customerId"
-                  :options="customerOptions"
-                  option-label="label"
-                  option-value="value"
-                  filter
-                  show-clear
-                  :placeholder="$t('discountForm.anyonePlaceholder')"
+                <label for="loyalty_active_until">{{ $t('discountForm.activeUntilLabel') }}</label>
+                <BaseInputText id="loyalty_active_until" v-model="form.loyalty.active_until" type="datetime-local" />
+              </div>
+              <div class="field">
+                <label for="points_expire_after_days">{{ $t('discountForm.pointsExpireAfterLabel') }}</label>
+                <BaseInputNumber id="points_expire_after_days" v-model="form.loyalty.points_expire_after_days" :min="1" :placeholder="$t('discountForm.neverPlaceholder')" />
+              </div>
+            </div>
+            <p class="usage-limits-hint">
+              {{ $t('discountForm.loyaltyExpiryHint') }}
+            </p>
+          </template>
+        </BaseCard>
+
+        <BaseCard @focusin="activeSection = 'discount'">
+          <template #title>{{ $t('discountForm.effectsTitle') }}</template>
+          <template #content>
+            <div class="effects-list">
+              <template v-for="(effect, i) in form.effects" :key="i">
+                <hr v-if="i > 0" class="effect-divider" />
+                <EffectEditor
+                  :model-value="effect"
+                  :kind="form.kind"
+                  @update:model-value="(v) => (form.effects[i] = v)"
+                  @remove="removeEffect(i)"
                 />
-              </div>
-              <div class="field">
-                <label for="coupon_code_max_redemptions">{{ $t('discountForm.maxRedemptionsLabel') }}</label>
-                <BaseInputNumber id="coupon_code_max_redemptions" v-model="form.couponCode.maxRedemptions" :min="1" />
-              </div>
-            </template>
-
-            <template v-else>
-              <div class="field field--full">
-                <BaseSelectButton
-                  v-model="couponBulkMode"
-                  :options="[
-                    { label: $t('discountForm.anonymousOption'), value: 'count' },
-                    { label: $t('discountForm.personalizedOption'), value: 'customers' },
-                  ]"
-                  option-label="label"
-                  option-value="value"
-                />
-              </div>
-              <div v-if="couponBulkMode === 'count'" class="field">
-                <label for="coupon_code_count">{{ $t('discountForm.howManyCodesLabel') }}</label>
-                <BaseInputNumber id="coupon_code_count" v-model="form.couponCode.count" :min="1" :max="5000" />
-              </div>
-              <div v-else class="field field--full">
-                <label for="coupon_code_customers">{{ $t('discountForm.customersOneCodeEachLabel') }}</label>
-                <BaseMultiSelect
-                  id="coupon_code_customers"
-                  v-model="form.couponCode.customerIds"
-                  :options="customerOptions"
-                  option-label="label"
-                  option-value="value"
-                  filter
-                />
-              </div>
-              <div class="field">
-                <label for="coupon_code_prefix">{{ $t('discountForm.prefixLabel') }}</label>
-                <BaseInputText id="coupon_code_prefix" v-model="form.couponCode.prefix" :placeholder="$t('discountForm.prefixPlaceholder')" />
-              </div>
-              <div class="field">
-                <label for="coupon_code_suffix">{{ $t('discountForm.suffixLabel') }}</label>
-                <BaseInputText id="coupon_code_suffix" v-model="form.couponCode.suffix" :placeholder="$t('discountForm.suffixPlaceholder')" />
-              </div>
-              <div class="field">
-                <label for="coupon_code_bulk_max_redemptions">{{ $t('discountForm.maxRedemptionsPerCodeLabel') }}</label>
-                <BaseInputNumber id="coupon_code_bulk_max_redemptions" v-model="form.couponCode.maxRedemptions" :min="1" />
-              </div>
-            </template>
-          </div>
-        </template>
-      </BaseCard>
-
-      <BaseCard v-if="form.kind === 'loyalty'">
-        <template #title>{{ $t('discountForm.loyaltyDetailsTitle') }}</template>
-        <template #content>
-          <div class="field-grid">
-            <div class="field">
-              <label for="loyalty_active_from">{{ $t('discountForm.activeFromLabel') }}</label>
-              <BaseInputText id="loyalty_active_from" v-model="form.loyalty.active_from" type="datetime-local" :invalid="!!errors['loyalty.active_from']" />
-              <small v-if="errors['loyalty.active_from']" class="text-danger text-[0.8125rem]">{{ errors['loyalty.active_from'] }}</small>
+              </template>
+              <p v-if="!form.effects.length" class="empty-hint">{{ $t('discountForm.noEffectsYet') }}</p>
             </div>
-            <div class="field">
-              <label for="loyalty_active_until">{{ $t('discountForm.activeUntilLabel') }}</label>
-              <BaseInputText id="loyalty_active_until" v-model="form.loyalty.active_until" type="datetime-local" />
-            </div>
-            <div class="field">
-              <label for="points_expire_after_days">{{ $t('discountForm.pointsExpireAfterLabel') }}</label>
-              <BaseInputNumber id="points_expire_after_days" v-model="form.loyalty.points_expire_after_days" :min="1" :placeholder="$t('discountForm.neverPlaceholder')" />
-            </div>
-          </div>
-          <p class="usage-limits-hint">
-            {{ $t('discountForm.loyaltyExpiryHint') }}
-          </p>
-        </template>
-      </BaseCard>
-
-      <BaseCard>
-        <template #title>{{ $t('discountForm.eligibilityTitle') }}</template>
-        <template #content>
-          <ConditionTreeEditor v-model="form.eligibility_condition" />
-        </template>
-      </BaseCard>
-
-      <BaseCard>
-        <template #title>{{ $t('discountForm.effectsTitle') }}</template>
-        <template #content>
-          <div class="effects-list">
-            <EffectEditor
-              v-for="(effect, i) in form.effects"
-              :key="i"
-              :model-value="effect"
-              :kind="form.kind"
-              @update:model-value="(v) => (form.effects[i] = v)"
-              @remove="removeEffect(i)"
-            />
-            <p v-if="!form.effects.length" class="empty-hint">{{ $t('discountForm.noEffectsYet') }}</p>
             <BaseButton text :label="$t('discountForm.addEffectButton')" @click="addEffect" />
-          </div>
-        </template>
-      </BaseCard>
+          </template>
+        </BaseCard>
 
-      <BaseMessage v-if="errors._root" severity="error" :closable="false">{{ errors._root }}</BaseMessage>
+        <BaseCard @focusin="activeSection = 'eligibility'">
+          <template #title>{{ $t('discountForm.eligibilityTitle') }}</template>
+          <template #content>
+            <ConditionTreeEditor v-model="form.eligibility_condition" />
+          </template>
+        </BaseCard>
 
-      <div class="form-actions">
-        <BaseButton type="button" text :label="$t('discountForm.cancelButton')" @click="cancel" />
-        <BaseButton type="submit" :label="isEdit ? $t('discountForm.saveButton') : $t('discountForm.createButton')" :loading="saving" />
-      </div>
-    </form>
+        <BaseCard @focusin="activeSection = 'usage'">
+          <template #title>{{ $t('discountForm.usageLimitsTitle') }}</template>
+          <template #content>
+            <p class="usage-limits-hint">{{ $t('discountForm.usageLimitsHint') }}</p>
+            <div class="field-grid">
+              <div class="field">
+                <label for="max_redemptions">{{ $t('discountForm.maxRedemptionsLabel') }}</label>
+                <BaseInputNumber id="max_redemptions" v-model="form.max_redemptions" :min="1" :placeholder="$t('discountForm.unlimitedPlaceholder')" />
+              </div>
+              <div class="field">
+                <label for="max_redemptions_per_customer">{{ $t('discountForm.maxRedemptionsPerCustomerLabel') }}</label>
+                <BaseInputNumber id="max_redemptions_per_customer" v-model="form.max_redemptions_per_customer" :min="1" :placeholder="$t('discountForm.unlimitedPlaceholder')" />
+              </div>
+              <div class="field">
+                <label for="max_redemptions_per_day">{{ $t('discountForm.maxRedemptionsPerDayLabel') }}</label>
+                <BaseInputNumber id="max_redemptions_per_day" v-model="form.max_redemptions_per_day" :min="1" :placeholder="$t('discountForm.unlimitedPlaceholder')" />
+              </div>
+              <div class="field">
+                <label for="max_redemption_amount">{{ $t('discountForm.maxRedemptionAmountLabel') }}</label>
+                <BaseInputNumber id="max_redemption_amount" v-model="form.max_redemption_amount" :min="0" :min-fraction-digits="2" :placeholder="$t('discountForm.unlimitedPlaceholder')" />
+              </div>
+              <div class="field">
+                <label for="max_redemption_amount_per_day">{{ $t('discountForm.maxRedemptionAmountPerDayLabel') }}</label>
+                <BaseInputNumber id="max_redemption_amount_per_day" v-model="form.max_redemption_amount_per_day" :min="0" :min-fraction-digits="2" :placeholder="$t('discountForm.unlimitedPlaceholder')" />
+              </div>
+              <div class="field">
+                <label for="max_redemption_amount_per_customer">{{ $t('discountForm.maxRedemptionAmountPerCustomerLabel') }}</label>
+                <BaseInputNumber id="max_redemption_amount_per_customer" v-model="form.max_redemption_amount_per_customer" :min="0" :min-fraction-digits="2" :placeholder="$t('discountForm.unlimitedPlaceholder')" />
+              </div>
+            </div>
+          </template>
+        </BaseCard>
+
+        <BaseCard v-if="isEdit">
+          <template #title>{{ $t('discountForm.stackingTitle') }}</template>
+          <template #content>
+            <p class="usage-limits-hint">
+              {{ $t('discountForm.stackingHint') }}
+            </p>
+            <div class="field">
+              <label for="compatible_discounts">{{ $t('discountForm.compatibleWithLabel') }}</label>
+              <BaseMultiSelect
+                id="compatible_discounts"
+                :model-value="compatibleDiscountIds"
+                :options="discountOptions"
+                option-label="label"
+                option-value="value"
+                filter
+                :placeholder="$t('discountForm.noExceptionsPlaceholder')"
+                :loading="savingCompatibility"
+                @update:model-value="updateCompatibleDiscounts"
+              />
+            </div>
+          </template>
+        </BaseCard>
+
+        <BaseCard v-if="form.kind === 'coupon'">
+          <template #title>{{ $t('discountForm.designTitle') }}</template>
+          <template #content>
+            <p class="design-hint">{{ $t('discountForm.designHint') }}</p>
+
+            <div class="field">
+              <label for="design_image">{{ $t('discountForm.designImageLabel') }}</label>
+              <img
+                v-if="designImagePreviewUrl"
+                :src="designImagePreviewUrl"
+                :alt="$t('discountForm.newDesignImageAlt')"
+                class="design-image-preview"
+              />
+              <img
+                v-else-if="existingDesignImageUrl"
+                :src="apiFileUrl(existingDesignImageUrl)"
+                :alt="$t('discountForm.currentDesignImageAlt')"
+                class="design-image-preview"
+              />
+              <input id="design_image" type="file" accept="image/png,image/jpeg,image/webp,image/gif" @change="onDesignImageSelected" />
+            </div>
+
+            <div class="field">
+              <label for="design_html">{{ $t('discountForm.designHtmlLabel') }}</label>
+              <BaseTextarea id="design_html" v-model="form.coupon.design_html" rows="6" auto-resize />
+            </div>
+
+            <div v-if="form.coupon.design_html" class="field">
+              <span class="preview-label">{{ $t('discountForm.designPreviewLabel') }}</span>
+              <!-- eslint-disable-next-line vue/no-v-html -- the one deliberate v-html in this app; sanitizeHtml() is the only thing ever passed to it -->
+              <div class="design-preview" v-html="sanitizeHtml(form.coupon.design_html)" />
+            </div>
+          </template>
+        </BaseCard>
+
+        <BaseMessage v-if="errors._root" severity="error" :closable="false">{{ errors._root }}</BaseMessage>
+
+        <div class="form-actions">
+          <BaseButton type="button" text :label="$t('discountForm.cancelButton')" @click="cancel" />
+          <BaseButton type="submit" :label="isEdit ? $t('discountForm.saveButton') : $t('discountForm.createButton')" :loading="saving" />
+        </div>
+      </form>
+
+      <aside v-if="showSummary" class="discount-form-summary">
+        <DiscountSummarySidebar :form="form" :timezone="auth.project?.timezone" :active-section="activeSection" />
+      </aside>
+    </div>
 
     <UnsavedChangesDialog :visible="showUnsavedDialog" @stay="cancelLeave" @discard="confirmLeave" />
   </AppShell>
 </template>
 
 <style scoped>
+.discount-form-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+/* The summary sidebar renders above the editor on narrow/medium screens
+   (order: -1, simple DOM-order reflow) rather than a collapsible panel —
+   its own content is kept short by design, so it stays reasonably compact
+   even stacked above the form. 1024px is a deliberate, narrower-than-usual
+   breakpoint of its own (not reused from AppShell's 900px nav-collapse
+   point) — this sidebar is a second column on top of the nav sidebar, so it
+   needs more headroom before appearing than the nav drawer alone does, to
+   avoid cramping the eligibility/effect rows this page deliberately keeps
+   compact and single-line. */
+.discount-form-summary {
+  order: -1;
+}
+
+@media (min-width: 1024px) {
+  .discount-form-layout--with-summary {
+    grid-template-columns: 1fr minmax(240px, 300px);
+  }
+
+  .discount-form-summary {
+    order: 0;
+    position: sticky;
+    top: 1rem;
+    align-self: start;
+  }
+}
+
 .discount-form {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
   margin-top: 1rem;
+  min-width: 0;
 }
 
 .field-grid {
@@ -754,6 +809,19 @@ function cancel() {
   margin: 0 0 1rem;
 }
 
+.period-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--color-text-muted);
+  margin: 0 0 0.5rem;
+}
+
+.period-label:not(:first-child) {
+  margin-top: 1.25rem;
+}
+
 .design-hint {
   color: var(--color-text-muted);
   font-size: 0.875rem;
@@ -784,18 +852,42 @@ function cancel() {
 .effects-list {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+}
+
+/* Sibling effects are separated by this divider, not by each effect owning
+   its own bordered box — EffectEditor.vue's root is plain vertical padding,
+   so this is the only line drawn between them (component-design.md: cards
+   communicate hierarchy, dividers communicate siblings). */
+.effect-divider {
+  border: none;
+  border-top: 1px solid var(--color-border);
+  margin: 0;
 }
 
 .empty-hint {
   color: var(--color-text-muted);
   font-size: 0.875rem;
   margin: 0;
+  padding: 1rem 0;
 }
 
+/* AppShell's own scroll container (.app-shell__content) has bottom padding
+   of its own — a plain `bottom: 0` sticks this to the top of THAT padding,
+   leaving a gap (the padding's own height) between the footer and the real
+   bottom edge, through which whatever's next in the page peeks through. The
+   negative margin/bottom bleeds the footer into that padding and back out to
+   the true edge; the padding added back here keeps the buttons visually
+   inset the same amount as before. */
 .form-actions {
   display: flex;
   justify-content: flex-end;
   gap: 0.75rem;
+  position: sticky;
+  bottom: -1.5rem;
+  margin: 0 -1.25rem -1.5rem;
+  padding: 1rem 1.25rem 1.5rem;
+  background: var(--color-bg);
+  border-top: 1px solid var(--color-border);
+  z-index: 1;
 }
 </style>

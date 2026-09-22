@@ -9,7 +9,8 @@ module Schemas
       type: :object,
       properties: {
         id: { type: :string, readOnly: true },
-        name: { type: :string }
+        name: { type: :string },
+        timezone: { type: :string }
       }
     )
   end

@@ -2,6 +2,9 @@
   "effectEditor": {
     "removeEffectButton": "効果を削除",
     "multiplierHint": "注文内の他の対象となるすべてのポイント割引から得られるポイントの合計に適用されます。",
+    "freeItemBuyWord": "購入",
+    "freeItemGetWord": "取得",
+    "freeItemFreeWord": "無料",
     "fields": {
       "percentageOff": "割引率",
       "amount": "金額",
@@ -9,8 +12,8 @@
       "buyQuantity": "購入数量",
       "getQuantity": "取得数量",
       "repeatable": "繰り返し可能",
-      "buyCondition": "購入条件",
-      "getCondition": "取得条件",
+      "buyCondition": "次の条件に一致するアイテムを購入",
+      "getCondition": "次の条件に一致するアイテムを取得",
       "pointsPerCurrency": "通貨単位あたりのポイント",
       "points": "ポイント",
       "pointsPerItem": "アイテムあたりのポイント",
@@ -25,6 +28,15 @@
       "pointsFlat": "固定ポイント",
       "pointsPerItem": "アイテムあたりのポイント",
       "pointsMultiplier": "ポイント倍率"
+    },
+    "effectTypeDescriptions": {
+      "percentageOff": "割引率による値引き",
+      "fixedAmountOff": "定額の値引き",
+      "freeItem": "アイテムの無料進呈",
+      "pointsPerCurrency": "通貨単位あたりのポイント付与",
+      "pointsFlat": "固定ポイントの付与",
+      "pointsPerItem": "購入アイテムごとのポイント付与",
+      "pointsMultiplier": "他のポイントを倍増"
     },
     "scopes": {
       "cart": "カート",

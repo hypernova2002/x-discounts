@@ -2,6 +2,9 @@
   "effectEditor": {
     "removeEffectButton": "Remove effect",
     "multiplierHint": "Applies to the sum of points earned from every other eligible loyalty discount on the order.",
+    "freeItemBuyWord": "Buy",
+    "freeItemGetWord": "Get",
+    "freeItemFreeWord": "free",
     "fields": {
       "percentageOff": "Percentage off",
       "amount": "Amount",
@@ -9,8 +12,8 @@
       "buyQuantity": "Buy quantity",
       "getQuantity": "Get quantity",
       "repeatable": "Repeatable",
-      "buyCondition": "Buy condition",
-      "getCondition": "Get condition",
+      "buyCondition": "Buy items matching",
+      "getCondition": "Get items matching",
       "pointsPerCurrency": "Points per currency unit spent",
       "points": "Points",
       "pointsPerItem": "Points per item",
@@ -25,6 +28,15 @@
       "pointsFlat": "Flat points",
       "pointsPerItem": "Points per item",
       "pointsMultiplier": "Points multiplier"
+    },
+    "effectTypeDescriptions": {
+      "percentageOff": "Percentage discount",
+      "fixedAmountOff": "Fixed amount off",
+      "freeItem": "Free item bonus",
+      "pointsPerCurrency": "Points per currency spent",
+      "pointsFlat": "Flat points bonus",
+      "pointsPerItem": "Points per item bought",
+      "pointsMultiplier": "Multiplies other loyalty points"
     },
     "scopes": {
       "cart": "Cart",

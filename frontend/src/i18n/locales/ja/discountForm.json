@@ -41,6 +41,8 @@
     "activeFromLabel": "有効開始日",
     "activeUntilLabel": "有効終了日",
     "couponDetailsTitle": "クーポン詳細",
+    "issuancePeriodLabel": "発行期間",
+    "redemptionPeriodLabel": "利用可能期間",
     "issuedFromLabel": "発行開始日",
     "issuedUntilLabel": "発行終了日",
     "validFromLabel": "開始日",

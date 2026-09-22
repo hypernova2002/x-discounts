@@ -1,0 +1,31 @@
+{
+  "discountSummarySidebar": {
+    "couponSectionTitle": "クーポン",
+    "promotionSectionTitle": "プロモーション",
+    "discountSectionTitle": "割引",
+    "eligibilitySectionTitle": "適用条件",
+    "usageSectionTitle": "利用状況",
+    "availabilitySectionTitle": "利用可能期間",
+    "warningsSectionTitle": "警告",
+    "unnamedLabel": "名称未設定の割引",
+    "enabledStatus": "有効",
+    "disabledStatus": "無効",
+    "noEffectsYet": "効果はまだ設定されていません。",
+    "appliesToEveryone": "すべての顧客に適用",
+    "conditionsCountLabel": "{count}件の条件",
+    "unlimitedLabel": "無制限",
+    "totalRedemptionsLabel": "合計{count}回まで利用可能",
+    "perCustomerLabel": "顧客ごとに{count}回まで",
+    "issuancePeriodLabel": "発行期間",
+    "redemptionPeriodLabel": "利用可能期間",
+    "activePeriodLabel": "実施期間",
+    "anytimeLabel": "いつでも",
+    "percentageOffSummary": "{percentage}%割引 · {scope}",
+    "fixedAmountOffSummary": "{amount}割引 · {scope}",
+    "freeItemSummary": "{buy}個購入 → {get}個無料",
+    "warningNoEffects": "効果が設定されていません。この割引は現在何も行いません。",
+    "warningRedemptionDates": "有効終了日が有効開始日より前になっています。",
+    "warningIssuanceDates": "発行終了日が発行開始日より前になっています。",
+    "warningActiveDates": "実施終了日が実施開始日より前になっています。"
+  }
+}

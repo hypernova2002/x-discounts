@@ -1,0 +1,31 @@
+{
+  "discountSummarySidebar": {
+    "couponSectionTitle": "Coupon",
+    "promotionSectionTitle": "Promotion",
+    "discountSectionTitle": "Discount",
+    "eligibilitySectionTitle": "Eligibility",
+    "usageSectionTitle": "Usage",
+    "availabilitySectionTitle": "Availability",
+    "warningsSectionTitle": "Warnings",
+    "unnamedLabel": "Unnamed discount",
+    "enabledStatus": "Enabled",
+    "disabledStatus": "Disabled",
+    "noEffectsYet": "No effects configured yet.",
+    "appliesToEveryone": "Applies to everyone",
+    "conditionsCountLabel": "{count} conditions",
+    "unlimitedLabel": "Unlimited",
+    "totalRedemptionsLabel": "{count} total redemptions",
+    "perCustomerLabel": "{count} per customer",
+    "issuancePeriodLabel": "Issuance period",
+    "redemptionPeriodLabel": "Redemption period",
+    "activePeriodLabel": "Active period",
+    "anytimeLabel": "Anytime",
+    "percentageOffSummary": "{percentage}% off · {scope}",
+    "fixedAmountOffSummary": "{amount} off · {scope}",
+    "freeItemSummary": "Buy {buy} → Get {get} free",
+    "warningNoEffects": "No effects configured — this discount won't do anything yet.",
+    "warningRedemptionDates": "Valid until is before valid from.",
+    "warningIssuanceDates": "Issued until is before issued from.",
+    "warningActiveDates": "Active until is before active from."
+  }
+}

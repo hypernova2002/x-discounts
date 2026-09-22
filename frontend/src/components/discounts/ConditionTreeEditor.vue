@@ -51,6 +51,12 @@ const ENTITY_OPTIONS = computed(() => [
   { label: t('conditionTreeEditor.entities.customer'), value: 'customer' },
 ])
 
+// A small semantic marker for the "subject" of a condition (point 6 of the
+// coupon-editor UX pass) — distinguishing cart/line_item/customer at a glance
+// without touching the rest of the row (attribute/operator/value stay neutral,
+// per "The existing Eligibility rule builder is generally good").
+const ENTITY_ICONS = { cart: 'pi-shopping-cart', line_item: 'pi-box', customer: 'pi-user' }
+
 function defaultLeaf() {
   return { entity: 'cart', key: '', operator: 'eq', value: '' }
 }
@@ -206,7 +212,20 @@ const valueDisplay = computed({
             option-label="label"
             option-value="value"
             @update:model-value="setEntity"
-          />
+          >
+            <template #value="{ value }">
+              <span class="entity-value">
+                <i v-if="value" :class="['pi', ENTITY_ICONS[value]]" aria-hidden="true" />
+                <span>{{ ENTITY_OPTIONS.find((o) => o.value === value)?.label }}</span>
+              </span>
+            </template>
+            <template #option="{ option }">
+              <span class="entity-option">
+                <i :class="['pi', ENTITY_ICONS[option.value]]" aria-hidden="true" />
+                <span>{{ option.label }}</span>
+              </span>
+            </template>
+          </BaseSelect>
           <CustomAttributeSelect :model-value="modelValue.key" :entity="modelValue.entity" @update:model-value="setKey" />
           <BaseSelect
             :model-value="modelValue.operator"
@@ -291,5 +310,27 @@ const valueDisplay = computed({
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+}
+
+.entity-value,
+.entity-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  min-width: 0;
+}
+
+.entity-value span:last-child,
+.entity-option span:last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.entity-value .pi,
+.entity-option .pi {
+  flex-shrink: 0;
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
 }
 </style>
