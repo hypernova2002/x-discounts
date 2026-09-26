@@ -7,4 +7,5 @@ class ProjectRequest < Dry::Struct
 
   attribute :name, JsonModel::Types::String.constrained(min_size: 1)
   attribute? :timezone, JsonModel::Types::String.optional
+  attribute? :currency, JsonModel::Types::String.optional
 end

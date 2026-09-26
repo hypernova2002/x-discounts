@@ -11,6 +11,7 @@ module Projects
     def call
       attrs = { name: @request.name, account: @account }
       attrs[:timezone] = @request.timezone if @request.timezone
+      attrs[:currency] = @request.currency if @request.currency
       project = Project.new(attrs)
       membership = ProjectMembership.new(user: @creator, role: "admin")
 

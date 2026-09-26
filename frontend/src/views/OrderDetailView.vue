@@ -21,7 +21,7 @@ import { OrderCancelInputSchema } from '@/models/order'
 import { refundInputSchema } from '@/models/refund'
 import { toFieldErrors } from '@/models/formErrors'
 import { useBaseToast } from '@/composables/useBaseToast'
-import { formatNumber, formatDateTime } from '@/lib/format'
+import { formatNumber, formatCurrency, formatDateTime } from '@/lib/format'
 
 const route = useRoute()
 const router = useRouter()
@@ -46,7 +46,7 @@ async function loadOrder() {
 }
 
 function discountAmount(discount) {
-  if (discount.amount_off != null) return t('orderDetail.amountOff', { amount: formatNumber(discount.amount_off) })
+  if (discount.amount_off != null) return t('orderDetail.amountOff', { amount: formatCurrency(discount.amount_off, auth.project?.currency) })
   if (discount.free_items?.length) return discount.free_items.map((f) => t('orderDetail.freeItem', { quantity: formatNumber(f.quantity), sku: f.sku })).join(', ')
   if (discount.points_earned != null) return t('orderDetail.pointsEarnedAmount', { points: formatNumber(discount.points_earned) })
   if (discount.effect_type === 'points_multiplier') return t('orderDetail.multiplierApplied')
@@ -68,7 +68,9 @@ function remainingRefundable(discount) {
 }
 
 function refundedSoFar(discount) {
-  if (discount.amount_off != null) return t('orderDetail.refundedOf', { refunded: formatNumber(discount.refunded_amount_off), total: formatNumber(discount.amount_off) })
+  if (discount.amount_off != null) {
+    return t('orderDetail.refundedOf', { refunded: formatCurrency(discount.refunded_amount_off, auth.project?.currency), total: formatCurrency(discount.amount_off, auth.project?.currency) })
+  }
   if (discount.points_earned != null) return t('orderDetail.refundedOf', { refunded: formatNumber(discount.refunded_points), total: formatNumber(discount.points_earned) })
   return '—'
 }
@@ -239,9 +241,9 @@ onMounted(loadOrder)
           <template #content>
             <dl class="details">
               <dt>{{ $t('orderDetail.totals.total') }}</dt>
-              <dd>{{ formatNumber(order.total_amount) }}</dd>
+              <dd>{{ formatCurrency(order.total_amount, auth.project?.currency) }}</dd>
               <dt>{{ $t('orderDetail.totals.discount') }}</dt>
-              <dd>{{ formatNumber(order.total_discount_amount) }}</dd>
+              <dd>{{ formatCurrency(order.total_discount_amount, auth.project?.currency) }}</dd>
               <dt>{{ $t('orderDetail.totals.pointsEarned') }}</dt>
               <dd>{{ formatNumber(order.total_points_earned) }}</dd>
             </dl>
@@ -255,7 +257,7 @@ onMounted(loadOrder)
           <div v-for="li in order.line_items" :key="li.sku" class="receipt-line-item">
             <div class="receipt-line-item__header">
               <span class="receipt-line-item__sku">{{ li.sku }}</span>
-              <span>{{ formatNumber(li.quantity) }} × {{ formatNumber(li.unit_price) }}</span>
+              <span>{{ formatNumber(li.quantity) }} × {{ formatCurrency(li.unit_price, auth.project?.currency) }}</span>
             </div>
             <ul v-if="lineItemDiscounts(li.sku).length" class="receipt-discount-list">
               <li v-for="d in lineItemDiscounts(li.sku)" :key="d.id" class="receipt-discount-row">
@@ -316,7 +318,12 @@ onMounted(loadOrder)
             <h4>{{ $t('orderDetail.receipt.pointsRedemption') }}</h4>
             <div class="receipt-discount-row">
               <span class="receipt-discount-row__name">
-                {{ $t('orderDetail.pointsRedemptionSummary', { points: formatNumber(order.points_redemption.points_redeemed), amount: formatNumber(order.points_redemption.amount_off) }) }}
+                {{
+                  $t('orderDetail.pointsRedemptionSummary', {
+                    points: formatNumber(order.points_redemption.points_redeemed),
+                    amount: formatCurrency(order.points_redemption.amount_off, auth.project?.currency),
+                  })
+                }}
               </span>
               <span class="receipt-discount-row__actions">
                 <span v-if="order.points_redemption.refunded_points" class="refunded-note">
@@ -362,7 +369,11 @@ onMounted(loadOrder)
         <p v-if="!historyTarget.entries.length" class="empty-hint">{{ $t('orderDetail.historyDialog.empty') }}</p>
         <div v-for="(entry, i) in historyTarget.entries" :key="i" class="history-entry">
           <div class="history-entry__amount">
-            {{ entry.amount_off != null ? $t('orderDetail.amountOff', { amount: formatNumber(entry.amount_off) }) : $t('orderDetail.pointsAmount', { points: formatNumber(entry.points) }) }}
+            {{
+              entry.amount_off != null
+                ? $t('orderDetail.amountOff', { amount: formatCurrency(entry.amount_off, auth.project?.currency) })
+                : $t('orderDetail.pointsAmount', { points: formatNumber(entry.points) })
+            }}
             <span class="history-entry__date">{{ formatDateTime(entry.refunded_at, auth.project?.timezone) }}</span>
           </div>
           <div v-if="entry.reason" class="history-entry__reason">"{{ entry.reason }}"</div>

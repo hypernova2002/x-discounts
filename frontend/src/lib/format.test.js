@@ -112,10 +112,15 @@ describe('formatAbbreviatedNumber', () => {
 })
 
 describe('formatCurrency', () => {
-  it('formats as USD with 2 decimal places and thousands separators', () => {
+  it('defaults to USD with 2 decimal places and thousands separators when no currency is given', () => {
     expect(formatCurrency(12430)).toBe('$12,430.00')
     expect(formatCurrency(19.5)).toBe('$19.50')
     expect(formatCurrency(0)).toBe('$0.00')
+  })
+
+  it('formats using the given currency', () => {
+    expect(formatCurrency(200, 'JPY')).toBe('¥200')
+    expect(formatCurrency(19.5, 'EUR')).toBe('€19.50')
   })
 
   it('returns an empty string for null/undefined/empty', () => {

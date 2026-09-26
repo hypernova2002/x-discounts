@@ -78,15 +78,17 @@ export function formatDateTime(value, timezone) {
   return `${p.year}-${p.month}-${p.day} ${p.hour}:${p.minute}`
 }
 
-// This app has no currency concept anywhere in the data model (projects/accounts
-// have no currency field, same gap as the earlier finding that there's no payment
-// concept at all) — USD is a fixed assumption, matching the design spec's own
-// examples, not a per-project setting.
-export function formatCurrency(value) {
+// `currency` is the project's own ISO 4217 code (auth.project?.currency) — falls
+// back to USD when omitted/unloaded, same degrade-gracefully approach as this
+// file's timezone params. currencyDisplay: 'symbol' is explicit (not left to the
+// Intl default) so an uncommon code without a well-known symbol in the active
+// locale never silently renders as a bare code (e.g. "CVE 200.00") instead of a
+// symbol.
+export function formatCurrency(value, currency) {
   if (value === null || value === undefined || value === '') return ''
   const num = Number(value)
   if (Number.isNaN(num)) return String(value)
-  return new Intl.NumberFormat(currentLocale(), { style: 'currency', currency: 'USD' }).format(num)
+  return new Intl.NumberFormat(currentLocale(), { style: 'currency', currency: currency || 'USD', currencyDisplay: 'symbol' }).format(num)
 }
 
 // Takes a plain percentage number (18.4, not 0.184) -> "18.4%".

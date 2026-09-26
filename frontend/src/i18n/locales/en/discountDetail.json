@@ -10,7 +10,7 @@
     "discountDeletedToast": "Discount deleted",
     "deleteDiscountError": "Failed to delete discount",
     "percentageOff": "{percentage}% off",
-    "fixedAmountOff": "{amount} {currency} off",
+    "fixedAmountOff": "{amount} off",
     "freeItemEffect": "Buy {buyQuantity}, get {getQuantity} free",
     "freeItemEffectRepeatable": "Buy {buyQuantity}, get {getQuantity} free (repeatable)",
     "pointsPerCurrency": "{rate} point(s) per currency unit spent",

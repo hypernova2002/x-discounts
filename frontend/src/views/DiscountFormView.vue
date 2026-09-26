@@ -726,7 +726,7 @@ function cancel() {
       </form>
 
       <aside v-if="showSummary" class="discount-form-summary">
-        <DiscountSummarySidebar :form="form" :timezone="auth.project?.timezone" :active-section="activeSection" />
+        <DiscountSummarySidebar :form="form" :timezone="auth.project?.timezone" :currency="auth.project?.currency" :active-section="activeSection" />
       </aside>
     </div>
 

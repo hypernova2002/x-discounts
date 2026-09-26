@@ -18,6 +18,7 @@ import { zonedInputToIso } from '@/lib/timezone'
 const props = defineProps({
   form: { type: Object, required: true },
   timezone: { type: String, default: null },
+  currency: { type: String, default: null },
   activeSection: { type: String, default: null },
 })
 
@@ -94,7 +95,7 @@ function formatEffect(effect) {
     return t('discountSummarySidebar.percentageOffSummary', { percentage: effect.config?.percentage ?? 0, scope: scopeLabel(effect.scope) })
   }
   if (effect.effect_type === 'fixed_amount_off') {
-    return t('discountSummarySidebar.fixedAmountOffSummary', { amount: formatCurrency(effect.config?.amount ?? 0), scope: scopeLabel(effect.scope) })
+    return t('discountSummarySidebar.fixedAmountOffSummary', { amount: formatCurrency(effect.config?.amount ?? 0, props.currency), scope: scopeLabel(effect.scope) })
   }
   if (effect.effect_type === 'free_item') {
     return t('discountSummarySidebar.freeItemSummary', { buy: effect.config?.buy_quantity ?? 0, get: effect.config?.get_quantity ?? 0 })

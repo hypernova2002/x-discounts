@@ -8,6 +8,7 @@ export const ProjectSchema = z
     id: z.string(),
     name: z.string(),
     timezone: z.string(),
+    currency: z.string(),
     created_at: z.string(),
     updated_at: z.string(),
   })
@@ -21,5 +22,6 @@ export function projectInputSchema(t) {
   return z.object({
     name: z.string().min(1, t('projects.nameRequired')),
     timezone: z.string().optional(),
+    currency: z.string().optional(),
   })
 }

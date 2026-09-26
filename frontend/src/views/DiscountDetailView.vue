@@ -30,7 +30,7 @@ import { toFieldErrors } from '@/models/formErrors'
 import { couponCodeGeneratePayload } from '@/services/couponCodes'
 import { attrsToObject, lineItemsToPayload } from '@/services/cartAttrs'
 import { useBaseToast } from '@/composables/useBaseToast'
-import { formatNumber, formatDateTime } from '@/lib/format'
+import { formatNumber, formatCurrency, formatDateTime } from '@/lib/format'
 import { zonedInputToIso } from '@/lib/timezone'
 
 const route = useRoute()
@@ -190,7 +190,7 @@ const hasUsageLimits = computed(() => {
 function configSummary(effect) {
   const c = effect.config
   if (effect.effect_type === 'percentage_off') return t('discountDetail.percentageOff', { percentage: formatNumber(c.percentage) })
-  if (effect.effect_type === 'fixed_amount_off') return t('discountDetail.fixedAmountOff', { amount: formatNumber(c.amount), currency: c.currency })
+  if (effect.effect_type === 'fixed_amount_off') return t('discountDetail.fixedAmountOff', { amount: formatCurrency(c.amount, c.currency) })
   if (effect.effect_type === 'free_item') {
     return c.repeatable
       ? t('discountDetail.freeItemEffectRepeatable', { buyQuantity: c.buy_quantity, getQuantity: c.get_quantity })
@@ -425,15 +425,15 @@ onMounted(loadDiscount)
               </template>
               <template v-if="discount.max_redemption_amount != null">
                 <dt>{{ $t('discountDetail.maxTotalRedeemed') }}</dt>
-                <dd>{{ formatNumber(discount.max_redemption_amount) }}</dd>
+                <dd>{{ formatCurrency(discount.max_redemption_amount, auth.project?.currency) }}</dd>
               </template>
               <template v-if="discount.max_redemption_amount_per_day != null">
                 <dt>{{ $t('discountDetail.maxRedeemedPerDay') }}</dt>
-                <dd>{{ formatNumber(discount.max_redemption_amount_per_day) }}</dd>
+                <dd>{{ formatCurrency(discount.max_redemption_amount_per_day, auth.project?.currency) }}</dd>
               </template>
               <template v-if="discount.max_redemption_amount_per_customer != null">
                 <dt>{{ $t('discountDetail.maxRedeemedPerCustomer') }}</dt>
-                <dd>{{ formatNumber(discount.max_redemption_amount_per_customer) }}</dd>
+                <dd>{{ formatCurrency(discount.max_redemption_amount_per_customer, auth.project?.currency) }}</dd>
               </template>
             </dl>
           </template>
@@ -606,7 +606,7 @@ onMounted(loadDiscount)
             <BaseMessage :severity="matchingResult ? 'success' : 'warn'" :closable="false">
               <template v-if="matchingResult">
                 {{ $t('discountDetail.appliesMessage') }}
-                <template v-if="matchingResult.amount_off != null">{{ $t('discountDetail.amountOffText', { amount: formatNumber(matchingResult.amount_off) }) }}</template>
+                <template v-if="matchingResult.amount_off != null">{{ $t('discountDetail.amountOffText', { amount: formatCurrency(matchingResult.amount_off, auth.project?.currency) }) }}</template>
                 <template v-else-if="matchingResult.free_items">
                   {{ $t('discountDetail.appliesFreeItems', { items: matchingResult.free_items.map((f) => `${f.quantity}x ${f.sku}`).join(', ') }) }}
                 </template>
@@ -618,14 +618,14 @@ onMounted(loadDiscount)
 
             <div class="tester-section">
               <h3>{{ $t('discountDetail.fullResultTitle') }}</h3>
-              <p>{{ $t('discountDetail.totalAmountOffLabel', { amount: formatNumber(testResult.total_amount_off) }) }}</p>
+              <p>{{ $t('discountDetail.totalAmountOffLabel', { amount: formatCurrency(testResult.total_amount_off, auth.project?.currency) }) }}</p>
               <p v-for="(c, i) in testResult.coupons" :key="i">
                 {{ $t('discountDetail.couponLine', { code: c.code, status: c.valid ? $t('discountDetail.validStatus') : $t('discountDetail.invalidStatus', { reason: c.reason }) }) }}
               </p>
               <ul>
                 <li v-for="(d, i) in testResult.applicable_discounts" :key="i">
                   {{ d.name }} ({{ d.kind }}) — {{ d.effect_type }} —
-                  <template v-if="d.amount_off != null">{{ $t('discountDetail.amountOffText', { amount: formatNumber(d.amount_off) }) }}</template>
+                  <template v-if="d.amount_off != null">{{ $t('discountDetail.amountOffText', { amount: formatCurrency(d.amount_off, auth.project?.currency) }) }}</template>
                   <template v-else-if="d.free_items">{{ $t('discountDetail.freeText', { items: d.free_items.map((f) => `${f.quantity}x ${f.sku}`).join(', ') }) }}</template>
                 </li>
               </ul>

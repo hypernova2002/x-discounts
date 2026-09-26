@@ -25,6 +25,7 @@ Sequel.migration do
       column :updated_at, "timestamp with time zone", :null=>false
       column :public_id, "text", :null=>false
       column :timezone, "text", :default=>"UTC", :null=>false
+      column :currency, "text", :default=>"USD", :null=>false
       
       index [:account_id]
       index [:account_id, :name], :name=>:projects_account_id_name_unique, :unique=>true
@@ -517,5 +518,6 @@ self << "INSERT INTO \"schema_migrations\" (\"filename\") VALUES ('2026091613000
 self << "INSERT INTO \"schema_migrations\" (\"filename\") VALUES ('20260916140001_add_public_id_to_redemptions.rb')"
 self << "INSERT INTO \"schema_migrations\" (\"filename\") VALUES ('20260919120001_add_timezone_to_projects.rb')"
 self << "INSERT INTO \"schema_migrations\" (\"filename\") VALUES ('20260920090001_add_otp_to_users_and_accounts.rb')"
+self << "INSERT INTO \"schema_migrations\" (\"filename\") VALUES ('20260926150001_add_currency_to_projects.rb')"
                 end
               end

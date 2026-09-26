@@ -56,7 +56,7 @@ const hasChartData = computed(
 )
 
 function formatTooltipValue(value, datasetLabel) {
-  return datasetLabel === t('orders.revenueSeriesLabel') ? formatCurrency(value) : formatNumber(value)
+  return datasetLabel === t('orders.revenueSeriesLabel') ? formatCurrency(value, auth.project?.currency) : formatNumber(value)
 }
 
 const columns = computed(() => [
@@ -121,21 +121,21 @@ async function exportOrders() {
       />
       <MetricCard
         :label="t('orders.totalRevenueMetric')"
-        :value="analytics ? formatCurrency(analytics.summary.total_revenue) : '—'"
+        :value="analytics ? formatCurrency(analytics.summary.total_revenue, auth.project?.currency) : '—'"
         :trend="
           analytics ? { current: analytics.summary.total_revenue, previous: analytics.previous_period.total_revenue, caption: t('orders.previousPeriodCaption') } : null
         "
       />
       <MetricCard
         :label="t('orders.totalDiscountGivenMetric')"
-        :value="analytics ? formatCurrency(analytics.summary.total_discount_given) : '—'"
+        :value="analytics ? formatCurrency(analytics.summary.total_discount_given, auth.project?.currency) : '—'"
         :trend="
           analytics
             ? { current: analytics.summary.total_discount_given, previous: analytics.previous_period.total_discount_given, caption: t('orders.previousPeriodCaption') }
             : null
         "
       />
-      <MetricCard :label="t('orders.averageOrderValueMetric')" :value="analytics ? formatCurrency(analytics.summary.average_order_value) : '—'" />
+      <MetricCard :label="t('orders.averageOrderValueMetric')" :value="analytics ? formatCurrency(analytics.summary.average_order_value, auth.project?.currency) : '—'" />
     </div>
 
     <BaseCard class="section-card">
@@ -164,8 +164,8 @@ async function exportOrders() {
             <EntityLink @click="viewCustomer(data.customer)">{{ data.customer.external_id }}</EntityLink>
           </template>
           <template #cell-line_items="{ data }">{{ data.line_items.length }}</template>
-          <template #cell-total_amount="{ data }">{{ formatNumber(data.total_amount) }}</template>
-          <template #cell-total_discount_amount="{ data }">{{ formatNumber(data.total_discount_amount) }}</template>
+          <template #cell-total_amount="{ data }">{{ formatCurrency(data.total_amount, auth.project?.currency) }}</template>
+          <template #cell-total_discount_amount="{ data }">{{ formatCurrency(data.total_discount_amount, auth.project?.currency) }}</template>
           <template #cell-status="{ data }"><OrderStatusTag :status="data.status" /></template>
           <template #cell-created_at="{ data }">{{ formatDateTime(data.created_at, auth.project?.timezone) }}</template>
         </BaseTable>

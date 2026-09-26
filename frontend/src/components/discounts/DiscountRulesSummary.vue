@@ -2,7 +2,7 @@
 import { useI18n } from 'vue-i18n'
 import BaseTag from '@/components/base/BaseTag.vue'
 import ConditionSummary from './ConditionSummary.vue'
-import { formatNumber } from '@/lib/format'
+import { formatNumber, formatCurrency } from '@/lib/format'
 
 defineOptions({ name: 'DiscountRulesSummary' })
 
@@ -15,7 +15,7 @@ const { t } = useI18n()
 function configSummary(effect) {
   const c = effect.config
   if (effect.effect_type === 'percentage_off') return t('discountRulesSummary.percentageOff', { percentage: formatNumber(c.percentage) })
-  if (effect.effect_type === 'fixed_amount_off') return t('discountRulesSummary.fixedAmountOff', { amount: formatNumber(c.amount), currency: c.currency })
+  if (effect.effect_type === 'fixed_amount_off') return t('discountRulesSummary.fixedAmountOff', { amount: formatCurrency(c.amount, c.currency) })
   if (effect.effect_type === 'free_item') {
     const key = c.repeatable ? 'discountRulesSummary.freeItemRepeatable' : 'discountRulesSummary.freeItem'
     return t(key, { buyQuantity: formatNumber(c.buy_quantity), getQuantity: formatNumber(c.get_quantity) })

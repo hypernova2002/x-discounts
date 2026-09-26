@@ -184,7 +184,7 @@ onMounted(loadCampaign)
       <div v-if="campaign.discount_summary" class="summary-cards">
         <MetricCard :label="$t('campaignDetail.discountsMetric')" :value="formatNumber(campaign.discount_summary.count)" />
         <MetricCard :label="$t('campaignDetail.redemptionsMetric')" :value="formatNumber(campaign.discount_summary.redemption_count)" />
-        <MetricCard :label="$t('campaignDetail.discountedMetric')" :value="formatCurrency(campaign.discount_summary.discounted_amount)" />
+        <MetricCard :label="$t('campaignDetail.discountedMetric')" :value="formatCurrency(campaign.discount_summary.discounted_amount, auth.project?.currency)" />
       </div>
 
       <BaseCard class="section-card">

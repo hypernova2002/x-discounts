@@ -43,7 +43,7 @@ const hasChartData = computed(
 )
 
 function formatTooltipValue(value, datasetLabel) {
-  return datasetLabel === t('promotions.earningsSeriesLabel') ? formatCurrency(value) : formatNumber(value)
+  return datasetLabel === t('promotions.earningsSeriesLabel') ? formatCurrency(value, auth.project?.currency) : formatNumber(value)
 }
 </script>
 
@@ -59,7 +59,7 @@ function formatTooltipValue(value, datasetLabel) {
       <MetricCard :label="t('promotions.totalRunningMetric')" :value="analytics ? formatNumber(analytics.summary.total_running_promotions) : '—'" />
       <MetricCard
         :label="t('promotions.totalDiscountsMetric')"
-        :value="analytics ? formatCurrency(analytics.summary.total_discounts_from_promotions) : '—'"
+        :value="analytics ? formatCurrency(analytics.summary.total_discounts_from_promotions, auth.project?.currency) : '—'"
         :trend="
           analytics
             ? {

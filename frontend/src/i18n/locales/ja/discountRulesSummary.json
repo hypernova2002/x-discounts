@@ -7,7 +7,7 @@
     "buyLabel": "購入:",
     "getLabel": "取得:",
     "percentageOff": "{percentage}%割引",
-    "fixedAmountOff": "{amount} {currency} 割引",
+    "fixedAmountOff": "{amount}割引",
     "freeItem": "{buyQuantity}個購入で{getQuantity}個無料",
     "freeItemRepeatable": "{buyQuantity}個購入で{getQuantity}個無料（繰り返し適用）"
   }

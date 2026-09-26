@@ -56,7 +56,7 @@ const hasChartData = computed(
 )
 
 function formatTooltipValue(value, datasetLabel) {
-  return datasetLabel === t('dashboard.revenueSeriesLabel') ? formatCurrency(value) : formatNumber(value)
+  return datasetLabel === t('dashboard.revenueSeriesLabel') ? formatCurrency(value, auth.project?.currency) : formatNumber(value)
 }
 
 const { data: attention, loading: attentionLoading, error: attentionError } = useAsync(() =>
@@ -131,7 +131,7 @@ function viewAllOrders() {
     <div class="metric-cards">
       <MetricCard
         :label="t('dashboard.totalRevenueMetric')"
-        :value="overview ? formatCurrency(overview.orders.summary.total_revenue) : '—'"
+        :value="overview ? formatCurrency(overview.orders.summary.total_revenue, auth.project?.currency) : '—'"
         :trend="
           overview
             ? { current: overview.orders.summary.total_revenue, previous: overview.orders.previous_period.total_revenue, caption: t('dashboard.previousPeriodCaption') }
@@ -150,7 +150,7 @@ function viewAllOrders() {
       <MetricCard :label="t('dashboard.activeCustomersMetric')" :value="overview ? formatNumber(overview.customers.summary.active_customers) : '—'" />
       <MetricCard
         :label="t('dashboard.totalDiscountedMetric')"
-        :value="overview ? formatCurrency(overview.campaigns.summary.total_discounted_amount) : '—'"
+        :value="overview ? formatCurrency(overview.campaigns.summary.total_discounted_amount, auth.project?.currency) : '—'"
         :trend="
           overview
             ? {
@@ -221,7 +221,7 @@ function viewAllOrders() {
             <template #cell-customer="{ data }">
               <EntityLink @click="viewCustomer(data.customer)">{{ data.customer.external_id }}</EntityLink>
             </template>
-            <template #cell-total_amount="{ data }">{{ formatCurrency(data.total_amount) }}</template>
+            <template #cell-total_amount="{ data }">{{ formatCurrency(data.total_amount, auth.project?.currency) }}</template>
             <template #cell-status="{ data }"><OrderStatusTag :status="data.status" /></template>
             <template #cell-created_at="{ data }">{{ formatDateTime(data.created_at, auth.project?.timezone) }}</template>
             <template #empty>{{ t('dashboard.recentOrdersEmpty') }}</template>

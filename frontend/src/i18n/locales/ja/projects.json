@@ -12,6 +12,7 @@
     "editProjectDialogHeader": "プロジェクトを編集",
     "nameLabel": "名前",
     "timezoneLabel": "タイムゾーン",
+    "currencyLabel": "通貨",
     "createButton": "作成",
     "saveButton": "保存",
     "editButton": "編集",

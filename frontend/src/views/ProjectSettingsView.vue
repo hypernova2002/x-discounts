@@ -16,12 +16,13 @@ import { projectInputSchema } from '@/models/project'
 import { toFieldErrors } from '@/models/formErrors'
 import { useBaseToast } from '@/composables/useBaseToast'
 import { TIMEZONE_OPTIONS } from '@/lib/timezone'
+import { CURRENCY_OPTIONS } from '@/lib/currency'
 
 const auth = useAuthStore()
 const toast = useBaseToast()
 const { t } = useI18n()
 
-const form = ref({ name: auth.project?.name ?? '', timezone: auth.project?.timezone ?? '' })
+const form = ref({ name: auth.project?.name ?? '', timezone: auth.project?.timezone ?? '', currency: auth.project?.currency ?? '' })
 const errors = ref({})
 const saving = ref(false)
 
@@ -80,6 +81,11 @@ async function exportProject() {
             <label for="project-timezone">{{ $t('projects.timezoneLabel') }}</label>
             <BaseSelect id="project-timezone" v-model="form.timezone" :options="TIMEZONE_OPTIONS" option-label="label" option-value="value" filter />
             <small v-if="errors.timezone" class="field-error">{{ errors.timezone }}</small>
+          </div>
+          <div class="field">
+            <label for="project-currency">{{ $t('projects.currencyLabel') }}</label>
+            <BaseSelect id="project-currency" v-model="form.currency" :options="CURRENCY_OPTIONS" option-label="label" option-value="value" filter />
+            <small v-if="errors.currency" class="field-error">{{ errors.currency }}</small>
           </div>
           <BaseMessage v-if="errors._root" severity="error" :closable="false">{{ errors._root }}</BaseMessage>
           <div class="form-actions">

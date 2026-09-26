@@ -22,6 +22,7 @@ import { toFieldErrors } from '@/models/formErrors'
 import { attrsToObject, lineItemsToPayload } from '@/services/cartAttrs'
 import { useBaseToast } from '@/composables/useBaseToast'
 import { useCoupons } from '@/composables/useCoupons'
+import { formatCurrency } from '@/lib/format'
 
 const auth = useAuthStore()
 const toast = useBaseToast()
@@ -139,7 +140,7 @@ async function createOrder() {
 }
 
 function describeDiscount(d) {
-  if (d.amount_off != null) return t('orderForm.amountOff', { amount: d.amount_off })
+  if (d.amount_off != null) return t('orderForm.amountOff', { amount: formatCurrency(d.amount_off, auth.project?.currency) })
   if (d.free_items) return d.free_items.map((f) => t('orderForm.freeItem', { quantity: f.quantity, sku: f.sku })).join(', ')
   return ''
 }
@@ -221,7 +222,7 @@ function describeDiscount(d) {
           <p v-if="previewResult" class="empty-hint">
             {{ $t('orderForm.loyaltyPoints.balance', { balance: previewResult.points_redemption.balance }) }}
             <template v-if="previewResult.points_redemption.applied">
-              {{ $t('orderForm.loyaltyPoints.applying', { applied: previewResult.points_redemption.applied, amount: previewResult.points_redemption.amount_off }) }}
+              {{ $t('orderForm.loyaltyPoints.applying', { applied: previewResult.points_redemption.applied, amount: formatCurrency(previewResult.points_redemption.amount_off, auth.project?.currency) }) }}
             </template>
           </p>
           <p v-else class="empty-hint">{{ $t('orderForm.loyaltyPoints.previewHint') }}</p>
@@ -244,7 +245,7 @@ function describeDiscount(d) {
 
         <div v-if="previewResult" class="form-section">
           <h3>{{ $t('orderForm.previewResult.title') }}</h3>
-          <p>{{ $t('orderForm.previewResult.totalAmountOff', { amount: previewResult.total_amount_off }) }}</p>
+          <p>{{ $t('orderForm.previewResult.totalAmountOff', { amount: formatCurrency(previewResult.total_amount_off, auth.project?.currency) }) }}</p>
           <p v-if="!previewResult.applicable_discounts.length" class="empty-hint">{{ $t('orderForm.previewResult.noDiscounts') }}</p>
           <ul v-else>
             <li v-for="(d, i) in previewResult.applicable_discounts" :key="i">
@@ -258,7 +259,12 @@ function describeDiscount(d) {
             </span>
           </p>
           <p v-if="previewResult.points_redemption.applied">
-            {{ $t('orderForm.previewResult.pointsRedeemedSummary', { applied: previewResult.points_redemption.applied, amount: previewResult.points_redemption.amount_off }) }}
+            {{
+              $t('orderForm.previewResult.pointsRedeemedSummary', {
+                applied: previewResult.points_redemption.applied,
+                amount: formatCurrency(previewResult.points_redemption.amount_off, auth.project?.currency),
+              })
+            }}
           </p>
         </div>
       </template>

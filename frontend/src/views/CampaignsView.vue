@@ -61,7 +61,7 @@ const hasChartData = computed(
 )
 
 function formatTooltipValue(value, datasetLabel) {
-  return datasetLabel === t('campaigns.discountedSeriesLabel') ? formatCurrency(value) : formatNumber(value)
+  return datasetLabel === t('campaigns.discountedSeriesLabel') ? formatCurrency(value, auth.project?.currency) : formatNumber(value)
 }
 
 const columns = computed(() => [
@@ -130,7 +130,7 @@ async function exportCampaigns() {
       />
       <MetricCard
         :label="t('campaigns.totalDiscountedMetric')"
-        :value="analytics ? formatCurrency(analytics.summary.total_discounted_amount) : '—'"
+        :value="analytics ? formatCurrency(analytics.summary.total_discounted_amount, auth.project?.currency) : '—'"
         :trend="
           analytics
             ? {

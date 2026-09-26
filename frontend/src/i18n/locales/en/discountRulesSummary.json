@@ -7,7 +7,7 @@
     "buyLabel": "Buy:",
     "getLabel": "Get:",
     "percentageOff": "{percentage}% off",
-    "fixedAmountOff": "{amount} {currency} off",
+    "fixedAmountOff": "{amount} off",
     "freeItem": "Buy {buyQuantity}, get {getQuantity} free",
     "freeItemRepeatable": "Buy {buyQuantity}, get {getQuantity} free (repeatable)"
   }

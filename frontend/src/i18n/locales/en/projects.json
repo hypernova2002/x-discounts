@@ -12,6 +12,7 @@
     "editProjectDialogHeader": "Edit project",
     "nameLabel": "Name",
     "timezoneLabel": "Timezone",
+    "currencyLabel": "Currency",
     "createButton": "Create",
     "saveButton": "Save",
     "editButton": "Edit",

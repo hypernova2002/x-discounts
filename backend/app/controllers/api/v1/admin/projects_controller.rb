@@ -28,7 +28,8 @@ module Api
         def update
           @project.set(
             name: body.key?(:name) ? body[:name] : @project.name,
-            timezone: body.key?(:timezone) ? body[:timezone] : @project.timezone
+            timezone: body.key?(:timezone) ? body[:timezone] : @project.timezone,
+            currency: body.key?(:currency) ? body[:currency] : @project.currency
           )
           raise ValidationError.from_model(@project) unless @project.valid?
 

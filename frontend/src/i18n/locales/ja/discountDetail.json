@@ -10,7 +10,7 @@
     "discountDeletedToast": "割引を削除しました",
     "deleteDiscountError": "割引の削除に失敗しました",
     "percentageOff": "{percentage}%割引",
-    "fixedAmountOff": "{amount} {currency}割引",
+    "fixedAmountOff": "{amount}割引",
     "freeItemEffect": "{buyQuantity}個購入で{getQuantity}個無料",
     "freeItemEffectRepeatable": "{buyQuantity}個購入で{getQuantity}個無料(繰り返し適用可能)",
     "pointsPerCurrency": "通貨単位ごとに{rate}ポイント",

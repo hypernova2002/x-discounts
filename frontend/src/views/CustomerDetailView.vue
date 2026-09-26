@@ -23,7 +23,7 @@ import { listMembershipSchemes } from '@/api/membershipSchemes'
 import { grantPointsInputSchema } from '@/models/customer'
 import { toFieldErrors } from '@/models/formErrors'
 import { useBaseToast } from '@/composables/useBaseToast.js'
-import { formatNumber, formatDate, formatDateTime } from '@/lib/format'
+import { formatNumber, formatCurrency, formatDate, formatDateTime } from '@/lib/format'
 import { zonedInputToIso } from '@/lib/timezone'
 
 const route = useRoute()
@@ -253,9 +253,9 @@ onMounted(loadCustomer)
               <dt>{{ $t('customerDetail.totals.orders') }}</dt>
               <dd>{{ formatNumber(customer.stats.order_count) }}</dd>
               <dt>{{ $t('customerDetail.totals.totalSpent') }}</dt>
-              <dd>{{ formatNumber(customer.stats.total_spent) }}</dd>
+              <dd>{{ formatCurrency(customer.stats.total_spent, auth.project?.currency) }}</dd>
               <dt>{{ $t('customerDetail.totals.totalDiscounts') }}</dt>
-              <dd>{{ formatNumber(customer.stats.total_discount) }}</dd>
+              <dd>{{ formatCurrency(customer.stats.total_discount, auth.project?.currency) }}</dd>
               <dt>{{ $t('customerDetail.totals.pointsBalance') }}</dt>
               <dd>{{ formatNumber(customer.stats.points_balance) }}</dd>
               <dt>{{ $t('customerDetail.totals.pointsEarnedLifetime') }}</dt>
@@ -331,7 +331,7 @@ onMounted(loadCustomer)
 
                 <template v-if="item.type === 'order'">
                   <EntityLink @click="viewOrder(item.order_id)">{{ item.order_id }}</EntityLink>
-                  <span>{{ $t('customerDetail.activity.orderSummary', { total: formatNumber(item.total_amount), discount: formatNumber(item.total_discount_amount) }) }}</span>
+                  <span>{{ $t('customerDetail.activity.orderSummary', { total: formatCurrency(item.total_amount, auth.project?.currency), discount: formatCurrency(item.total_discount_amount, auth.project?.currency) }) }}</span>
                   <span v-if="item.total_points_earned">{{ $t('customerDetail.activity.pointsEarnedSuffix', { points: formatNumber(item.total_points_earned) }) }}</span>
                   <span v-if="item.total_points_redeemed">{{ $t('customerDetail.activity.pointsRedeemedSuffix', { points: formatNumber(item.total_points_redeemed) }) }}</span>
                 </template>
@@ -405,8 +405,8 @@ onMounted(loadCustomer)
         <template #content>
           <BaseTable :data="orders" :columns="customerOrderColumns" :loading="ordersLoading" row-key="id" @row-click="viewOrder($event.data.id)" @refresh="loadOrders">
             <template #cell-created_at="{ data }">{{ formatDateTime(data.created_at, auth.project?.timezone) }}</template>
-            <template #cell-total_amount="{ data }">{{ formatNumber(data.total_amount) }}</template>
-            <template #cell-total_discount_amount="{ data }">{{ formatNumber(data.total_discount_amount) }}</template>
+            <template #cell-total_amount="{ data }">{{ formatCurrency(data.total_amount, auth.project?.currency) }}</template>
+            <template #cell-total_discount_amount="{ data }">{{ formatCurrency(data.total_discount_amount, auth.project?.currency) }}</template>
             <template #cell-total_points_earned="{ data }">{{ formatNumber(data.total_points_earned) }}</template>
             <template #cell-total_points_redeemed="{ data }">{{ formatNumber(data.total_points_redeemed) }}</template>
             <template #empty>{{ $t('customerDetail.orders.empty') }}</template>

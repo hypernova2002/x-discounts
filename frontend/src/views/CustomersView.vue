@@ -107,7 +107,7 @@ const hasChartData = computed(() => (analytics.value?.series || []).some((s) => 
     <div class="metric-cards">
       <MetricCard :label="t('customers.totalCustomersMetric')" :value="analytics ? formatNumber(analytics.summary.total_customers) : '—'" />
       <MetricCard :label="t('customers.activeCustomersMetric')" :value="analytics ? formatNumber(analytics.summary.active_customers) : '—'" />
-      <MetricCard :label="t('customers.totalSpentMetric')" :value="analytics ? formatCurrency(analytics.summary.total_spent) : '—'" />
+      <MetricCard :label="t('customers.totalSpentMetric')" :value="analytics ? formatCurrency(analytics.summary.total_spent, auth.project?.currency) : '—'" />
       <MetricCard
         :label="t('customers.newCustomersMetric')"
         :value="analytics ? formatNumber(analytics.summary.new_customers) : '—'"
