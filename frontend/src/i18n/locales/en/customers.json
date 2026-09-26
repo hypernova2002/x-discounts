@@ -1,6 +1,7 @@
 {
   "customers": {
     "title": "Customers",
+    "newCustomerButton": "New customer",
     "loadError": "Failed to load customers",
     "exportButton": "Export customers",
     "searchPlaceholder": "Search customers",

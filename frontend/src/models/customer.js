@@ -110,3 +110,19 @@ export function grantPointsInputSchema(t) {
     reason: z.string().nullable(),
   })
 }
+
+// Form input for the "new customer" form. A factory (not a module-level
+// constant) so validation messages are real i18n keys from the caller's own
+// namespace (customerForm.json). Length caps mirror the backend model's own
+// validation (Customer#validate) for early feedback.
+export function customerInputSchema(t) {
+  return z.object({
+    external_id: z.string().min(1, t('customerForm.externalIdRequired')),
+    name: z.string().max(1000, t('customerForm.nameTooLong')).nullable(),
+    email: z.string().max(255, t('customerForm.emailTooLong')).nullable(),
+    phone_number: z.string().max(255, t('customerForm.phoneTooLong')).nullable(),
+    country: z.string().max(255, t('customerForm.countryTooLong')).nullable(),
+    date_of_birth: z.string().nullable(),
+    marketing_opt_in: z.boolean(),
+  })
+}

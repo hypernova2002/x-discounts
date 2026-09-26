@@ -5,6 +5,7 @@ import { useI18n } from 'vue-i18n'
 import AppShell from '@/components/AppShell.vue'
 import PageHeader from '@/components/PageHeader.vue'
 import BaseTable from '@/components/base/BaseTable.vue'
+import BaseButton from '@/components/base/BaseButton.vue'
 import BaseCard from '@/components/base/BaseCard.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useAsync } from '@/composables/useAsync'
@@ -40,7 +41,11 @@ function viewScheme(scheme) {
 
 <template>
   <AppShell>
-    <PageHeader />
+    <PageHeader>
+      <template #title>
+        <BaseButton icon="pi pi-plus" :label="t('membershipSchemes.newSchemeButton')" @click="createScheme" />
+      </template>
+    </PageHeader>
 
     <BaseCard class="section-card">
       <template #content>
@@ -50,10 +55,8 @@ function viewScheme(scheme) {
           :loading="loading"
           row-key="id"
           :search-placeholder="$t('membershipSchemes.searchPlaceholder')"
-          :create-label="$t('membershipSchemes.newSchemeButton')"
           @row-click="viewScheme($event.data)"
           @refresh="reload"
-          @create="createScheme"
         >
           <template #cell-tiers="{ data }">{{ data.tiers.map((tier) => tier.name).join(', ') || '—' }}</template>
           <template #cell-created_at="{ data }">{{ formatDate(data.created_at, auth.project?.timezone) }}</template>

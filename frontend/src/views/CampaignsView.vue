@@ -104,6 +104,9 @@ async function exportCampaigns() {
 <template>
   <AppShell>
     <PageHeader>
+      <template #title>
+        <BaseButton icon="pi pi-plus" :label="t('campaigns.newCampaign')" @click="createCampaign" />
+      </template>
       <template #actions>
         <DateRangePicker v-model="range" />
         <label class="flex items-center gap-2 text-sm text-text-muted">
@@ -156,12 +159,10 @@ async function exportCampaigns() {
           :loading="loading"
           row-key="id"
           :search-placeholder="$t('campaigns.searchPlaceholder')"
-          :create-label="$t('campaigns.newCampaign')"
           :export-label="$t('campaigns.exportButton')"
           :exporting="exporting"
           @row-click="viewCampaign($event.data)"
           @refresh="reload"
-          @create="createCampaign"
           @export="exportCampaigns"
         >
           <template #cell-discount_kinds="{ data }">

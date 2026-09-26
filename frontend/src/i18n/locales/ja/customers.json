@@ -1,6 +1,7 @@
 {
   "customers": {
     "title": "顧客",
+    "newCustomerButton": "新規顧客",
     "loadError": "顧客の読み込みに失敗しました",
     "exportButton": "顧客をエクスポート",
     "searchPlaceholder": "顧客を検索",

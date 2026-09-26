@@ -9,6 +9,7 @@ import BaseCard from '@/components/base/BaseCard.vue'
 import MetricCard from '@/components/base/MetricCard.vue'
 import BaseChart from '@/components/base/BaseChart.vue'
 import BaseTable from '@/components/base/BaseTable.vue'
+import BaseButton from '@/components/base/BaseButton.vue'
 import BaseTag from '@/components/base/BaseTag.vue'
 import CountryFlag from '@/components/CountryFlag.vue'
 import { useAuthStore } from '@/stores/auth'
@@ -57,6 +58,10 @@ function viewCustomer(customer) {
   router.push({ name: 'customer-show', params: { id: customer.id } })
 }
 
+function createCustomer() {
+  router.push({ name: 'customer-new' })
+}
+
 async function exportCustomers() {
   exporting.value = true
   try {
@@ -91,6 +96,9 @@ const hasChartData = computed(() => (analytics.value?.series || []).some((s) => 
 <template>
   <AppShell>
     <PageHeader>
+      <template #title>
+        <BaseButton icon="pi pi-plus" :label="t('customers.newCustomerButton')" @click="createCustomer" />
+      </template>
       <template #actions>
         <DateRangePicker v-model="range" />
       </template>

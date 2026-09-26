@@ -1,0 +1,21 @@
+{
+  "customerForm": {
+    "newTitle": "新規顧客",
+    "externalIdLabel": "顧客ID",
+    "externalIdRequired": "顧客IDは必須です",
+    "nameLabel": "氏名",
+    "nameTooLong": "氏名が長すぎます",
+    "emailLabel": "メールアドレス",
+    "emailTooLong": "メールアドレスが長すぎます",
+    "phoneLabel": "電話番号",
+    "phoneTooLong": "電話番号が長すぎます",
+    "countryLabel": "国",
+    "countryTooLong": "国名が長すぎます",
+    "dateOfBirthLabel": "生年月日",
+    "marketingOptInLabel": "マーケティング配信の同意",
+    "cancelButton": "キャンセル",
+    "createButton": "顧客を作成",
+    "customerCreated": "顧客を作成しました",
+    "genericError": "問題が発生しました"
+  }
+}

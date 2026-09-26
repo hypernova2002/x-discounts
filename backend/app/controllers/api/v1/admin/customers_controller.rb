@@ -8,7 +8,12 @@ module Api
 
         before_action :require_project_context!
         before_action :set_customer, only: %i[show update grant_points]
-        before_action -> { require_role!(*WRITE_ROLES) }, only: %i[update grant_points]
+        before_action -> { require_role!(*WRITE_ROLES) }, only: %i[create update grant_points]
+
+        def create
+          customer = Customers::AdminCreateService.new(project: current_project, request: CustomerRequest.new(body)).call
+          render json: CustomerResource.new(customer).to_h, status: :created
+        end
 
         def index
           dataset = filtered_customers_dataset

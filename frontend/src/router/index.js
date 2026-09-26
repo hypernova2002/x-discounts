@@ -27,6 +27,7 @@ const router = createRouter({
     { path: '/orders/new', name: 'order-new', component: () => import('../views/OrderFormView.vue') },
     { path: '/orders/:id', name: 'order-show', component: () => import('../views/OrderDetailView.vue') },
     { path: '/customers', name: 'customers', component: () => import('../views/CustomersView.vue') },
+    { path: '/customers/new', name: 'customer-new', component: () => import('../views/CustomerFormView.vue') },
     { path: '/customers/:id', name: 'customer-show', component: () => import('../views/CustomerDetailView.vue') },
     { path: '/membership-schemes', name: 'membership-schemes', component: () => import('../views/MembershipSchemesView.vue') },
     { path: '/membership-schemes/new', name: 'membership-scheme-new', component: () => import('../views/MembershipSchemeFormView.vue') },

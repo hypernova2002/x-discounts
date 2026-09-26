@@ -8,6 +8,7 @@ import EntityLink from '@/components/EntityLink.vue'
 import OrderStatusTag from '@/components/OrderStatusTag.vue'
 import DateRangePicker from '@/components/DateRangePicker.vue'
 import BaseTable from '@/components/base/BaseTable.vue'
+import BaseButton from '@/components/base/BaseButton.vue'
 import BaseCard from '@/components/base/BaseCard.vue'
 import MetricCard from '@/components/base/MetricCard.vue'
 import BaseChart from '@/components/base/BaseChart.vue'
@@ -102,6 +103,9 @@ async function exportOrders() {
 <template>
   <AppShell>
     <PageHeader>
+      <template #title>
+        <BaseButton icon="pi pi-plus" :label="t('orders.newOrder')" @click="createOrder" />
+      </template>
       <template #actions>
         <DateRangePicker v-model="range" />
       </template>
@@ -150,12 +154,10 @@ async function exportOrders() {
           :loading="loading"
           row-key="id"
           :search-placeholder="$t('orders.searchPlaceholder')"
-          :create-label="$t('orders.newOrder')"
           :export-label="$t('orders.exportButton')"
           :exporting="exporting"
           @row-click="viewOrder($event.data)"
           @refresh="reload"
-          @create="createOrder"
           @export="exportOrders"
         >
           <template #cell-customer="{ data }">

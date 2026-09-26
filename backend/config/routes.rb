@@ -53,7 +53,7 @@ Rails.application.routes.draw do
         resources :points_redemptions, only: [] do
           post :refund, on: :member
         end
-        resources :customers, only: %i[index show update] do
+        resources :customers, only: %i[index show update create] do
           post :grant_points, on: :member
           collection { get :export }
         end

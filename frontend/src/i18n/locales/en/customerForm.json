@@ -1,0 +1,21 @@
+{
+  "customerForm": {
+    "newTitle": "New customer",
+    "externalIdLabel": "Customer ID",
+    "externalIdRequired": "Customer ID is required",
+    "nameLabel": "Name",
+    "nameTooLong": "Name is too long",
+    "emailLabel": "Email",
+    "emailTooLong": "Email is too long",
+    "phoneLabel": "Phone number",
+    "phoneTooLong": "Phone number is too long",
+    "countryLabel": "Country",
+    "countryTooLong": "Country is too long",
+    "dateOfBirthLabel": "Date of birth",
+    "marketingOptInLabel": "Marketing opt-in",
+    "cancelButton": "Cancel",
+    "createButton": "Create customer",
+    "customerCreated": "Customer created",
+    "genericError": "Something went wrong"
+  }
+}
