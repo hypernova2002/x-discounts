@@ -483,6 +483,10 @@ function cancel() {
                 <BaseInputText id="valid_until" v-model="form.coupon.valid_until" type="datetime-local" />
               </div>
             </div>
+            <p v-if="isEdit" class="coupon-codes-hint">
+              {{ $t('discountForm.manageCouponCodesHint') }}
+              <RouterLink :to="{ name: 'discount-show', params: { id: discountId } }">{{ $t('discountForm.manageCouponCodesLink') }}</RouterLink>
+            </p>
           </template>
         </BaseCard>
 
@@ -820,6 +824,21 @@ function cancel() {
 
 .period-label:not(:first-child) {
   margin-top: 1.25rem;
+}
+
+.coupon-codes-hint {
+  margin: 1.25rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
+}
+
+.coupon-codes-hint a {
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.coupon-codes-hint a:hover {
+  text-decoration: underline;
 }
 
 .design-hint {

@@ -3,6 +3,8 @@
     "nameColumn": "Name",
     "campaignColumn": "Campaign",
     "redemptionsColumn": "Total Redemptions",
+    "pointsEarnedColumn": "Points Earned",
+    "pointsRedeemedColumn": "Points Redeemed",
     "usageColumn": "Usage",
     "usageOfMax": "{count} of {max}",
     "usageUnlimited": "Unlimited",

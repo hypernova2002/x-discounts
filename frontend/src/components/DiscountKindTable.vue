@@ -50,6 +50,15 @@ const columns = computed(() => [
   { field: 'name', header: t('discountKindTable.nameColumn'), sortable: true, hideable: false, filter: { type: 'string' } },
   { field: 'campaign', header: t('discountKindTable.campaignColumn'), filter: { type: 'string', accessor: (row) => row.campaign.name } },
   { field: 'redemption_count', header: t('discountKindTable.redemptionsColumn'), sortable: true, filter: { type: 'number' } },
+  // Points earned/redeemed only mean anything for loyalty discounts (coupon/
+  // promotion give amount-off, not points) — see Discount#points_earned/
+  // #points_redeemed on the backend.
+  ...(props.kind === 'loyalty'
+    ? [
+        { field: 'points_earned', header: t('discountKindTable.pointsEarnedColumn'), sortable: true, filter: { type: 'number' } },
+        { field: 'points_redeemed', header: t('discountKindTable.pointsRedeemedColumn'), sortable: true, filter: { type: 'number' } },
+      ]
+    : []),
   { field: 'usage', header: t('discountKindTable.usageColumn') },
   { field: 'start_date', header: t('discountKindTable.startDateColumn'), filter: { type: 'date', accessor: (row) => validityFields(row).from } },
   { field: 'end_date', header: t('discountKindTable.endDateColumn'), filter: { type: 'date', accessor: (row) => validityFields(row).until } },
@@ -85,6 +94,8 @@ function viewCampaign(campaign) {
         <template #cell-campaign="{ data }">
           <EntityLink @click="viewCampaign(data.campaign)">{{ data.campaign.name }}</EntityLink>
         </template>
+        <template #cell-points_earned="{ data }">{{ formatNumber(data.points_earned) }}</template>
+        <template #cell-points_redeemed="{ data }">{{ formatNumber(data.points_redeemed) }}</template>
         <template #cell-usage="{ data }">
           <div v-if="usagePercent(data) !== null" class="usage-cell">
             <BaseProgressBar :value="usagePercent(data)" class="usage-cell__bar" />

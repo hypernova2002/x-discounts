@@ -87,6 +87,19 @@ function viewCustomer(customer) {
             : null
         "
       />
+      <MetricCard
+        :label="t('loyaltyPoints.totalPointsRedeemedMetric')"
+        :value="analytics ? formatNumber(analytics.summary.total_points_redeemed) : '—'"
+        :trend="
+          analytics
+            ? {
+                current: analytics.summary.total_points_redeemed,
+                previous: analytics.previous_period.total_points_redeemed,
+                caption: t('loyaltyPoints.previousPeriodCaption'),
+              }
+            : null
+        "
+      />
     </div>
 
     <BaseCard class="section-card">

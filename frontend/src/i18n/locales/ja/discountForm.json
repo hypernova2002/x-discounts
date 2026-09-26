@@ -47,6 +47,8 @@
     "issuedUntilLabel": "発行終了日",
     "validFromLabel": "開始日",
     "validUntilLabel": "終了日",
+    "manageCouponCodesHint": "クーポンコードは割引の詳細ページから管理します。",
+    "manageCouponCodesLink": "クーポンコードを管理",
     "designTitle": "デザイン",
     "designHint": "このクーポンの顧客向けデザイン（画像、カスタムHTML、またはその両方）を設定します。",
     "designImageLabel": "画像",

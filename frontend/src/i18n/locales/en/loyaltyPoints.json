@@ -1,6 +1,7 @@
 {
   "loyaltyPoints": {
-    "totalQuantityMetric": "Total Redemption Quantity",
+    "totalQuantityMetric": "Points Earned",
+    "totalPointsRedeemedMetric": "Points Redeemed",
     "previousPeriodCaption": "previous period",
     "chartTitle": "Loyalty point redemptions per day",
     "chartSeriesLabel": "Points granted",

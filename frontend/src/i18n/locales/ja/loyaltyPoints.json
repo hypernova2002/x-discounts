@@ -1,6 +1,7 @@
 {
   "loyaltyPoints": {
     "totalQuantityMetric": "合計獲得ポイント数",
+    "totalPointsRedeemedMetric": "利用済みポイント数",
     "previousPeriodCaption": "前の期間",
     "chartTitle": "1日あたりのロイヤルティポイント付与数",
     "chartSeriesLabel": "付与ポイント数",

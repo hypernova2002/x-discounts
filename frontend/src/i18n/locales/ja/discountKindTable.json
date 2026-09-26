@@ -3,6 +3,8 @@
     "nameColumn": "名前",
     "campaignColumn": "キャンペーン",
     "redemptionsColumn": "合計利用回数",
+    "pointsEarnedColumn": "獲得ポイント",
+    "pointsRedeemedColumn": "利用済みポイント",
     "usageColumn": "利用状況",
     "usageOfMax": "{max}回中{count}回",
     "usageUnlimited": "無制限",

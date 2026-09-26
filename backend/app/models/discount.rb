@@ -123,6 +123,26 @@ class Discount < Sequel::Model
     OrderDiscount.where(discount_id: id).all.count { |od| !od.refunded? }
   end
 
+  # Loyalty-only. Total points ever credited to a customer via this discount —
+  # every LoyaltyPointLot it earned, regardless of how much of that has since
+  # been spent or clawed back.
+  def points_earned
+    return 0 unless kind == "loyalty"
+
+    LoyaltyPointLot.where(discount_id: id).sum(:points) || 0
+  end
+
+  # Loyalty-only. How many of this discount's earned points have actually been
+  # spent by a customer (checkout or gift shop) — ledger entries of kind
+  # "spend" only, not "clawback" (a refund reversing the original earn is not
+  # a redemption). delta is stored negative, so this negates the sum.
+  def points_redeemed
+    return 0 unless kind == "loyalty"
+
+    lot_ids = LoyaltyPointLot.where(discount_id: id).select(:id)
+    -(LoyaltyPointLedgerEntry.where(loyalty_point_lot_id: lot_ids, kind: "spend").sum(:delta) || 0)
+  end
+
   # "Currently running" for a promotion/loyalty discount — enabled and within its
   # own active_from/active_until window, mirroring Campaign#active?'s date-window
   # shape. Coupon uses valid_from/valid_until instead, so this only makes sense

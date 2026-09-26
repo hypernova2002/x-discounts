@@ -35,7 +35,8 @@ import BaseToggleSwitch from '@/components/base/BaseToggleSwitch.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import BaseMessage from '@/components/base/BaseMessage.vue'
 import BaseTable from '@/components/base/BaseTable.vue'
-import BaseTag from '@/components/base/BaseTag.vue'
+import LifecycleStatus from '@/components/LifecycleStatus.vue'
+import DiscountKindTag from '@/components/DiscountKindTag.vue'
 import UnsavedChangesDialog from '@/components/UnsavedChangesDialog.vue'
 import { useAuthStore } from '@/stores/auth'
 import { ApiError } from '@/lib/api'
@@ -131,6 +132,13 @@ function newDiscount() {
   saveCampaignDraft(campaignId.value, form)
   bypassOnce()
   router.push({ name: 'discount-new', query: { campaign_id: campaignId.value, return_to: 'campaign-edit' } })
+}
+
+// Same per-kind validity-field lookup as CampaignDetailView.vue/DiscountKindTable.vue
+// (promotion/loyalty: active_from/active_until, coupon: valid_from/valid_until).
+function validityFields(discount) {
+  if (discount.kind === 'coupon') return { from: discount.coupon?.valid_from, until: discount.coupon?.valid_until }
+  return { from: discount[discount.kind]?.active_from, until: discount[discount.kind]?.active_until }
 }
 
 const discountColumns = computed(() => [
@@ -268,9 +276,9 @@ function cancel() {
           @refresh="loadDiscounts"
           @create="newDiscount"
         >
-          <template #cell-kind="{ data }"><BaseTag :value="data.kind" /></template>
+          <template #cell-kind="{ data }"><DiscountKindTag :kind="data.kind" /></template>
           <template #cell-enabled="{ data }">
-            <BaseTag v-if="!data.enabled" severity="secondary" :value="$t('campaignDetail.statusDisabled')" />
+            <LifecycleStatus compact :enabled="data.enabled" :from="validityFields(data).from" :until="validityFields(data).until" />
           </template>
           <template #cell-actions="{ data }">
             <BaseButton text icon="pi pi-pencil" :aria-label="$t('campaignDetail.editButton')" @click.stop="editDiscount(data)" />

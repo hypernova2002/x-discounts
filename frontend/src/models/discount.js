@@ -36,6 +36,8 @@ export const DiscountSchema = z
     compatible_discounts: z.array(z.record(z.unknown())),
     coupon_code_stats: z.object({ total: z.number(), available: z.number() }).nullable(),
     redemption_count: z.number(),
+    points_earned: z.number().nullable(),
+    points_redeemed: z.number().nullable(),
     campaign: CampaignSchema,
     max_redemptions: z.number().nullable(),
     max_redemptions_per_customer: z.number().nullable(),

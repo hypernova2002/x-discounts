@@ -62,10 +62,17 @@ module Api
                                                  .series(order_discounts_in(discount_ids, from, to), exclude: REFUNDED) { |od| od.loyalty_point_lot&.points || 0 }
           previous_total = previous_period_order_discount_total(discount_ids, from, to) { |od| od.loyalty_point_lot&.points || 0 }
 
+          total_points_redeemed = points_redeemed_total(discount_ids, from, to)
+          prev_from, prev_to = previous_range(from, to)
+          previous_points_redeemed = points_redeemed_total(discount_ids, prev_from, prev_to)
+
           render json: {
-            summary: { total_redemption_quantity: series.sum { |s| s[:value] } },
+            summary: {
+              total_redemption_quantity: series.sum { |s| s[:value] },
+              total_points_redeemed: total_points_redeemed
+            },
             series: series,
-            previous_period: { total_redemption_quantity: previous_total }
+            previous_period: { total_redemption_quantity: previous_total, total_points_redeemed: previous_points_redeemed }
           }
         end
 
@@ -218,6 +225,17 @@ module Api
           prev_from, prev_to = previous_range(from, to)
           Analytics::DailySeriesService.new(from: prev_from, to: prev_to)
                                         .total(orders_in(prev_from, prev_to), exclude: exclude, &block)
+        end
+
+        # Points actually spent (checkout or gift shop) in the range, for lots
+        # earned via this project's loyalty discounts — mirrors
+        # Discount#points_redeemed's "spend, not clawback" distinction, just
+        # scoped to a date range and summed across every loyalty discount
+        # instead of one.
+        def points_redeemed_total(discount_ids, from, to)
+          lot_ids = LoyaltyPointLot.where(discount_id: discount_ids).select(:id)
+          entries = LoyaltyPointLedgerEntry.where(loyalty_point_lot_id: lot_ids, kind: "spend", created_at: day_range(from, to))
+          -(entries.sum(:delta) || 0)
         end
 
         def order_discounts_in(discount_ids, from, to)

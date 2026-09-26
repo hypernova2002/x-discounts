@@ -38,6 +38,8 @@ class DiscountResource
   end
 
   attribute(:redemption_count) { |d| d.redemption_count }
+  attribute(:points_earned) { |d| d.kind == "loyalty" ? d.points_earned : nil }
+  attribute(:points_redeemed) { |d| d.kind == "loyalty" ? d.points_redeemed : nil }
 
   one :campaign, resource: CampaignResource
   many :discount_effects, resource: DiscountEffectResource, key: "effects"

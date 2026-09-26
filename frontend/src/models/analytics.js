@@ -21,9 +21,9 @@ export const PromotionAnalyticsSchema = z
 
 export const LoyaltyAnalyticsSchema = z
   .object({
-    summary: z.object({ total_redemption_quantity: z.number() }),
+    summary: z.object({ total_redemption_quantity: z.number(), total_points_redeemed: z.number() }),
     series: z.array(SeriesPointSchema),
-    previous_period: z.object({ total_redemption_quantity: z.number() }),
+    previous_period: z.object({ total_redemption_quantity: z.number(), total_points_redeemed: z.number() }),
   })
   .passthrough()
 

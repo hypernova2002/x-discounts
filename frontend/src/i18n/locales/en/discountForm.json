@@ -47,6 +47,8 @@
     "issuedUntilLabel": "Issued until",
     "validFromLabel": "Valid from",
     "validUntilLabel": "Valid until",
+    "manageCouponCodesHint": "Coupon codes are managed from the discount's own page.",
+    "manageCouponCodesLink": "Manage coupon codes",
     "designTitle": "Design",
     "designHint": "Give this coupon a customer-facing look — an image, custom HTML, or both.",
     "designImageLabel": "Image",
