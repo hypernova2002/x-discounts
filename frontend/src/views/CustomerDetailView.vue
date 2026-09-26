@@ -17,7 +17,7 @@ import BaseInputNumber from '@/components/base/BaseInputNumber.vue'
 import BaseInputText from '@/components/base/BaseInputText.vue'
 import { useAuthStore } from '@/stores/auth'
 import { ApiError } from '@/lib/api'
-import { getCustomer, updateCustomer, grantPoints as grantPointsRequest } from '@/api/customers'
+import { getCustomer, updateCustomer, grantPoints as grantPointsRequest, duplicateCustomer } from '@/api/customers'
 import { listOrders } from '@/api/orders'
 import { listMembershipSchemes } from '@/api/membershipSchemes'
 import { grantPointsInputSchema } from '@/models/customer'
@@ -71,6 +71,21 @@ const ACTIVITY_SEVERITIES = {
 
 function viewOrder(orderId) {
   router.push({ name: 'order-show', params: { id: orderId } })
+}
+
+const duplicating = ref(false)
+
+async function duplicateCustomerAction() {
+  duplicating.value = true
+  try {
+    const copy = await duplicateCustomer(customer.value.id, { token: auth.token, projectId: auth.project?.id })
+    toast.add({ severity: 'success', summary: t('customerDetail.duplicatedToast'), life: 3000 })
+    router.push({ name: 'customer-show', params: { id: copy.id } })
+  } catch (e) {
+    toast.add({ severity: 'error', summary: t('customerDetail.genericError'), detail: e.message, life: 4000 })
+  } finally {
+    duplicating.value = false
+  }
 }
 
 const loyaltyPointLotColumns = computed(() => [
@@ -190,6 +205,9 @@ onMounted(loadCustomer)
       <PageHeader>
         <template #title>
           <h2>{{ customer.name || customer.external_id }}</h2>
+        </template>
+        <template #actions>
+          <BaseButton text :label="$t('customerDetail.duplicateButton')" :loading="duplicating" @click="duplicateCustomerAction" />
         </template>
       </PageHeader>
 

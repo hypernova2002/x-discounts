@@ -9,6 +9,8 @@
     "membershipUpdated": "Membership updated",
     "membershipUpdateError": "Failed to update membership",
     "pointsGranted": "Points granted",
+    "duplicateButton": "Duplicate",
+    "duplicatedToast": "Customer duplicated",
     "genericError": "Something went wrong",
     "details": {
       "title": "Details",

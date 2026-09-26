@@ -20,6 +20,8 @@
     "stackableTag": "stackable",
     "disabledTag": "disabled",
     "editButton": "Edit",
+    "duplicateButton": "Duplicate",
+    "duplicatedToast": "Discount duplicated",
     "deleteButton": "Delete",
     "deleteDialogHeader": "Delete discount",
     "deleteDialogBodyBefore": "This permanently deletes",

@@ -21,6 +21,10 @@ export function createCustomer(input, { token, projectId }) {
   return apiFetch(BASE, { method: 'POST', token, projectId, body: input }).then((data) => CustomerSchema.parse(data))
 }
 
+export function duplicateCustomer(id, { token, projectId }) {
+  return apiFetch(`${BASE}/${id}/duplicate`, { method: 'POST', token, projectId }).then((data) => CustomerSchema.parse(data))
+}
+
 // The backend's PATCH returns the plain customer shape (no stats/activity/
 // loyalty_point_lots) — see CustomerUpdateRequest's tri-state comment for how
 // `input` should be built: omit `membership_tier_id` to leave it unchanged,

@@ -7,12 +7,17 @@ module Api
         WRITE_ROLES = %w[admin developer marketer].freeze
 
         before_action :require_project_context!
-        before_action :set_customer, only: %i[show update grant_points]
-        before_action -> { require_role!(*WRITE_ROLES) }, only: %i[create update grant_points]
+        before_action :set_customer, only: %i[show update grant_points duplicate]
+        before_action -> { require_role!(*WRITE_ROLES) }, only: %i[create update grant_points duplicate]
 
         def create
           customer = Customers::AdminCreateService.new(project: current_project, request: CustomerRequest.new(body)).call
           render json: CustomerResource.new(customer).to_h, status: :created
+        end
+
+        def duplicate
+          copy = Customers::DuplicateService.new(customer: @customer).call
+          render json: CustomerResource.new(copy).to_h, status: :created
         end
 
         def index

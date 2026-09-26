@@ -13,7 +13,7 @@ import BaseMessage from '@/components/base/BaseMessage.vue'
 import BaseTable from '@/components/base/BaseTable.vue'
 import { useAuthStore } from '@/stores/auth'
 import { ApiError } from '@/lib/api'
-import { getCampaign, updateCampaign } from '@/api/campaigns'
+import { getCampaign, updateCampaign, duplicateCampaign } from '@/api/campaigns'
 import { listDiscounts } from '@/api/discounts'
 import { useBaseToast } from '@/composables/useBaseToast'
 import { formatDateTime, formatNumber, formatCurrency } from '@/lib/format'
@@ -30,6 +30,7 @@ const discounts = ref([])
 const discountsLoading = ref(false)
 const toggling = ref(false)
 const archiving = ref(false)
+const duplicating = ref(false)
 
 async function loadCampaign() {
   loadError.value = ''
@@ -76,6 +77,19 @@ async function toggleArchived() {
 
 function editCampaign() {
   router.push({ name: 'campaign-edit', params: { id: campaign.value.id } })
+}
+
+async function duplicateCampaignAction() {
+  duplicating.value = true
+  try {
+    const copy = await duplicateCampaign(campaign.value.id, { token: auth.token, projectId: auth.project?.id })
+    toast.add({ severity: 'success', summary: t('campaignDetail.duplicatedToast'), life: 3000 })
+    router.push({ name: 'campaign-show', params: { id: copy.id } })
+  } catch (e) {
+    toast.add({ severity: 'error', summary: t('campaignDetail.duplicateError'), detail: e.message, life: 4000 })
+  } finally {
+    duplicating.value = false
+  }
 }
 
 // Same per-kind validity-field lookup as DiscountKindTable.vue (promotion/
@@ -148,6 +162,7 @@ onMounted(loadCampaign)
             @click="toggleArchived"
           />
           <BaseButton text :label="campaign.enabled ? $t('campaignDetail.pauseButton') : $t('campaignDetail.enableButton')" :loading="toggling" @click="toggleEnabled" />
+          <BaseButton text :label="$t('campaignDetail.duplicateButton')" :loading="duplicating" @click="duplicateCampaignAction" />
           <BaseButton :label="$t('campaignDetail.editButton')" @click="editCampaign" />
         </template>
       </PageHeader>

@@ -20,6 +20,8 @@
     "stackableTag": "併用可能",
     "disabledTag": "無効",
     "editButton": "編集",
+    "duplicateButton": "複製",
+    "duplicatedToast": "割引を複製しました",
     "deleteButton": "削除",
     "deleteDialogHeader": "割引を削除",
     "deleteDialogBodyBefore": "この操作を実行すると",

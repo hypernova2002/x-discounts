@@ -29,6 +29,10 @@ export function deleteDiscount(id, { token, projectId }) {
   return apiFetch(`${BASE}/${id}`, { method: 'DELETE', token, projectId })
 }
 
+export function duplicateDiscount(id, { token, projectId }) {
+  return apiFetch(`${BASE}/${id}/duplicate`, { method: 'POST', token, projectId }).then((data) => DiscountSchema.parse(data))
+}
+
 export function uploadCouponDesignImage(id, file, { token, projectId }) {
   return apiUpload(`${BASE}/${id}/design_image`, { token, projectId, fieldName: 'design_image', file }).then((data) => DiscountSchema.parse(data))
 }

@@ -20,7 +20,7 @@ import ConditionSummary from '@/components/discounts/ConditionSummary.vue'
 import KeyValueEditor from '@/components/discounts/KeyValueEditor.vue'
 import { useAuthStore } from '@/stores/auth'
 import { ApiError, apiFileUrl } from '@/lib/api'
-import { getDiscount, deleteDiscount } from '@/api/discounts'
+import { getDiscount, deleteDiscount, duplicateDiscount } from '@/api/discounts'
 import { sanitizeHtml } from '@/lib/sanitizeHtml'
 import { listCouponCodes, generateCouponCodes, deleteCouponCode } from '@/api/couponCodes'
 import { listCustomers } from '@/api/customers'
@@ -211,6 +211,21 @@ function viewCampaign() {
   router.push({ name: 'campaign-show', params: { id: discount.value.campaign.id } })
 }
 
+const duplicating = ref(false)
+
+async function duplicateDiscountAction() {
+  duplicating.value = true
+  try {
+    const copy = await duplicateDiscount(discount.value.id, { token: auth.token, projectId: auth.project?.id })
+    toast.add({ severity: 'success', summary: t('discountDetail.duplicatedToast'), life: 3000 })
+    router.push({ name: 'discount-show', params: { id: copy.id } })
+  } catch (e) {
+    toast.add({ severity: 'error', summary: t('discountDetail.genericError'), detail: e.message, life: 4000 })
+  } finally {
+    duplicating.value = false
+  }
+}
+
 // --- delete (hard, permanent — enabled/disabled is the reversible everyday toggle) ---
 
 const deleteDialogOpen = ref(false)
@@ -301,6 +316,7 @@ onMounted(loadDiscount)
         </template>
         <template #actions>
           <BaseButton :label="$t('discountDetail.editButton')" @click="editDiscount" />
+          <BaseButton text :label="$t('discountDetail.duplicateButton')" :loading="duplicating" @click="duplicateDiscountAction" />
           <BaseButton text severity="danger" :label="$t('discountDetail.deleteButton')" @click="deleteDialogOpen = true" />
         </template>
       </PageHeader>

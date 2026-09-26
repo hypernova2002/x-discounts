@@ -7,8 +7,8 @@ module Api
         WRITE_ROLES = %w[admin developer marketer].freeze
 
         before_action :require_project_context!
-        before_action -> { require_role!(*WRITE_ROLES) }, only: %i[create update]
-        before_action :set_campaign, only: %i[show update]
+        before_action -> { require_role!(*WRITE_ROLES) }, only: %i[create update duplicate]
+        before_action :set_campaign, only: %i[show update duplicate]
 
         def index
           dataset = filtered_campaigns_dataset
@@ -36,6 +36,11 @@ module Api
         def update
           campaign = Campaigns::UpdateService.new(campaign: @campaign, request: CampaignUpdateRequest.new(body)).call
           render json: CampaignResource.new(campaign).to_h
+        end
+
+        def duplicate
+          copy = Campaigns::DuplicateService.new(campaign: @campaign).call
+          render json: CampaignResource.new(copy).to_h, status: :created
         end
 
         private

@@ -34,11 +34,13 @@ Rails.application.routes.draw do
         resources :project_memberships, only: %i[index show create update destroy]
         resources :api_keys, only: %i[index show create destroy]
         resources :campaigns, only: %i[index show create update] do
+          post :duplicate, on: :member
           collection { get :export }
         end
         resources :discounts, only: %i[index show create update destroy] do
           get :design_image, on: :member
           post :design_image, action: :upload_design_image, on: :member
+          post :duplicate, on: :member
           resources :compatible_discounts, only: %i[create destroy], controller: "discount_compatibilities"
           resources :coupon_codes, only: %i[index create destroy]
         end
@@ -55,6 +57,7 @@ Rails.application.routes.draw do
         end
         resources :customers, only: %i[index show update create] do
           post :grant_points, on: :member
+          post :duplicate, on: :member
           collection { get :export }
         end
         get "exports/project" => "exports#project"

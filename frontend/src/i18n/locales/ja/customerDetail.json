@@ -9,6 +9,8 @@
     "membershipUpdated": "メンバーシップを更新しました",
     "membershipUpdateError": "メンバーシップの更新に失敗しました",
     "pointsGranted": "ポイントを付与しました",
+    "duplicateButton": "複製",
+    "duplicatedToast": "顧客を複製しました",
     "genericError": "エラーが発生しました",
     "details": {
       "title": "詳細",

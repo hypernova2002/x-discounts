@@ -12,8 +12,8 @@ module Api
         # item photos (see GiftShopItemsController#photo).
         skip_before_action :authenticate!, only: %i[design_image]
         before_action :require_project_context!, except: %i[design_image]
-        before_action -> { require_role!(*WRITE_ROLES) }, only: %i[create update destroy upload_design_image]
-        before_action :set_discount, only: %i[show update destroy upload_design_image]
+        before_action -> { require_role!(*WRITE_ROLES) }, only: %i[create update destroy upload_design_image duplicate]
+        before_action :set_discount, only: %i[show update destroy upload_design_image duplicate]
         before_action :set_discount_by_public_id, only: %i[design_image]
 
         def index
@@ -53,6 +53,11 @@ module Api
           campaign = find_campaign!(request.campaign_id) if request.attributes.key?(:campaign_id)
           discount = Discounts::UpdateService.new(discount: @discount, request: request, campaign: campaign).call
           render json: DiscountResource.new(discount).to_h
+        end
+
+        def duplicate
+          copy = Discounts::DuplicateService.new(discount: @discount).call
+          render json: DiscountResource.new(copy).to_h, status: :created
         end
 
         def destroy

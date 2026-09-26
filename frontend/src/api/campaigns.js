@@ -23,6 +23,10 @@ export function updateCampaign(id, input, { token, projectId }) {
   return apiFetch(`${BASE}/${id}`, { method: 'PATCH', token, projectId, body: input }).then((data) => CampaignSchema.parse(data))
 }
 
+export function duplicateCampaign(id, { token, projectId }) {
+  return apiFetch(`${BASE}/${id}/duplicate`, { method: 'POST', token, projectId }).then((data) => CampaignSchema.parse(data))
+}
+
 export function exportCampaigns({ includeArchived, token, projectId }) {
   const path = includeArchived ? `${BASE}/export?include_archived=true` : `${BASE}/export`
   return apiDownload(path, { token, projectId, filename: 'campaigns.csv' })
