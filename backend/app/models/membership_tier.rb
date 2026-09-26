@@ -5,6 +5,7 @@ class MembershipTier < Sequel::Model
 
   include ConditionTreeValidatable
   include PublicIdentifiable
+  include BoundedFieldValidatable
 
   plugin :timestamps, update_on_create: true
   plugin :validation_helpers
@@ -14,18 +15,16 @@ class MembershipTier < Sequel::Model
   def validate
     super
     validates_presence %i[membership_scheme_id name rank]
-    validates_unique %i[membership_scheme_id rank]
-    validates_unique %i[membership_scheme_id name]
+    validates_utf8_length :name, max: 1000
+    validates_unique %i[membership_scheme_id name] unless errors[:name]
+    validates_bounded_number :rank, min: 0, max: 10_000, integer_only: true
+    validates_unique %i[membership_scheme_id rank] unless errors[:rank]
+    validates_bounded_number :grace_period_days, min: 1, max: 10_000, integer_only: true
 
     if requirements_condition && !requirements_condition.empty?
       condition_errors = []
       valid_condition_tree?(requirements_condition, condition_errors)
       condition_errors.each { |msg| errors.add(:requirements_condition, msg) }
-    end
-
-    if grace_period_days
-      validates_integer :grace_period_days
-      errors.add(:grace_period_days, "must be a positive number of days") if grace_period_days <= 0
     end
   end
 

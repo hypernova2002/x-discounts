@@ -4,6 +4,7 @@ class Order < Sequel::Model
   PUBLIC_ID_PREFIX = "ord"
 
   include PublicIdentifiable
+  include BoundedFieldValidatable
 
   plugin :timestamps, update_on_create: true
   plugin :validation_helpers
@@ -20,6 +21,8 @@ class Order < Sequel::Model
   def validate
     super
     validates_presence %i[project_id customer_id]
+    validates_bounded_number :total_amount, min: 0, max: 100_000_000
+    validates_bounded_number :total_discount_amount, min: 0, max: 100_000_000
   end
 
   def cancelled?

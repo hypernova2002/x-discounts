@@ -4,6 +4,7 @@ class PointsRedemption < Sequel::Model
   PUBLIC_ID_PREFIX = "ptsr"
 
   include PublicIdentifiable
+  include BoundedFieldValidatable
 
   plugin :timestamps, update_on_create: true
   plugin :validation_helpers
@@ -19,6 +20,8 @@ class PointsRedemption < Sequel::Model
   def validate
     super
     validates_presence %i[order_id customer_id points_redeemed amount_off]
+    validates_bounded_number :points_redeemed, min: 0, max: 10_000_000, integer_only: true
+    validates_bounded_number :amount_off, min: 0, max: 100_000_000
   end
 
   def refunded_points

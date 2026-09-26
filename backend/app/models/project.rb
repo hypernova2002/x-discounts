@@ -11,6 +11,7 @@ class Project < Sequel::Model
   TIMEZONES = TZInfo::Timezone.all_identifiers.freeze
 
   include PublicIdentifiable
+  include BoundedFieldValidatable
 
   plugin :timestamps, update_on_create: true
   plugin :validation_helpers
@@ -40,7 +41,8 @@ class Project < Sequel::Model
   def validate
     super
     validates_presence [:name, :account_id]
-    validates_unique %i[account_id name]
+    validates_utf8_length :name, max: 1000
+    validates_unique %i[account_id name] unless errors[:name]
     validates_includes TIMEZONES, :timezone, allow_missing: true
   end
 end

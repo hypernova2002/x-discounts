@@ -8,6 +8,7 @@ class ApiKey < Sequel::Model
   PUBLIC_ID_PREFIX = "key"
 
   include PublicIdentifiable
+  include BoundedFieldValidatable
 
   plugin :timestamps, update_on_create: true
   plugin :validation_helpers
@@ -22,6 +23,7 @@ class ApiKey < Sequel::Model
   def validate
     super
     validates_presence [:project_id, :user_id, :name, :role, :token_digest, :token_last_four]
+    validates_utf8_length :name, max: 1000
     validates_includes ProjectMembership::ROLES, :role, allow_missing: true
   end
 

@@ -4,6 +4,7 @@ class Customer < Sequel::Model
   PUBLIC_ID_PREFIX = "cust"
 
   include PublicIdentifiable
+  include BoundedFieldValidatable
 
   plugin :timestamps, update_on_create: true
   plugin :validation_helpers
@@ -22,7 +23,14 @@ class Customer < Sequel::Model
   def validate
     super
     validates_presence [:project_id, :external_id]
-    validates_unique [:project_id, :external_id]
+    validates_utf8_length :external_id, max: 255
+    validates_unique [:project_id, :external_id] unless errors[:external_id]
+    validates_utf8_length :name, max: 1000
+    validates_utf8_length :email, max: 255
+    validates_utf8_length :phone_number, max: 255
+    validates_utf8_length :country, max: 255
+    validates_boolean :marketing_opt_in
+    errors.add(:date_of_birth, "cannot be in the future") if date_of_birth && date_of_birth > Date.today
   end
 
   # Sum of whatever's left in every non-expired lot — not earned-minus-redeemed

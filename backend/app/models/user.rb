@@ -13,6 +13,7 @@ class User < Sequel::Model
   BACKUP_CODE_COUNT = 8
 
   include PublicIdentifiable
+  include BoundedFieldValidatable
 
   plugin :timestamps, update_on_create: true
   plugin :validation_helpers
@@ -42,9 +43,12 @@ class User < Sequel::Model
   def validate
     super
     validates_presence [:email, :name, :account_id]
-    validates_unique :email
-    validates_format(/\A[^@\s]+@[^@\s]+\z/, :email, message: "is not a valid email") if email
+    validates_utf8_length :email, max: 255
+    validates_unique :email unless errors[:email]
+    validates_format(/\A[^@\s]+@[^@\s]+\z/, :email, message: "is not a valid email") if email && !errors[:email]
+    validates_utf8_length :name, max: 1000
     validates_includes LOCALES, :locale, allow_missing: true
+    validates_boolean :otp_enabled
     validate_password
   end
 

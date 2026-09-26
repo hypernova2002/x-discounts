@@ -4,6 +4,7 @@ class CouponCode < Sequel::Model
   PUBLIC_ID_PREFIX = "cpn"
 
   include PublicIdentifiable
+  include BoundedFieldValidatable
 
   plugin :timestamps, update_on_create: true
   plugin :validation_helpers
@@ -16,7 +17,8 @@ class CouponCode < Sequel::Model
   def validate
     super
     validates_presence %i[discount_id project_id code max_redemptions]
-    errors.add(:max_redemptions, "must be at least 1") if max_redemptions && max_redemptions < 1
+    validates_utf8_length :code, max: 255
+    validates_bounded_number :max_redemptions, min: 1, max: 10_000, integer_only: true
   end
 
   # Redemption count, refund-aware — a refunded usage frees the slot back up, same

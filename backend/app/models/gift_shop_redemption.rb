@@ -4,6 +4,7 @@ class GiftShopRedemption < Sequel::Model
   PUBLIC_ID_PREFIX = "giftr"
 
   include PublicIdentifiable
+  include BoundedFieldValidatable
 
   plugin :timestamps, update_on_create: true
   plugin :validation_helpers
@@ -14,5 +15,8 @@ class GiftShopRedemption < Sequel::Model
   def validate
     super
     validates_presence %i[customer_id item_name quantity points_spent redeemed_at]
+    validates_utf8_length :item_name, max: 1000
+    validates_bounded_number :quantity, min: 1, max: 100_000, integer_only: true
+    validates_bounded_number :points_spent, min: 0, max: 10_000_000, integer_only: true
   end
 end

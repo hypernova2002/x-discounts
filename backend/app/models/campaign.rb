@@ -4,6 +4,7 @@ class Campaign < Sequel::Model
   PUBLIC_ID_PREFIX = "camp"
 
   include PublicIdentifiable
+  include BoundedFieldValidatable
 
   plugin :timestamps, update_on_create: true
   plugin :validation_helpers
@@ -14,6 +15,9 @@ class Campaign < Sequel::Model
   def validate
     super
     validates_presence %i[project_id name]
+    validates_utf8_length :name, max: 1000
+    validates_boolean :enabled
+    validates_boolean :archived
   end
 
   def active?(now = Time.now.utc)

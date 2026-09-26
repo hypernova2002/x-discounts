@@ -3,6 +3,7 @@
 class DiscountEffect < Sequel::Model
   include ConditionTreeValidatable
   include PublicIdentifiable
+  include BoundedFieldValidatable
 
   LOYALTY_EFFECT_TYPES = %w[points_per_currency points_flat points_per_item points_multiplier].freeze
   EFFECT_TYPES = (%w[percentage_off fixed_amount_off free_item] + LOYALTY_EFFECT_TYPES).freeze
@@ -55,7 +56,9 @@ class DiscountEffect < Sequel::Model
     when "fixed_amount_off"
       amount = cfg["amount"]
       errors.add(:config, "amount must be a positive number") unless amount.is_a?(Numeric) && amount.positive?
+      errors.add(:config, "amount must be at most 100000000") if amount.is_a?(Numeric) && amount > 100_000_000
       errors.add(:config, "currency is required") unless cfg["currency"].is_a?(String) && !cfg["currency"].empty?
+      add_utf8_length_errors(:config, cfg["currency"], max: 255)
     when "free_item"
       validate_free_item_config(cfg)
     when "points_per_currency"
@@ -64,10 +67,12 @@ class DiscountEffect < Sequel::Model
     when "points_flat"
       points = cfg["points"]
       errors.add(:config, "points must be a positive integer") unless points.is_a?(Integer) && points.positive?
+      errors.add(:config, "points must be at most 10000000") if points.is_a?(Integer) && points > 10_000_000
     when "points_per_item"
       errors.add(:scope, "must be line_item for points_per_item") unless scope == "line_item"
       points_per_item = cfg["points_per_item"]
       errors.add(:config, "points_per_item must be a positive integer") unless points_per_item.is_a?(Integer) && points_per_item.positive?
+      errors.add(:config, "points_per_item must be at most 10000000") if points_per_item.is_a?(Integer) && points_per_item > 10_000_000
     when "points_multiplier"
       multiplier = cfg["multiplier"]
       errors.add(:config, "multiplier must be a number greater than 1") unless multiplier.is_a?(Numeric) && multiplier > 1
@@ -87,7 +92,9 @@ class DiscountEffect < Sequel::Model
 
   def validate_free_item_config(cfg)
     %w[buy_quantity get_quantity].each do |key|
-      unless cfg[key].is_a?(Integer) && cfg[key].positive?
+      if cfg[key].is_a?(Integer) && cfg[key].positive?
+        errors.add(:config, "#{key} must be at most 100000") if cfg[key] > 100_000
+      else
         errors.add(:config, "#{key} must be a positive integer")
       end
     end

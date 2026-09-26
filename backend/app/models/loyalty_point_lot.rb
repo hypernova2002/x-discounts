@@ -7,6 +7,7 @@ class LoyaltyPointLot < Sequel::Model
   STATUSES = %w[active expired cancelled].freeze
 
   include PublicIdentifiable
+  include BoundedFieldValidatable
 
   plugin :timestamps, update_on_create: true
   plugin :validation_helpers
@@ -22,6 +23,8 @@ class LoyaltyPointLot < Sequel::Model
     super
     validates_presence %i[customer_id points earned_at source]
     validates_includes SOURCES, :source, allow_missing: true
+    validates_bounded_number :points, min: 0, max: 10_000_000, integer_only: true
+    validates_utf8_length :reason, max: 10_000
   end
 
   def expired?(now = Time.now.utc)

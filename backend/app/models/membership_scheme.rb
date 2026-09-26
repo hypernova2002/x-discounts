@@ -4,6 +4,7 @@ class MembershipScheme < Sequel::Model
   PUBLIC_ID_PREFIX = "mscheme"
 
   include PublicIdentifiable
+  include BoundedFieldValidatable
 
   plugin :timestamps, update_on_create: true
   plugin :validation_helpers
@@ -17,5 +18,6 @@ class MembershipScheme < Sequel::Model
   def validate
     super
     validates_presence %i[project_id name]
+    validates_utf8_length :name, max: 1000
   end
 end

@@ -5,6 +5,7 @@ class LoyaltyPointLedgerEntry < Sequel::Model
   KINDS = %w[spend clawback].freeze
 
   include PublicIdentifiable
+  include BoundedFieldValidatable
 
   plugin :timestamps, update_on_create: true
   plugin :validation_helpers
@@ -19,7 +20,8 @@ class LoyaltyPointLedgerEntry < Sequel::Model
     super
     validates_presence %i[loyalty_point_lot_id delta kind]
     validates_includes KINDS, :kind, allow_missing: true
-    errors.add(:delta, "must be negative") if delta && delta >= 0
+    validates_bounded_number :delta, min: -10_000_000, max: -1, integer_only: true
+    validates_utf8_length :reason, max: 10_000
 
     case kind
     when "spend"

@@ -4,6 +4,7 @@ class DiscountRefund < Sequel::Model
   PUBLIC_ID_PREFIX = "drfnd"
 
   include PublicIdentifiable
+  include BoundedFieldValidatable
 
   plugin :timestamps, update_on_create: true
   plugin :validation_helpers
@@ -14,5 +15,7 @@ class DiscountRefund < Sequel::Model
   def validate
     super
     validates_presence %i[order_discount_id amount_off refunded_at]
+    validates_bounded_number :amount_off, min: 0, max: 100_000_000
+    validates_utf8_length :reason, max: 10_000
   end
 end

@@ -4,6 +4,7 @@ class GiftShopItem < Sequel::Model
   PUBLIC_ID_PREFIX = "gift"
 
   include PublicIdentifiable
+  include BoundedFieldValidatable
 
   plugin :timestamps, update_on_create: true
   plugin :validation_helpers
@@ -13,12 +14,13 @@ class GiftShopItem < Sequel::Model
   def validate
     super
     validates_presence %i[project_id name points_cost]
-    validates_integer :points_cost, allow_missing: true
-    errors.add(:points_cost, "must be a positive number") if points_cost && points_cost <= 0
-    if stock
-      validates_integer :stock
-      errors.add(:stock, "must be zero or positive") if stock.negative?
-    end
+    validates_utf8_length :name, max: 1000
+    validates_utf8_length :description, max: 10_000
+    validates_utf8_length :photo_filename, max: 255
+    validates_utf8_length :photo_content_type, max: 255
+    validates_bounded_number :points_cost, min: 1, max: 10_000_000, integer_only: true
+    validates_bounded_number :stock, min: 0, max: 10_000_000, integer_only: true
+    validates_boolean :enabled
   end
 
   def photo?

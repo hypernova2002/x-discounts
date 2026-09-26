@@ -3,6 +3,7 @@
 class Discount < Sequel::Model
   include ConditionTreeValidatable
   include PublicIdentifiable
+  include BoundedFieldValidatable
 
   KINDS = %w[promotion coupon loyalty].freeze
   KEY_FORMAT = /\A[a-zA-Z0-9_.-]+\z/
@@ -37,8 +38,20 @@ class Discount < Sequel::Model
     super
     validates_presence [:project_id, :campaign_id, :kind, :name, :key]
     validates_includes KINDS, :kind, allow_missing: true
-    validates_unique [:project_id, :key]
+    validates_utf8_length :name, max: 1000
+    validates_utf8_length :key, max: 255
+    validates_unique [:project_id, :key] unless errors[:key]
     validates_format KEY_FORMAT, :key, message: "may only contain letters, numbers, underscores, hyphens, and periods", allow_nil: true
+    validates_boolean :stackable
+    validates_boolean :refundable
+    validates_boolean :enabled
+    validates_bounded_number :max_redemptions, min: 1, max: 1_000_000, integer_only: true
+    validates_bounded_number :max_redemptions_per_customer, min: 1, max: 1_000_000, integer_only: true
+    validates_bounded_number :max_redemptions_per_day, min: 1, max: 1_000_000, integer_only: true
+    validates_bounded_number :max_redemption_amount, min: 0, max: 100_000_000
+    validates_bounded_number :max_redemption_amount_per_day, min: 0, max: 100_000_000
+    validates_bounded_number :max_redemption_amount_per_customer, min: 0, max: 100_000_000
+    validate_kind_config
 
     if eligibility_condition && !eligibility_condition.empty?
       condition_errors = []
@@ -155,5 +168,16 @@ class Discount < Sequel::Model
 
   def parse_time(value)
     value ? Time.parse(value).utc : nil
+  end
+
+  # kind_config's own free-text/count sub-fields — the date strings and
+  # nested design_image_byte_size are left alone here, same as the rest of
+  # kind_config's shape, since this pass doesn't add jsonb structural validation.
+  def validate_kind_config
+    cfg = (kind_config || {}).to_h.stringify_keys
+    add_utf8_length_errors(:kind_config, cfg["design_html"], max: 10_000)
+    add_utf8_length_errors(:kind_config, cfg["design_image_filename"], max: 255)
+    add_utf8_length_errors(:kind_config, cfg["design_image_content_type"], max: 255)
+    add_bounded_number_errors(:kind_config, cfg["points_expire_after_days"], min: 0, max: 10_000, integer_only: true)
   end
 end

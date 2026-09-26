@@ -4,6 +4,7 @@ class OrderDiscount < Sequel::Model
   PUBLIC_ID_PREFIX = "ordisc"
 
   include PublicIdentifiable
+  include BoundedFieldValidatable
 
   plugin :timestamps, update_on_create: true
   plugin :validation_helpers
@@ -20,6 +21,12 @@ class OrderDiscount < Sequel::Model
   def validate
     super
     validates_presence %i[order_id kind discount_key discount_name effect_type]
+    validates_utf8_length :kind, max: 255
+    validates_utf8_length :discount_key, max: 255
+    validates_utf8_length :discount_name, max: 1000
+    validates_utf8_length :effect_type, max: 255
+    validates_utf8_length :sku, max: 255
+    validates_bounded_number :amount_off, min: 0, max: 100_000_000
   end
 
   # Loyalty points are attributed at the lot level, not per effect-row — a discount

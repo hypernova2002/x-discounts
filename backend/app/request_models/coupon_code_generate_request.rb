@@ -14,7 +14,7 @@ class CouponCodeGenerateRequest < Dry::Struct
   transform_keys(&:to_sym)
 
   attribute? :code, JsonModel::Types::String.optional
-  attribute? :count, JsonModel::Types::Integer.optional
+  attribute? :count, JsonModel::Types::Integer.constrained(gteq: 1, lteq: 10_000).optional
   attribute? :customer_ids, JsonModel::Types::Array.of(JsonModel::Types::String).optional
   attribute? :customer_id, JsonModel::Types::String.optional
   attribute? :prefix, JsonModel::Types::String.optional
