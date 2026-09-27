@@ -1,0 +1,27 @@
+{
+  "logs": {
+    "loadError": "Failed to load activity logs",
+    "empty": "No activity yet.",
+    "systemActor": "System",
+    "entityTypeFilterPlaceholder": "Entity type",
+    "actionFilterPlaceholder": "Action",
+    "groupSummarySuffix": "{label} (+{count} more)",
+    "fieldsChanged": "{count} field(s) changed",
+    "action": {
+      "create": "Created",
+      "update": "Updated",
+      "delete": "Deleted"
+    },
+    "detailDialog": {
+      "header": "Change details",
+      "entity": "Entity",
+      "actor": "Actor",
+      "time": "Time",
+      "noFields": "No field changes recorded.",
+      "fieldColumn": "Field",
+      "beforeColumn": "Before",
+      "afterColumn": "After",
+      "valueColumn": "Value"
+    }
+  }
+}

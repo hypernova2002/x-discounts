@@ -4,6 +4,7 @@ class Discount < Sequel::Model
   include ConditionTreeValidatable
   include PublicIdentifiable
   include BoundedFieldValidatable
+  include Auditable
 
   KINDS = %w[promotion coupon loyalty].freeze
   KEY_FORMAT = /\A[a-zA-Z0-9_.-]+\z/

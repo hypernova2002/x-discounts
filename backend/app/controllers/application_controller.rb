@@ -2,6 +2,8 @@ class ApplicationController < ActionController::API
   include Authenticatable
   include Pagy::Backend
 
+  before_action { Current.user = current_user; Current.request_id = request.request_id }
+
   rescue_from ApiError, with: :render_api_error
 
   # Request models (app/request_models) raise these when the incoming JSON doesn't

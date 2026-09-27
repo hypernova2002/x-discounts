@@ -5,6 +5,7 @@ class PointsRedemption < Sequel::Model
 
   include PublicIdentifiable
   include BoundedFieldValidatable
+  include Auditable
 
   plugin :timestamps, update_on_create: true
   plugin :validation_helpers
@@ -22,6 +23,10 @@ class PointsRedemption < Sequel::Model
     validates_presence %i[order_id customer_id points_redeemed amount_off]
     validates_bounded_number :points_redeemed, min: 0, max: 10_000_000, integer_only: true
     validates_bounded_number :amount_off, min: 0, max: 100_000_000
+  end
+
+  def audit_project_id
+    order.project_id
   end
 
   def refunded_points

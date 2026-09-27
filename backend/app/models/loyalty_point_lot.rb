@@ -8,6 +8,7 @@ class LoyaltyPointLot < Sequel::Model
 
   include PublicIdentifiable
   include BoundedFieldValidatable
+  include Auditable
 
   plugin :timestamps, update_on_create: true
   plugin :validation_helpers
@@ -25,6 +26,10 @@ class LoyaltyPointLot < Sequel::Model
     validates_includes SOURCES, :source, allow_missing: true
     validates_bounded_number :points, min: 0, max: 10_000_000, integer_only: true
     validates_utf8_length :reason, max: 10_000
+  end
+
+  def audit_project_id
+    customer.project_id
   end
 
   def expired?(now = Time.now.utc)

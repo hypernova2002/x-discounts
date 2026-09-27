@@ -1,0 +1,27 @@
+{
+  "logs": {
+    "loadError": "アクティビティログの読み込みに失敗しました",
+    "empty": "まだアクティビティはありません。",
+    "systemActor": "システム",
+    "entityTypeFilterPlaceholder": "対象の種類",
+    "actionFilterPlaceholder": "操作",
+    "groupSummarySuffix": "{label}(他{count}件)",
+    "fieldsChanged": "{count}件のフィールドが変更されました",
+    "action": {
+      "create": "作成",
+      "update": "更新",
+      "delete": "削除"
+    },
+    "detailDialog": {
+      "header": "変更の詳細",
+      "entity": "対象",
+      "actor": "実行者",
+      "time": "日時",
+      "noFields": "記録されたフィールドの変更はありません。",
+      "fieldColumn": "フィールド",
+      "beforeColumn": "変更前",
+      "afterColumn": "変更後",
+      "valueColumn": "値"
+    }
+  }
+}

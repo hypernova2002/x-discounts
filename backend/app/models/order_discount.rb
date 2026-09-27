@@ -5,6 +5,7 @@ class OrderDiscount < Sequel::Model
 
   include PublicIdentifiable
   include BoundedFieldValidatable
+  include Auditable
 
   plugin :timestamps, update_on_create: true
   plugin :validation_helpers
@@ -27,6 +28,14 @@ class OrderDiscount < Sequel::Model
     validates_utf8_length :effect_type, max: 255
     validates_utf8_length :sku, max: 255
     validates_bounded_number :amount_off, min: 0, max: 100_000_000
+  end
+
+  def audit_project_id
+    order.project_id
+  end
+
+  def audit_label
+    "#{discount_name} on order #{order.public_id}"
   end
 
   # Loyalty points are attributed at the lot level, not per effect-row — a discount

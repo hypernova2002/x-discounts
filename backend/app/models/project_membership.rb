@@ -5,6 +5,7 @@ class ProjectMembership < Sequel::Model
   PUBLIC_ID_PREFIX = "memb"
 
   include PublicIdentifiable
+  include Auditable
 
   plugin :timestamps, update_on_create: true
   plugin :validation_helpers
@@ -17,5 +18,9 @@ class ProjectMembership < Sequel::Model
     validates_presence [:project_id, :user_id, :role]
     validates_includes ROLES, :role
     validates_unique [:project_id, :user_id]
+  end
+
+  def audit_label
+    "#{user.email} (#{role})"
   end
 end

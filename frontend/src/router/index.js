@@ -12,6 +12,7 @@ const router = createRouter({
     { path: '/settings', name: 'user-settings', component: () => import('../views/UserSettingsView.vue') },
     { path: '/account', name: 'account', component: () => import('../views/AccountView.vue') },
     { path: '/project-settings', name: 'project-settings', component: () => import('../views/ProjectSettingsView.vue') },
+    { path: '/logs', name: 'logs', component: () => import('../views/LogsView.vue') },
     { path: '/campaigns', name: 'campaigns', component: () => import('../views/CampaignsView.vue') },
     { path: '/campaigns/coupons', name: 'campaigns-coupons', component: () => import('../views/CouponsView.vue') },
     { path: '/campaigns/promotions', name: 'campaigns-promotions', component: () => import('../views/PromotionsView.vue') },

@@ -5,6 +5,7 @@ class DiscountRefund < Sequel::Model
 
   include PublicIdentifiable
   include BoundedFieldValidatable
+  include Auditable
 
   plugin :timestamps, update_on_create: true
   plugin :validation_helpers
@@ -17,5 +18,9 @@ class DiscountRefund < Sequel::Model
     validates_presence %i[order_discount_id amount_off refunded_at]
     validates_bounded_number :amount_off, min: 0, max: 100_000_000
     validates_utf8_length :reason, max: 10_000
+  end
+
+  def audit_project_id
+    order_discount.order.project_id
   end
 end

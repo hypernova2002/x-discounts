@@ -51,6 +51,27 @@ Sequel.migration do
       index [:public_id], :name=>:users_public_id_unique, :unique=>true
     end
     
+    create_table(:activity_logs) do
+      primary_key :id
+      foreign_key :project_id, :projects, :null=>false, :key=>[:id]
+      foreign_key :user_id, :users, :key=>[:id], :on_delete=>:set_null
+      column :actor_label, "text"
+      column :action, "text", :null=>false
+      column :entity_type, "text", :null=>false
+      column :entity_id, "integer"
+      column :entity_public_id, "text"
+      column :entity_label, "text", :null=>false
+      column :changes, "jsonb", :default=>Sequel::LiteralString.new("'{}'::jsonb"), :null=>false
+      column :request_id, "text"
+      column :public_id, "text", :null=>false
+      column :created_at, "timestamp with time zone", :default=>Sequel::CURRENT_TIMESTAMP, :null=>false
+      
+      index [:entity_type, :entity_id]
+      index [:project_id, :created_at]
+      index [:public_id], :name=>:activity_logs_public_id_unique, :unique=>true
+      index [:request_id]
+    end
+    
     create_table(:api_keys) do
       primary_key :id
       foreign_key :project_id, :projects, :null=>false, :key=>[:id]
@@ -519,5 +540,6 @@ self << "INSERT INTO \"schema_migrations\" (\"filename\") VALUES ('2026091614000
 self << "INSERT INTO \"schema_migrations\" (\"filename\") VALUES ('20260919120001_add_timezone_to_projects.rb')"
 self << "INSERT INTO \"schema_migrations\" (\"filename\") VALUES ('20260920090001_add_otp_to_users_and_accounts.rb')"
 self << "INSERT INTO \"schema_migrations\" (\"filename\") VALUES ('20260926150001_add_currency_to_projects.rb')"
+self << "INSERT INTO \"schema_migrations\" (\"filename\") VALUES ('20260927013001_create_activity_logs.rb')"
                 end
               end

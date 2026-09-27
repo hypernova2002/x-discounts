@@ -2,6 +2,7 @@
 
 class OrderLineItem < Sequel::Model
   include BoundedFieldValidatable
+  include Auditable
 
   plugin :timestamps, update_on_create: true
   plugin :validation_helpers
@@ -14,5 +15,13 @@ class OrderLineItem < Sequel::Model
     validates_utf8_length :sku, max: 255
     validates_bounded_number :quantity, min: 1, max: 100_000, integer_only: true
     validates_bounded_number :unit_price, min: 0, max: 100_000_000
+  end
+
+  def audit_project_id
+    order.project_id
+  end
+
+  def audit_label
+    "#{sku} on order #{order.public_id}"
   end
 end

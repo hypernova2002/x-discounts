@@ -4,6 +4,7 @@ class Redemption < Sequel::Model
   PUBLIC_ID_PREFIX = "redm"
 
   include PublicIdentifiable
+  include Auditable
 
   plugin :timestamps, update_on_create: true
   plugin :validation_helpers
@@ -15,5 +16,9 @@ class Redemption < Sequel::Model
   def validate
     super
     validates_presence [:discount_id, :customer_id, :redeemed_at, :coupon_code_id]
+  end
+
+  def audit_project_id
+    discount.project_id
   end
 end

@@ -64,6 +64,14 @@ export const NAV_SECTIONS = [
     routeNames: ['custom-attributes'],
   },
   {
+    id: 'logs',
+    labelKey: 'nav.logs',
+    icon: 'pi pi-history',
+    to: { name: 'logs' },
+    routeNames: ['logs'],
+    group: 'admin',
+  },
+  {
     id: 'projectSettings',
     labelKey: 'nav.projectSettings',
     icon: 'pi pi-cog',

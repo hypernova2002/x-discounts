@@ -6,6 +6,7 @@ class LoyaltyPointLedgerEntry < Sequel::Model
 
   include PublicIdentifiable
   include BoundedFieldValidatable
+  include Auditable
 
   plugin :timestamps, update_on_create: true
   plugin :validation_helpers
@@ -29,5 +30,9 @@ class LoyaltyPointLedgerEntry < Sequel::Model
     when "clawback"
       errors.add(:order_discount_id, "is required for a clawback") if order_discount_id.nil?
     end
+  end
+
+  def audit_project_id
+    loyalty_point_lot.customer.project_id
   end
 end

@@ -5,6 +5,7 @@ class GiftShopRedemption < Sequel::Model
 
   include PublicIdentifiable
   include BoundedFieldValidatable
+  include Auditable
 
   plugin :timestamps, update_on_create: true
   plugin :validation_helpers
@@ -18,5 +19,13 @@ class GiftShopRedemption < Sequel::Model
     validates_utf8_length :item_name, max: 1000
     validates_bounded_number :quantity, min: 1, max: 100_000, integer_only: true
     validates_bounded_number :points_spent, min: 0, max: 10_000_000, integer_only: true
+  end
+
+  def audit_project_id
+    customer.project_id
+  end
+
+  def audit_label
+    "#{item_name} redeemed by #{customer.external_id}"
   end
 end

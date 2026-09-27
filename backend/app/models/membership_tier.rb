@@ -6,6 +6,7 @@ class MembershipTier < Sequel::Model
   include ConditionTreeValidatable
   include PublicIdentifiable
   include BoundedFieldValidatable
+  include Auditable
 
   plugin :timestamps, update_on_create: true
   plugin :validation_helpers
@@ -26,6 +27,10 @@ class MembershipTier < Sequel::Model
       valid_condition_tree?(requirements_condition, condition_errors)
       condition_errors.each { |msg| errors.add(:requirements_condition, msg) }
     end
+  end
+
+  def audit_project_id
+    membership_scheme.project_id
   end
 
   # A blank condition deliberately does NOT mean "everyone qualifies" here (unlike

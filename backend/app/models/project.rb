@@ -27,6 +27,7 @@ class Project < Sequel::Model
 
   include PublicIdentifiable
   include BoundedFieldValidatable
+  include Auditable
 
   plugin :timestamps, update_on_create: true
   plugin :validation_helpers
@@ -42,6 +43,7 @@ class Project < Sequel::Model
   one_to_many :campaigns
   one_to_many :membership_schemes
   one_to_many :gift_shop_items
+  one_to_many :activity_logs
 
   add_association_dependencies project_memberships: :destroy,
                                 api_keys: :destroy,
@@ -51,7 +53,8 @@ class Project < Sequel::Model
                                 orders: :destroy,
                                 campaigns: :destroy,
                                 membership_schemes: :destroy,
-                                gift_shop_items: :destroy
+                                gift_shop_items: :destroy,
+                                activity_logs: :destroy
 
   def validate
     super

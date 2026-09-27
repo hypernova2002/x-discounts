@@ -4,6 +4,7 @@ class DiscountEffect < Sequel::Model
   include ConditionTreeValidatable
   include PublicIdentifiable
   include BoundedFieldValidatable
+  include Auditable
 
   LOYALTY_EFFECT_TYPES = %w[points_per_currency points_flat points_per_item points_multiplier].freeze
   EFFECT_TYPES = (%w[percentage_off fixed_amount_off free_item] + LOYALTY_EFFECT_TYPES).freeze
@@ -24,6 +25,14 @@ class DiscountEffect < Sequel::Model
     validate_target_condition
     validate_config
     validate_kind_compatibility
+  end
+
+  def audit_project_id
+    discount.project_id
+  end
+
+  def audit_label
+    "#{effect_type} on #{discount.name}"
   end
 
   private

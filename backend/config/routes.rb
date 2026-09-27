@@ -45,6 +45,7 @@ Rails.application.routes.draw do
           resources :coupon_codes, only: %i[index create destroy]
         end
         resources :custom_attributes, only: %i[index create destroy]
+        resources :activity_logs, only: %i[index]
         resources :orders, only: %i[index show] do
           post :cancel, on: :member
           collection { get :export }
