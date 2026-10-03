@@ -1,8 +1,30 @@
-<script setup>
+<script setup lang="ts">
 import { onMounted, onUnmounted, ref, watch } from 'vue'
-import { Chart, LineController, LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend } from 'chart.js'
+import {
+  Chart,
+  LineController,
+  LineElement,
+  PointElement,
+  LinearScale,
+  CategoryScale,
+  Tooltip,
+  Legend,
+  type ChartDataset,
+  type ChartOptions,
+  type TooltipItem,
+} from 'chart.js'
 
 Chart.register(LineController, LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend)
+
+type LineDataset = ChartDataset<'line'>
+
+interface BaseChartProps {
+  labels: unknown[]
+  datasets: LineDataset[]
+  // (value, datasetLabel) => string — exact tooltip text; callers format with
+  // formatNumber/formatCurrency/etc. so a chart never invents its own rounding.
+  formatValue?: (value: number, datasetLabel?: string) => string
+}
 
 // Thin Chart.js wrapper — the only place in the app that touches the Chart.js
 // API directly, same "one wrapper per third-party primitive" convention as
@@ -10,18 +32,14 @@ Chart.register(LineController, LineElement, PointElement, LinearScale, CategoryS
 // own shape ([{ label, data, ... }]) minus color, which this component applies
 // itself (reading the app's own CSS custom properties so a chart always matches
 // the current theme, light or dark, without the caller hardcoding hex values).
-const props = defineProps({
-  labels: { type: Array, required: true },
-  datasets: { type: Array, required: true },
-  // (value, datasetLabel) => string — exact tooltip text; callers format with
-  // formatNumber/formatCurrency/etc. so a chart never invents its own rounding.
-  formatValue: { type: Function, default: (value) => value },
+const props = withDefaults(defineProps<BaseChartProps>(), {
+  formatValue: (value: number) => String(value),
 })
 
-const canvasRef = ref(null)
-let chart = null
+const canvasRef = ref<HTMLCanvasElement | null>(null)
+let chart: Chart<'line'> | null = null
 
-function themeColor(varName, fallback) {
+function themeColor(varName: string, fallback: string): string {
   const value = getComputedStyle(document.documentElement).getPropertyValue(varName).trim()
   return value || fallback
 }
@@ -32,8 +50,8 @@ function themeColor(varName, fallback) {
 // than a "state," so it's the one semantic-adjacent token safe to reuse here.
 const PALETTE = ['--color-primary', '--color-info']
 
-function styledDatasets() {
-  return props.datasets.map((dataset, i) => {
+function styledDatasets(): LineDataset[] {
+  return props.datasets.map((dataset, i: number) => {
     const color = themeColor(PALETTE[i % PALETTE.length], '#185fa5')
     return {
       borderColor: color,
@@ -49,7 +67,7 @@ function styledDatasets() {
   })
 }
 
-function buildOptions() {
+function buildOptions(): ChartOptions<'line'> {
   const textMuted = themeColor('--color-text-muted', '#64748b')
   const border = themeColor('--color-border', '#e2e8f0')
 
@@ -59,7 +77,7 @@ function buildOptions() {
   // axis. y1 has no grid of its own so it doesn't visually compete with y's.
   const hasSecondAxis = props.datasets.some((d) => d.yAxisID === 'y1')
 
-  const scales = {
+  const scales: Record<string, object> = {
     x: { grid: { display: false }, ticks: { color: textMuted } },
     y: { grid: { color: border }, ticks: { color: textMuted }, beginAtZero: true },
   }
@@ -75,7 +93,7 @@ function buildOptions() {
       legend: { display: props.datasets.length > 1, labels: { color: textMuted, usePointStyle: true, boxHeight: 6 } },
       tooltip: {
         callbacks: {
-          label: (context) => `${context.dataset.label}: ${props.formatValue(context.parsed.y, context.dataset.label)}`,
+          label: (context: TooltipItem<'line'>) => `${context.dataset.label}: ${props.formatValue(context.parsed.y ?? 0, context.dataset.label)}`,
         },
       },
     },
@@ -84,9 +102,9 @@ function buildOptions() {
 }
 
 onMounted(() => {
-  chart = new Chart(canvasRef.value, {
+  chart = new Chart(canvasRef.value!, {
     type: 'line',
-    data: { labels: props.labels, datasets: styledDatasets() },
+    data: { labels: props.labels as (string | number)[], datasets: styledDatasets() },
     options: buildOptions(),
   })
 })
@@ -99,7 +117,7 @@ watch(
   () => [props.labels, props.datasets],
   () => {
     if (!chart) return
-    chart.data.labels = props.labels
+    chart.data.labels = props.labels as (string | number)[]
     chart.data.datasets = styledDatasets()
     chart.update()
   },

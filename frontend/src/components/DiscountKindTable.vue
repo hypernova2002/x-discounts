@@ -1,8 +1,9 @@
-<script setup>
+<script setup lang="ts">
 import { computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import BaseTable from '@/components/base/BaseTable.vue'
+import type { TableColumn } from '@/components/base/BaseTable.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import BaseProgressBar from '@/components/base/BaseProgressBar.vue'
 import BaseCard from '@/components/base/BaseCard.vue'
@@ -13,27 +14,31 @@ import { useAsync } from '@/composables/useAsync'
 import { listDiscounts } from '@/api/discounts'
 import { useBaseToast } from '@/composables/useBaseToast'
 import { formatMonthDayYear, formatNumber } from '@/lib/format'
+import type { Discount } from '@/models/discount'
 
 // Mountable section shared by CouponsView/PromotionsView/LoyaltyPointsView —
 // `kind` picks which discounts show and which of their own validity fields
 // apply (promotion/loyalty: active_from/active_until, coupon: valid_from/
 // valid_until — see models/discount.js's per-kind kind_config shape).
-const props = defineProps({ kind: { type: String, required: true } })
+const props = defineProps<{ kind: Discount['kind'] }>()
 
 const auth = useAuthStore()
 const toast = useBaseToast()
 const router = useRouter()
 const { t } = useI18n()
 
-const { data: discounts, loading, error, reload } = useAsync(() => listDiscounts({ kind: props.kind, token: auth.token, projectId: auth.project?.id }))
+const { data: discounts, loading, error, reload } = useAsync(() => listDiscounts({ kind: props.kind, token: auth.token ?? undefined, projectId: auth.project?.id }))
 
 watch(error, (e) => {
-  if (e) toast.add({ severity: 'error', summary: t('discountKindTable.loadError'), detail: e.message, life: 4000 })
+  if (e) toast.add({ severity: 'error', summary: t('discountKindTable.loadError'), detail: e instanceof Error ? e.message : String(e), life: 4000 })
 })
 
-function validityFields(discount) {
-  if (discount.kind === 'coupon') return { from: discount.coupon?.valid_from, until: discount.coupon?.valid_until }
-  return { from: discount[discount.kind]?.active_from, until: discount[discount.kind]?.active_until }
+function validityFields(discount: Discount): { from: string | null | undefined; until: string | null | undefined } {
+  if (discount.kind === 'coupon') {
+    return { from: discount.coupon?.valid_from as string | null | undefined, until: discount.coupon?.valid_until as string | null | undefined }
+  }
+  const kindConfig = discount[discount.kind] as Record<string, unknown> | null
+  return { from: kindConfig?.active_from as string | null | undefined, until: kindConfig?.active_until as string | null | undefined }
 }
 
 // Usage against `max_redemptions` (an optional overall cap shared by every
@@ -41,40 +46,40 @@ function validityFields(discount) {
 // case redemption_count ever exceeds the cap (e.g. the cap was lowered after
 // the fact). `null` (not 0) when there's no cap, so the cell can tell
 // "unlimited" apart from "0% used".
-function usagePercent(discount) {
+function usagePercent(discount: Discount): number | null {
   if (!discount.max_redemptions) return null
   return Math.min(100, Math.round((discount.redemption_count / discount.max_redemptions) * 100))
 }
 
-const columns = computed(() => [
+const columns = computed<TableColumn[]>(() => [
   { field: 'name', header: t('discountKindTable.nameColumn'), sortable: true, hideable: false, filter: { type: 'string' } },
-  { field: 'campaign', header: t('discountKindTable.campaignColumn'), filter: { type: 'string', accessor: (row) => row.campaign.name } },
+  { field: 'campaign', header: t('discountKindTable.campaignColumn'), filter: { type: 'string', accessor: (row) => (row as unknown as Discount).campaign.name } },
   { field: 'redemption_count', header: t('discountKindTable.redemptionsColumn'), sortable: true, filter: { type: 'number' } },
   // Points earned/redeemed only mean anything for loyalty discounts (coupon/
   // promotion give amount-off, not points) — see Discount#points_earned/
   // #points_redeemed on the backend.
   ...(props.kind === 'loyalty'
     ? [
-        { field: 'points_earned', header: t('discountKindTable.pointsEarnedColumn'), sortable: true, filter: { type: 'number' } },
-        { field: 'points_redeemed', header: t('discountKindTable.pointsRedeemedColumn'), sortable: true, filter: { type: 'number' } },
+        { field: 'points_earned', header: t('discountKindTable.pointsEarnedColumn'), sortable: true, filter: { type: 'number' as const } },
+        { field: 'points_redeemed', header: t('discountKindTable.pointsRedeemedColumn'), sortable: true, filter: { type: 'number' as const } },
       ]
     : []),
   { field: 'usage', header: t('discountKindTable.usageColumn') },
-  { field: 'start_date', header: t('discountKindTable.startDateColumn'), filter: { type: 'date', accessor: (row) => validityFields(row).from } },
-  { field: 'end_date', header: t('discountKindTable.endDateColumn'), filter: { type: 'date', accessor: (row) => validityFields(row).until } },
+  { field: 'start_date', header: t('discountKindTable.startDateColumn'), filter: { type: 'date', accessor: (row) => validityFields(row as unknown as Discount).from } },
+  { field: 'end_date', header: t('discountKindTable.endDateColumn'), filter: { type: 'date', accessor: (row) => validityFields(row as unknown as Discount).until } },
   { field: 'status', header: t('discountKindTable.statusColumn'), hideable: false },
   { field: 'actions', header: t('discountKindTable.actionsColumn'), hideable: false },
 ])
 
-function viewDiscount(discount) {
+function viewDiscount(discount: Discount) {
   router.push({ name: 'discount-show', params: { id: discount.id } })
 }
 
-function editDiscount(discount) {
+function editDiscount(discount: Discount) {
   router.push({ name: 'discount-edit', params: { id: discount.id } })
 }
 
-function viewCampaign(campaign) {
+function viewCampaign(campaign: { id: string }) {
   router.push({ name: 'campaign-show', params: { id: campaign.id } })
 }
 </script>
@@ -88,7 +93,7 @@ function viewCampaign(campaign) {
         :loading="loading"
         row-key="id"
         :search-placeholder="t('discountKindTable.searchPlaceholder')"
-        @row-click="viewDiscount($event.data)"
+        @row-click="viewDiscount($event.data as unknown as Discount)"
         @refresh="reload"
       >
         <template #cell-campaign="{ data }">

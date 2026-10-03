@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -22,7 +22,7 @@ const toast = useBaseToast()
 const { t } = useI18n()
 
 const saving = ref(false)
-const errors = ref({})
+const errors = ref<Record<string, string>>({})
 
 const form = reactive({
   external_id: '',
@@ -55,7 +55,7 @@ async function submit() {
 
   saving.value = true
   try {
-    const customer = await createCustomer(result.data, { token: auth.token, projectId: auth.project?.id })
+    const customer = await createCustomer(result.data, { token: auth.token ?? undefined, projectId: auth.project?.id })
     toast.add({ severity: 'success', summary: t('customerForm.customerCreated'), life: 3000 })
     router.push({ name: 'customer-show', params: { id: customer.id } })
   } catch (e) {

@@ -1,9 +1,10 @@
-<script setup>
+<script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AppShell from '@/components/AppShell.vue'
 import PageHeader from '@/components/PageHeader.vue'
 import DateRangePicker from '@/components/DateRangePicker.vue'
+import type { DateRange } from '@/components/DateRangePicker.vue'
 import BaseCard from '@/components/base/BaseCard.vue'
 import BaseSelect from '@/components/base/BaseSelect.vue'
 import BaseTag from '@/components/base/BaseTag.vue'
@@ -13,17 +14,18 @@ import { useAuthStore } from '@/stores/auth'
 import { ApiError } from '@/lib/api'
 import { listActivityLogs } from '@/api/activityLogs'
 import { ACTIVITY_LOG_ACTIONS } from '@/models/activityLog'
+import type { ActivityLog } from '@/models/activityLog'
 import { formatDateTime } from '@/lib/format'
 
 const auth = useAuthStore()
 const { t } = useI18n()
 
-const logs = ref([])
+const logs = ref<ActivityLog[]>([])
 const loading = ref(false)
 const loadError = ref('')
-const range = ref(null)
-const entityTypeFilter = ref(null)
-const actionFilter = ref(null)
+const range = ref<DateRange | null>(null)
+const entityTypeFilter = ref<string | null>(null)
+const actionFilter = ref<string | null>(null)
 
 // Every model that includes Auditable (see backend/app/models/concerns/auditable.rb).
 const ENTITY_TYPE_OPTIONS = [
@@ -52,19 +54,19 @@ const ENTITY_TYPE_OPTIONS = [
 ].map((value) => ({ label: value, value }))
 
 const ACTION_OPTIONS = ACTIVITY_LOG_ACTIONS.map((value) => ({ label: t(`logs.action.${value}`), value }))
-const ACTION_SEVERITIES = { create: 'success', update: 'info', delete: 'danger' }
+const ACTION_SEVERITIES: Record<string, string> = { create: 'success', update: 'info', delete: 'danger' }
 
 async function load() {
   loading.value = true
   loadError.value = ''
   try {
     logs.value = await listActivityLogs({
-      entityType: entityTypeFilter.value,
-      action: actionFilter.value,
+      entityType: entityTypeFilter.value ?? undefined,
+      action: actionFilter.value ?? undefined,
       from: range.value?.from,
       to: range.value?.to,
       perPage: 200,
-      token: auth.token,
+      token: auth.token ?? undefined,
       projectId: auth.project?.id,
     })
   } catch (e) {
@@ -77,12 +79,19 @@ async function load() {
 watch([entityTypeFilter, actionFilter, range], load)
 onMounted(load)
 
+interface LogGroup {
+  request_id: string | null
+  actor_label: string | null
+  created_at: string
+  entries: ActivityLog[]
+}
+
 // Groups adjacent same-request_id rows for display — guaranteed contiguous
 // since the backend orders by id desc. A row with no request_id (shouldn't
 // normally happen; every write in this app is authenticated) renders as its
 // own singleton group.
-const groups = computed(() => {
-  const result = []
+const groups = computed<LogGroup[]>(() => {
+  const result: LogGroup[] = []
   for (const log of logs.value) {
     const last = result[result.length - 1]
     if (last && log.request_id && last.request_id === log.request_id) {
@@ -94,18 +103,18 @@ const groups = computed(() => {
   return result
 })
 
-function groupKey(group) {
+function groupKey(group: LogGroup): string {
   return group.request_id || `single-${group.entries[0].id}`
 }
 
-function groupSummary(group) {
+function groupSummary(group: LogGroup): string {
   const first = group.entries[0]
   const label = `${t(`logs.action.${first.action}`)} ${first.entity_type} "${first.entity_label}"`
   return group.entries.length > 1 ? t('logs.groupSummarySuffix', { label, count: group.entries.length - 1 }) : label
 }
 
-const expandedGroups = ref(new Set())
-function toggleGroup(group) {
+const expandedGroups = ref<Set<string>>(new Set())
+function toggleGroup(group: LogGroup) {
   const key = groupKey(group)
   const next = new Set(expandedGroups.value)
   if (next.has(key)) next.delete(key)
@@ -113,14 +122,21 @@ function toggleGroup(group) {
   expandedGroups.value = next
 }
 
-const detailEntry = ref(null)
-function showDetail(entry) {
+const detailEntry = ref<ActivityLog | null>(null)
+function showDetail(entry: ActivityLog) {
   detailEntry.value = entry
+}
+
+interface ChangeRow {
+  field: string
+  isDiff: boolean
+  before: unknown
+  after: unknown
 }
 
 // Normalizes both shapes changes can take: {field: [old, new]} for an update,
 // or a flat {field: value} snapshot for a create/delete.
-const changeRows = computed(() => {
+const changeRows = computed<ChangeRow[]>(() => {
   if (!detailEntry.value) return []
   return Object.entries(detailEntry.value.changes).map(([field, pair]) => ({
     field,
@@ -130,7 +146,7 @@ const changeRows = computed(() => {
   }))
 })
 
-function formatChangeValue(value) {
+function formatChangeValue(value: unknown): string {
   if (value === null || value === undefined) return '—'
   if (typeof value === 'object') return JSON.stringify(value)
   return String(value)

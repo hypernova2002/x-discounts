@@ -1,6 +1,7 @@
-<script setup>
+<script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import BaseTable from '@/components/base/BaseTable.vue'
+import type { TableColumn } from '@/components/base/BaseTable.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import BaseDialog from '@/components/base/BaseDialog.vue'
 import BaseInputText from '@/components/base/BaseInputText.vue'
@@ -14,8 +15,9 @@ import { ApiError } from '@/lib/api'
 import { useAsync } from '@/composables/useAsync'
 import { listUsers, createUser as createUserRequest, resetUserPassword, resetUserOtp } from '@/api/users'
 import { userInputSchema, adminResetPasswordInputSchema } from '@/models/user'
+import type { User } from '@/models/user'
 import { toFieldErrors } from '@/models/formErrors'
-import { useBaseToast } from '@/composables/useBaseToast.js'
+import { useBaseToast } from '@/composables/useBaseToast'
 
 // A mountable section, not a route-level page — used inside
 // ProjectSettingsView.vue's own BaseCard, which already supplies the
@@ -25,13 +27,13 @@ const auth = useAuthStore()
 const toast = useBaseToast()
 const { t } = useI18n()
 
-const { data: users, loading, error, reload } = useAsync(() => listUsers({ token: auth.token, projectId: auth.project?.id }))
+const { data: users, loading, error, reload } = useAsync(() => listUsers({ token: auth.token ?? undefined, projectId: auth.project?.id }))
 
 watch(error, (e) => {
-  if (e) toast.add({ severity: 'error', summary: t('users.loadError'), detail: e.message, life: 4000 })
+  if (e) toast.add({ severity: 'error', summary: t('users.loadError'), detail: e instanceof Error ? e.message : String(e), life: 4000 })
 })
 
-const columns = computed(() => [
+const columns = computed<TableColumn[]>(() => [
   { field: 'id', header: t('users.idColumn'), sortable: true, hideable: false },
   { field: 'name', header: t('users.nameColumn'), sortable: true, filter: { type: 'string' } },
   { field: 'email', header: t('users.emailColumn'), sortable: true, filter: { type: 'string' } },
@@ -58,7 +60,7 @@ const columns = computed(() => [
 
 const showCreate = ref(false)
 const form = ref({ name: '', email: '' })
-const errors = ref({})
+const errors = ref<Record<string, string>>({})
 const creating = ref(false)
 
 function openCreate() {
@@ -78,7 +80,7 @@ async function createUser() {
 
   creating.value = true
   try {
-    await createUserRequest(result.data, { token: auth.token, projectId: auth.project?.id })
+    await createUserRequest(result.data, { token: auth.token ?? undefined, projectId: auth.project?.id })
     showCreate.value = false
     form.value = { name: '', email: '' }
     toast.add({ severity: 'success', summary: t('users.createdSuccess'), life: 3000 })
@@ -91,12 +93,12 @@ async function createUser() {
 }
 
 const showResetPassword = ref(false)
-const resetTargetUser = ref(null)
+const resetTargetUser = ref<User | null>(null)
 const resetPasswordForm = ref({ password: '', password_confirmation: '' })
-const resetPasswordErrors = ref({})
+const resetPasswordErrors = ref<Record<string, string>>({})
 const resettingPassword = ref(false)
 
-function openResetPassword(user) {
+function openResetPassword(user: User) {
   resetTargetUser.value = user
   resetPasswordForm.value = { password: '', password_confirmation: '' }
   resetPasswordErrors.value = {}
@@ -114,7 +116,7 @@ async function submitResetPassword() {
 
   resettingPassword.value = true
   try {
-    await resetUserPassword(resetTargetUser.value.id, result.data, { token: auth.token, projectId: auth.project?.id })
+    await resetUserPassword(resetTargetUser.value!.id, result.data, { token: auth.token ?? undefined, projectId: auth.project?.id })
     showResetPassword.value = false
     toast.add({ severity: 'success', summary: t('users.resetPasswordSuccess'), life: 3000 })
   } catch (e) {
@@ -124,16 +126,16 @@ async function submitResetPassword() {
   }
 }
 
-const resettingOtpId = ref(null)
+const resettingOtpId = ref<string | null>(null)
 
-async function handleResetOtp(user) {
+async function handleResetOtp(user: User) {
   resettingOtpId.value = user.id
   try {
-    await resetUserOtp(user.id, { token: auth.token, projectId: auth.project?.id })
+    await resetUserOtp(user.id, { token: auth.token ?? undefined, projectId: auth.project?.id })
     toast.add({ severity: 'success', summary: t('users.resetOtpSuccess'), life: 3000 })
     await reload()
   } catch (e) {
-    toast.add({ severity: 'error', summary: t('users.genericError'), detail: e.message, life: 4000 })
+    toast.add({ severity: 'error', summary: t('users.genericError'), detail: e instanceof Error ? e.message : String(e), life: 4000 })
   } finally {
     resettingOtpId.value = null
   }

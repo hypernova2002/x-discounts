@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import BaseSelect from '@/components/base/BaseSelect.vue'
@@ -22,20 +22,26 @@ const DATA_TYPE_OPTIONS = computed(() => [
   { label: t('customAttributeSelect.dataTypes.boolean'), value: 'boolean' },
   { label: t('customAttributeSelect.dataTypes.date'), value: 'date' },
 ])
-const ENTITY_LABEL_KEYS = { cart: 'cart', line_item: 'lineItem', customer: 'customer' }
+const ENTITY_LABEL_KEYS: Record<string, string> = { cart: 'cart', line_item: 'lineItem', customer: 'customer' }
 
-function entityLabel(entity) {
+function entityLabel(entity: string): string {
   const key = ENTITY_LABEL_KEYS[entity]
   return key ? t(`customAttributeSelect.entities.${key}`) : entity
 }
 
-const props = defineProps({
-  modelValue: { type: String, default: null },
-  entity: { type: String, required: true },
-})
+const props = withDefaults(
+  defineProps<{
+    modelValue?: string | null
+    entity: string
+  }>(),
+  { modelValue: null },
+)
 // 'select' carries the full attribute record (including data_type) for callers that
 // need more than just the key — update:modelValue alone only ever carries the key string.
-const emit = defineEmits(['update:modelValue', 'select'])
+const emit = defineEmits<{
+  'update:modelValue': [key: string]
+  select: [attribute: { key: string; data_type?: string } | undefined]
+}>()
 
 const auth = useAuthStore()
 const toast = useBaseToast()
@@ -44,7 +50,7 @@ const { load, attributesFor, invalidate } = useCustomAttributes()
 watch(
   () => props.entity,
   (entity) => {
-    if (entity) load(entity, { token: auth.token, projectId: auth.project?.id })
+    if (entity) load(entity, { token: auth.token ?? undefined, projectId: auth.project?.id })
   },
   { immediate: true }
 )
@@ -56,7 +62,7 @@ const options = computed(() => [
   ...attributes.value.map((a) => ({ label: a.key, value: a.key })),
 ])
 
-function onSelect(key) {
+function onSelect(key: string) {
   emit('update:modelValue', key)
   emit(
     'select',
@@ -83,12 +89,12 @@ async function createAttribute() {
   try {
     await apiFetch('/api/v1/admin/custom_attributes', {
       method: 'POST',
-      token: auth.token,
+      token: auth.token ?? undefined,
       projectId: auth.project?.id,
       body: { entity: props.entity, key: newKey.value, data_type: newDataType.value },
     })
     invalidate()
-    await load(props.entity, { token: auth.token, projectId: auth.project?.id })
+    await load(props.entity, { token: auth.token ?? undefined, projectId: auth.project?.id })
     onSelect(newKey.value)
     showCreate.value = false
     toast.add({ severity: 'success', summary: t('customAttributeSelect.createdToast'), life: 3000 })

@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { computed, reactive, ref, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -24,15 +24,22 @@ const auth = useAuthStore()
 const toast = useBaseToast()
 const { t } = useI18n()
 
-const itemId = computed(() => route.params.id || null)
+const itemId = computed(() => (route.params.id as string | undefined) || null)
 const isEdit = computed(() => !!itemId.value)
 
 const loading = ref(false)
 const saving = ref(false)
 const loadError = ref('')
-const errors = ref({})
+const errors = ref<Record<string, string>>({})
 
-const form = reactive({
+const form = reactive<{
+  name: string
+  description: string
+  points_cost: number
+  stock: number | null
+  unlimitedStock: boolean
+  enabled: boolean
+}>({
   name: '',
   description: '',
   points_cost: 100,
@@ -41,12 +48,12 @@ const form = reactive({
   enabled: true,
 })
 
-const existingPhotoUrl = ref(null)
-const photoFile = ref(null)
-const photoPreviewUrl = ref(null)
+const existingPhotoUrl = ref<string | null>(null)
+const photoFile = ref<File | null>(null)
+const photoPreviewUrl = ref<string | null>(null)
 
-function onPhotoSelected(event) {
-  const file = event.target.files?.[0]
+function onPhotoSelected(event: Event) {
+  const file = (event.target as HTMLInputElement).files?.[0]
   if (!file) return
   photoFile.value = file
   if (photoPreviewUrl.value) URL.revokeObjectURL(photoPreviewUrl.value)
@@ -60,7 +67,7 @@ onBeforeUnmount(() => {
 async function load() {
   loading.value = true
   try {
-    const data = await getGiftShopItem(itemId.value, { token: auth.token, projectId: auth.project?.id })
+    const data = await getGiftShopItem(itemId.value!, { token: auth.token ?? undefined, projectId: auth.project?.id })
     form.name = data.name
     form.description = data.description || ''
     form.points_cost = data.points_cost
@@ -89,10 +96,10 @@ function buildPayload() {
   }
 }
 
-async function uploadPhotoIfSelected(id) {
+async function uploadPhotoIfSelected(id: string) {
   if (!photoFile.value) return
   await apiUpload(`/api/v1/admin/gift_shop_items/${id}/photo`, {
-    token: auth.token,
+    token: auth.token ?? undefined,
     projectId: auth.project?.id,
     fieldName: 'photo',
     file: photoFile.value,
@@ -112,12 +119,12 @@ async function submit() {
 
   saving.value = true
   try {
-    let id = itemId.value
+    let id = itemId.value!
     if (isEdit.value) {
-      await updateGiftShopItem(id, result.data, { token: auth.token, projectId: auth.project?.id })
+      await updateGiftShopItem(id, result.data, { token: auth.token ?? undefined, projectId: auth.project?.id })
       toast.add({ severity: 'success', summary: t('giftShopItemForm.itemUpdated'), life: 3000 })
     } else {
-      const item = await createGiftShopItem(result.data, { token: auth.token, projectId: auth.project?.id })
+      const item = await createGiftShopItem(result.data, { token: auth.token ?? undefined, projectId: auth.project?.id })
       id = item.id
       toast.add({ severity: 'success', summary: t('giftShopItemForm.itemCreated'), life: 3000 })
     }

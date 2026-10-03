@@ -1,14 +1,16 @@
-<script setup>
+<script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import AppShell from '@/components/AppShell.vue'
 import PageHeader from '@/components/PageHeader.vue'
 import DateRangePicker from '@/components/DateRangePicker.vue'
+import type { DateRange } from '@/components/DateRangePicker.vue'
 import BaseCard from '@/components/base/BaseCard.vue'
 import MetricCard from '@/components/base/MetricCard.vue'
 import BaseChart from '@/components/base/BaseChart.vue'
 import BaseTable from '@/components/base/BaseTable.vue'
+import type { TableColumn } from '@/components/base/BaseTable.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import BaseTag from '@/components/base/BaseTag.vue'
 import CountryFlag from '@/components/CountryFlag.vue'
@@ -17,23 +19,24 @@ import { apiDownload } from '@/lib/api'
 import { useAsync } from '@/composables/useAsync'
 import { listCustomers } from '@/api/customers'
 import { getCustomerAnalytics } from '@/api/analytics'
-import { useBaseToast } from '@/composables/useBaseToast.js'
+import { useBaseToast } from '@/composables/useBaseToast'
 import { formatDateTime, formatNumber, formatCurrency, formatCalendarDate } from '@/lib/format'
+import type { Customer } from '@/models/customer'
 
 const auth = useAuthStore()
 const toast = useBaseToast()
 const router = useRouter()
 const { t } = useI18n()
 
-const { data: customers, loading, error, reload } = useAsync(() => listCustomers({ token: auth.token, projectId: auth.project?.id }))
+const { data: customers, loading, error, reload } = useAsync(() => listCustomers({ token: auth.token ?? undefined, projectId: auth.project?.id }))
 
 watch(error, (e) => {
-  if (e) toast.add({ severity: 'error', summary: t('customers.loadError'), detail: e.message, life: 4000 })
+  if (e) toast.add({ severity: 'error', summary: t('customers.loadError'), detail: e instanceof Error ? e.message : String(e), life: 4000 })
 })
 
 const exporting = ref(false)
 
-const columns = computed(() => [
+const columns = computed<TableColumn[]>(() => [
   { field: 'external_id', header: t('customers.externalId'), sortable: true, hideable: false, filter: { type: 'string' } },
   { field: 'name', header: t('customers.name'), sortable: true, filter: { type: 'string' } },
   { field: 'email', header: t('customers.email'), sortable: true, filter: { type: 'string' } },
@@ -54,7 +57,7 @@ const columns = computed(() => [
   { field: 'created_at', header: t('customers.created'), sortable: true, filter: { type: 'date' } },
 ])
 
-function viewCustomer(customer) {
+function viewCustomer(customer: Customer) {
   router.push({ name: 'customer-show', params: { id: customer.id } })
 }
 
@@ -65,23 +68,23 @@ function createCustomer() {
 async function exportCustomers() {
   exporting.value = true
   try {
-    await apiDownload('/api/v1/admin/customers/export', { token: auth.token, projectId: auth.project?.id, filename: 'customers.csv' })
+    await apiDownload('/api/v1/admin/customers/export', { token: auth.token ?? undefined, projectId: auth.project?.id, filename: 'customers.csv' })
   } catch (e) {
-    toast.add({ severity: 'error', summary: t('customers.exportError'), detail: e.message, life: 4000 })
+    toast.add({ severity: 'error', summary: t('customers.exportError'), detail: e instanceof Error ? e.message : String(e), life: 4000 })
   } finally {
     exporting.value = false
   }
 }
 
-const range = ref(null)
+const range = ref<DateRange | null>(null)
 
 const { data: analytics, loading: analyticsLoading, error: analyticsError, reload: reloadAnalytics } = useAsync(
-  () => (range.value ? getCustomerAnalytics({ ...range.value, token: auth.token, projectId: auth.project?.id }) : Promise.resolve(null)),
+  () => (range.value ? getCustomerAnalytics({ ...range.value, token: auth.token ?? undefined, projectId: auth.project?.id }) : Promise.resolve(null)),
   { immediate: false },
 )
 
 watch(analyticsError, (e) => {
-  if (e) toast.add({ severity: 'error', summary: t('customers.analyticsLoadError'), detail: e.message, life: 4000 })
+  if (e) toast.add({ severity: 'error', summary: t('customers.analyticsLoadError'), detail: e instanceof Error ? e.message : String(e), life: 4000 })
 })
 
 watch(range, () => {
@@ -122,7 +125,7 @@ const hasChartData = computed(() => (analytics.value?.series || []).some((s) => 
     <BaseCard class="section-card">
       <template #title>{{ t('customers.chartTitle') }}</template>
       <template #content>
-        <BaseChart v-if="hasChartData" :labels="chartLabels" :datasets="chartDatasets" :format-value="(v) => formatNumber(v)" />
+        <BaseChart v-if="hasChartData" :labels="chartLabels" :datasets="chartDatasets" :format-value="(v: number) => formatNumber(v)" />
         <p v-else-if="!analyticsLoading" class="empty-hint">{{ t('customers.noChartData') }}</p>
       </template>
     </BaseCard>
@@ -137,7 +140,7 @@ const hasChartData = computed(() => (analytics.value?.series || []).some((s) => 
           :search-placeholder="$t('customers.searchPlaceholder')"
           :export-label="$t('customers.exportButton')"
           :exporting="exporting"
-          @row-click="viewCustomer($event.data)"
+          @row-click="viewCustomer($event.data as unknown as Customer)"
           @refresh="reload"
           @export="exportCustomers"
         >

@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AppShell from '@/components/AppShell.vue'
@@ -23,7 +23,7 @@ const toast = useBaseToast()
 const { t } = useI18n()
 
 const form = ref({ name: auth.project?.name ?? '', timezone: auth.project?.timezone ?? '', currency: auth.project?.currency ?? '' })
-const errors = ref({})
+const errors = ref<Record<string, string>>({})
 const saving = ref(false)
 
 async function saveDetails() {
@@ -37,11 +37,11 @@ async function saveDetails() {
 
   saving.value = true
   try {
-    await updateProjectRequest(auth.project.id, result.data, { token: auth.token, projectId: auth.project?.id })
+    await updateProjectRequest(auth.project!.id, result.data, { token: auth.token ?? undefined, projectId: auth.project?.id })
     // This page only ever edits the currently active project, so always
     // refresh the store snapshot — the topbar/timezone tag and every
     // formatDateTime call should reflect the change immediately.
-    await auth.loadMe(auth.project.id)
+    await auth.loadMe(auth.project!.id)
     toast.add({ severity: 'success', summary: t('projects.updatedSuccess'), life: 3000 })
   } catch (e) {
     errors.value = e instanceof ApiError ? toFieldErrors(e) : { _root: t('projects.genericError') }
@@ -55,9 +55,9 @@ const exporting = ref(false)
 async function exportProject() {
   exporting.value = true
   try {
-    await apiDownload('/api/v1/admin/exports/project', { token: auth.token, projectId: auth.project?.id, filename: 'project-export.zip' })
+    await apiDownload('/api/v1/admin/exports/project', { token: auth.token ?? undefined, projectId: auth.project?.id, filename: 'project-export.zip' })
   } catch (e) {
-    toast.add({ severity: 'error', summary: t('dashboard.exportError'), detail: e.message, life: 4000 })
+    toast.add({ severity: 'error', summary: t('dashboard.exportError'), detail: e instanceof Error ? e.message : String(e), life: 4000 })
   } finally {
     exporting.value = false
   }

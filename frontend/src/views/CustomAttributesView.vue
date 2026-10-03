@@ -1,9 +1,10 @@
-<script setup>
+<script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AppShell from '@/components/AppShell.vue'
 import PageHeader from '@/components/PageHeader.vue'
 import BaseTable from '@/components/base/BaseTable.vue'
+import type { TableColumn } from '@/components/base/BaseTable.vue'
 import BaseCard from '@/components/base/BaseCard.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import BaseDialog from '@/components/base/BaseDialog.vue'
@@ -16,8 +17,9 @@ import { ApiError } from '@/lib/api'
 import { useAsync } from '@/composables/useAsync'
 import { listCustomAttributes, createCustomAttribute, deleteCustomAttribute as deleteCustomAttributeRequest } from '@/api/customAttributes'
 import { customAttributeInputSchema } from '@/models/customAttribute'
+import type { CustomAttribute } from '@/models/customAttribute'
 import { toFieldErrors } from '@/models/formErrors'
-import { useBaseToast } from '@/composables/useBaseToast.js'
+import { useBaseToast } from '@/composables/useBaseToast'
 import { useCustomAttributes } from '@/composables/useCustomAttributes'
 
 const auth = useAuthStore()
@@ -37,20 +39,20 @@ const DATA_TYPE_OPTIONS = computed(() => [
   { label: t('customAttributes.dataTypeOptions.date'), value: 'date' },
 ])
 
-const entityFilter = ref(null)
+const entityFilter = ref<string | null>(null)
 
 const {
   data: attributes,
   loading,
   error,
   reload,
-} = useAsync(() => listCustomAttributes({ entity: entityFilter.value, token: auth.token, projectId: auth.project?.id }))
+} = useAsync(() => listCustomAttributes({ entity: entityFilter.value ?? undefined, token: auth.token ?? undefined, projectId: auth.project?.id }))
 
 watch(error, (e) => {
-  if (e) toast.add({ severity: 'error', summary: t('customAttributes.loadError'), detail: e.message, life: 4000 })
+  if (e) toast.add({ severity: 'error', summary: t('customAttributes.loadError'), detail: e instanceof Error ? e.message : String(e), life: 4000 })
 })
 
-const columns = computed(() => [
+const columns = computed<TableColumn[]>(() => [
   { field: 'entity', header: t('customAttributes.columns.entity'), hideable: false },
   { field: 'key', header: t('customAttributes.columns.key'), sortable: true, hideable: false, filter: { type: 'string' } },
   { field: 'data_type', header: t('customAttributes.columns.type'), sortable: true, filter: { type: 'enum', options: DATA_TYPE_OPTIONS.value } },
@@ -59,7 +61,7 @@ const columns = computed(() => [
 
 const showCreate = ref(false)
 const form = ref({ entity: 'cart', key: '', data_type: 'string' })
-const errors = ref({})
+const errors = ref<Record<string, string>>({})
 const creating = ref(false)
 
 function openCreate() {
@@ -79,7 +81,7 @@ async function createAttribute() {
 
   creating.value = true
   try {
-    await createCustomAttribute(result.data, { token: auth.token, projectId: auth.project?.id })
+    await createCustomAttribute(result.data, { token: auth.token ?? undefined, projectId: auth.project?.id })
     showCreate.value = false
     form.value = { entity: 'cart', key: '', data_type: 'string' }
     toast.add({ severity: 'success', summary: t('customAttributes.attributeCreated'), life: 3000 })
@@ -92,15 +94,15 @@ async function createAttribute() {
   }
 }
 
-async function deleteAttribute(attribute) {
+async function deleteAttribute(attribute: CustomAttribute) {
   if (!confirm(t('customAttributes.deleteConfirm', { key: attribute.key }))) return
   try {
-    await deleteCustomAttributeRequest(attribute.id, { token: auth.token, projectId: auth.project?.id })
+    await deleteCustomAttributeRequest(attribute.id, { token: auth.token ?? undefined, projectId: auth.project?.id })
     toast.add({ severity: 'success', summary: t('customAttributes.attributeDeleted'), life: 3000 })
     invalidate()
     await reload()
   } catch (e) {
-    toast.add({ severity: 'error', summary: t('customAttributes.deleteError'), detail: e.message, life: 4000 })
+    toast.add({ severity: 'error', summary: t('customAttributes.deleteError'), detail: e instanceof Error ? e.message : String(e), life: 4000 })
   }
 }
 </script>

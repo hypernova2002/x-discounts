@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { computed, ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -11,12 +11,15 @@ import MetricCard from '@/components/base/MetricCard.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import BaseMessage from '@/components/base/BaseMessage.vue'
 import BaseTable from '@/components/base/BaseTable.vue'
+import type { TableColumn } from '@/components/base/BaseTable.vue'
 import { useAuthStore } from '@/stores/auth'
 import { ApiError } from '@/lib/api'
 import { getCampaign, updateCampaign, duplicateCampaign } from '@/api/campaigns'
 import { listDiscounts } from '@/api/discounts'
 import { useBaseToast } from '@/composables/useBaseToast'
 import { formatDateTime, formatNumber, formatCurrency } from '@/lib/format'
+import type { Campaign } from '@/models/campaign'
+import type { Discount } from '@/models/discount'
 
 const route = useRoute()
 const router = useRouter()
@@ -24,9 +27,9 @@ const auth = useAuthStore()
 const toast = useBaseToast()
 const { t } = useI18n()
 
-const campaign = ref(null)
+const campaign = ref<Campaign | null>(null)
 const loadError = ref('')
-const discounts = ref([])
+const discounts = ref<Discount[]>([])
 const discountsLoading = ref(false)
 const toggling = ref(false)
 const archiving = ref(false)
@@ -35,7 +38,7 @@ const duplicating = ref(false)
 async function loadCampaign() {
   loadError.value = ''
   try {
-    campaign.value = await getCampaign(route.params.id, { token: auth.token, projectId: auth.project?.id })
+    campaign.value = await getCampaign(route.params.id as string, { token: auth.token ?? undefined, projectId: auth.project?.id })
     await loadDiscounts()
   } catch (e) {
     loadError.value = e instanceof ApiError ? e.message : t('campaignDetail.loadError')
@@ -45,7 +48,7 @@ async function loadCampaign() {
 async function loadDiscounts() {
   discountsLoading.value = true
   try {
-    discounts.value = await listDiscounts({ campaignId: campaign.value.id, token: auth.token, projectId: auth.project?.id })
+    discounts.value = await listDiscounts({ campaignId: campaign.value!.id, token: auth.token ?? undefined, projectId: auth.project?.id })
   } finally {
     discountsLoading.value = false
   }
@@ -54,10 +57,10 @@ async function loadDiscounts() {
 async function toggleEnabled() {
   toggling.value = true
   try {
-    campaign.value = await updateCampaign(campaign.value.id, { enabled: !campaign.value.enabled }, { token: auth.token, projectId: auth.project?.id })
+    campaign.value = await updateCampaign(campaign.value!.id, { enabled: !campaign.value!.enabled }, { token: auth.token ?? undefined, projectId: auth.project?.id })
     toast.add({ severity: 'success', summary: campaign.value.enabled ? t('campaignDetail.enabledToast') : t('campaignDetail.pausedToast'), life: 3000 })
   } catch (e) {
-    toast.add({ severity: 'error', summary: t('campaignDetail.updateError'), detail: e.message, life: 4000 })
+    toast.add({ severity: 'error', summary: t('campaignDetail.updateError'), detail: e instanceof Error ? e.message : String(e), life: 4000 })
   } finally {
     toggling.value = false
   }
@@ -66,27 +69,27 @@ async function toggleEnabled() {
 async function toggleArchived() {
   archiving.value = true
   try {
-    campaign.value = await updateCampaign(campaign.value.id, { archived: !campaign.value.archived }, { token: auth.token, projectId: auth.project?.id })
+    campaign.value = await updateCampaign(campaign.value!.id, { archived: !campaign.value!.archived }, { token: auth.token ?? undefined, projectId: auth.project?.id })
     toast.add({ severity: 'success', summary: campaign.value.archived ? t('campaignDetail.archivedToast') : t('campaignDetail.unarchivedToast'), life: 3000 })
   } catch (e) {
-    toast.add({ severity: 'error', summary: t('campaignDetail.updateError'), detail: e.message, life: 4000 })
+    toast.add({ severity: 'error', summary: t('campaignDetail.updateError'), detail: e instanceof Error ? e.message : String(e), life: 4000 })
   } finally {
     archiving.value = false
   }
 }
 
 function editCampaign() {
-  router.push({ name: 'campaign-edit', params: { id: campaign.value.id } })
+  router.push({ name: 'campaign-edit', params: { id: campaign.value!.id } })
 }
 
 async function duplicateCampaignAction() {
   duplicating.value = true
   try {
-    const copy = await duplicateCampaign(campaign.value.id, { token: auth.token, projectId: auth.project?.id })
+    const copy = await duplicateCampaign(campaign.value!.id, { token: auth.token ?? undefined, projectId: auth.project?.id })
     toast.add({ severity: 'success', summary: t('campaignDetail.duplicatedToast'), life: 3000 })
     router.push({ name: 'campaign-show', params: { id: copy.id } })
   } catch (e) {
-    toast.add({ severity: 'error', summary: t('campaignDetail.duplicateError'), detail: e.message, life: 4000 })
+    toast.add({ severity: 'error', summary: t('campaignDetail.duplicateError'), detail: e instanceof Error ? e.message : String(e), life: 4000 })
   } finally {
     duplicating.value = false
   }
@@ -94,24 +97,27 @@ async function duplicateCampaignAction() {
 
 // Same per-kind validity-field lookup as DiscountKindTable.vue (promotion/
 // loyalty: active_from/active_until, coupon: valid_from/valid_until).
-function validityFields(discount) {
-  if (discount.kind === 'coupon') return { from: discount.coupon?.valid_from, until: discount.coupon?.valid_until }
-  return { from: discount[discount.kind]?.active_from, until: discount[discount.kind]?.active_until }
+function validityFields(discount: Discount): { from: string | null | undefined; until: string | null | undefined } {
+  if (discount.kind === 'coupon') {
+    return { from: discount.coupon?.valid_from as string | null | undefined, until: discount.coupon?.valid_until as string | null | undefined }
+  }
+  const kindConfig = discount[discount.kind] as Record<string, unknown> | null
+  return { from: kindConfig?.active_from as string | null | undefined, until: kindConfig?.active_until as string | null | undefined }
 }
 
-function viewDiscount(discount) {
+function viewDiscount(discount: Discount) {
   router.push({ name: 'discount-show', params: { id: discount.id } })
 }
 
-function editDiscount(discount) {
+function editDiscount(discount: Discount) {
   router.push({ name: 'discount-edit', params: { id: discount.id } })
 }
 
 function newDiscount() {
-  router.push({ name: 'discount-new', query: { campaign_id: campaign.value.id } })
+  router.push({ name: 'discount-new', query: { campaign_id: campaign.value!.id } })
 }
 
-const discountColumns = computed(() => [
+const discountColumns = computed<TableColumn[]>(() => [
   { field: 'name', header: t('campaignDetail.nameColumn'), sortable: true, hideable: false, filter: { type: 'string' } },
   {
     field: 'kind',
@@ -196,7 +202,7 @@ onMounted(loadCampaign)
             :loading="discountsLoading"
             row-key="id"
             :create-label="$t('campaignDetail.newDiscountButton')"
-            @row-click="viewDiscount($event.data)"
+            @row-click="viewDiscount($event.data as unknown as Discount)"
             @refresh="loadDiscounts"
             @create="newDiscount"
           >

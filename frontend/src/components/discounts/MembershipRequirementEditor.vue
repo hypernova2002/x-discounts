@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import BaseSelect from '@/components/base/BaseSelect.vue'
@@ -6,6 +6,15 @@ import BaseInputNumber from '@/components/base/BaseInputNumber.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 
 defineOptions({ name: 'MembershipRequirementEditor' })
+
+export interface RequirementNode {
+  entity?: string
+  key?: string
+  operator: string
+  value?: number | null
+  window_days?: number | null
+  conditions?: RequirementNode[]
+}
 
 const { t } = useI18n()
 
@@ -37,25 +46,31 @@ const OPERATOR_OPTIONS = computed(() => [
   { label: t('membershipRequirementEditor.operators.lte'), value: 'lte' },
 ])
 
-const props = defineProps({
-  modelValue: { type: Object, default: null },
-  allowEmpty: { type: Boolean, default: true },
-  removable: { type: Boolean, default: false },
-})
-const emit = defineEmits(['update:modelValue', 'remove'])
+const props = withDefaults(
+  defineProps<{
+    modelValue?: RequirementNode | null
+    allowEmpty?: boolean
+    removable?: boolean
+  }>(),
+  { modelValue: null, allowEmpty: true, removable: false },
+)
+const emit = defineEmits<{
+  'update:modelValue': [value: RequirementNode | null]
+  remove: []
+}>()
 
-function defaultLeaf() {
+function defaultLeaf(): RequirementNode {
   return { entity: 'customer', key: 'total_spent', operator: 'gte', value: 0, window_days: null }
 }
 
 const isGroup = computed(() => !!props.modelValue && GROUP_OPERATORS.includes(props.modelValue.operator))
 const nodeType = computed(() => (isGroup.value ? 'group' : 'leaf'))
 
-function update(patch) {
-  emit('update:modelValue', { ...props.modelValue, ...patch })
+function update(patch: Partial<RequirementNode>) {
+  emit('update:modelValue', { ...props.modelValue, ...patch } as RequirementNode)
 }
 
-function setNodeType(type) {
+function setNodeType(type: string) {
   if (type === 'group') {
     emit('update:modelValue', { operator: 'and', conditions: [props.modelValue || defaultLeaf()] })
   } else {
@@ -68,34 +83,34 @@ function addCondition() {
 }
 
 function addSiblingCondition() {
-  emit('update:modelValue', { operator: 'and', conditions: [props.modelValue, defaultLeaf()] })
+  emit('update:modelValue', { operator: 'and', conditions: [props.modelValue as RequirementNode, defaultLeaf()] })
 }
 
-function setGroupOperator(op) {
-  const conditions = op === 'not' ? props.modelValue.conditions.slice(0, 1) : props.modelValue.conditions
+function setGroupOperator(op: string) {
+  const conditions = op === 'not' ? props.modelValue!.conditions!.slice(0, 1) : props.modelValue!.conditions
   update({ operator: op, conditions })
 }
 
-function setKey(key) {
+function setKey(key: string) {
   update({ key, entity: 'customer' })
 }
 
-function setWindowDays(days) {
+function setWindowDays(days: number | null) {
   update({ window_days: days || null })
 }
 
-function updateChild(index, value) {
-  const conditions = [...props.modelValue.conditions]
+function updateChild(index: number, value: RequirementNode) {
+  const conditions = [...props.modelValue!.conditions!]
   conditions[index] = value
   update({ conditions })
 }
 
 function addChild() {
-  update({ conditions: [...props.modelValue.conditions, defaultLeaf()] })
+  update({ conditions: [...props.modelValue!.conditions!, defaultLeaf()] })
 }
 
-function removeChild(index) {
-  update({ conditions: props.modelValue.conditions.filter((_, i) => i !== index) })
+function removeChild(index: number) {
+  update({ conditions: props.modelValue!.conditions!.filter((_, i) => i !== index) })
 }
 </script>
 
@@ -134,9 +149,9 @@ function removeChild(index) {
             :options="OPERATOR_OPTIONS"
             option-label="label"
             option-value="value"
-            @update:model-value="(v) => update({ operator: v })"
+            @update:model-value="(v: string) => update({ operator: v })"
           />
-          <BaseInputNumber :model-value="modelValue.value" :min="0" @update:model-value="(v) => update({ value: v })" />
+          <BaseInputNumber :model-value="modelValue!.value" :min="0" @update:model-value="(v: number) => update({ value: v })" />
           <BaseInputNumber
             :model-value="modelValue.window_days"
             :placeholder="t('membershipRequirementEditor.lifetimePlaceholder')"
@@ -158,7 +173,7 @@ function removeChild(index) {
           :model-value="child"
           :allow-empty="false"
           removable
-          @update:model-value="(v) => updateChild(i, v)"
+          @update:model-value="(v: RequirementNode | null) => updateChild(i, v!)"
           @remove="removeChild(i)"
         />
         <BaseButton v-if="modelValue.operator !== 'not'" size="small" text :label="$t('membershipRequirementEditor.addRequirementButton')" @click="addChild" />

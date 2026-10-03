@@ -1,31 +1,32 @@
-<script setup>
+<script setup lang="ts">
 import BaseInputText from '@/components/base/BaseInputText.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import CustomAttributeSelect from './CustomAttributeSelect.vue'
+import type { KeyValuePair } from '@/services/cartAttrs'
 
 defineOptions({ name: 'KeyValueEditor' })
 
-const props = defineProps({
-  modelValue: { type: Array, required: true },
-  entity: { type: String, required: true },
-})
-const emit = defineEmits(['update:modelValue'])
+const props = defineProps<{
+  modelValue: KeyValuePair[]
+  entity: string
+}>()
+const emit = defineEmits<{ 'update:modelValue': [list: KeyValuePair[]] }>()
 
-function update(list) {
+function update(list: KeyValuePair[]) {
   emit('update:modelValue', list)
 }
 function add() {
   update([...props.modelValue, { key: '', value: '' }])
 }
-function remove(index) {
+function remove(index: number) {
   update(props.modelValue.filter((_, i) => i !== index))
 }
-function setKey(index, key) {
+function setKey(index: number, key: string) {
   const list = [...props.modelValue]
   list[index] = { ...list[index], key }
   update(list)
 }
-function setValue(index, value) {
+function setValue(index: number, value: string) {
   const list = [...props.modelValue]
   list[index] = { ...list[index], value }
   update(list)
@@ -35,8 +36,8 @@ function setValue(index, value) {
 <template>
   <div class="kv-editor">
     <div v-for="(pair, i) in modelValue" :key="i" class="kv-row">
-      <CustomAttributeSelect :model-value="pair.key" :entity="entity" @update:model-value="(v) => setKey(i, v)" />
-      <BaseInputText :model-value="pair.value" :placeholder="$t('keyValueEditor.valuePlaceholder')" @update:model-value="(v) => setValue(i, v)" />
+      <CustomAttributeSelect :model-value="pair.key" :entity="entity" @update:model-value="(v: string) => setKey(i, v)" />
+      <BaseInputText :model-value="pair.value" :placeholder="$t('keyValueEditor.valuePlaceholder')" @update:model-value="(v: string) => setValue(i, v)" />
       <BaseButton text severity="danger" icon="pi pi-times" @click="remove(i)" />
     </div>
     <BaseButton size="small" text :label="$t('keyValueEditor.addAttributeButton')" @click="add" />

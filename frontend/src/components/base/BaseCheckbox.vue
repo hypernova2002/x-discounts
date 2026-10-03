@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { useAttrs } from 'vue'
 import Checkbox from 'openvue/checkbox'
 

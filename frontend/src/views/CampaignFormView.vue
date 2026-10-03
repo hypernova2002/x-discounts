@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
 // Module-level (not per-instance) so it survives navigating away to edit a
 // discount and back — a plain `<script>` block's top-level bindings are
 // shared across every instance of this component, unlike `<script setup>`'s,
@@ -6,13 +6,25 @@
 // only ever written just before navigating to a discount's own form, and
 // read/cleared the moment this view mounts again, so it can't leak into an
 // unrelated later visit to this screen.
-let campaignDraft = null
+interface CampaignDraftForm {
+  name: string
+  enabled: boolean
+  valid_from: string
+  valid_until: string
+}
 
-function saveCampaignDraft(campaignId, form) {
+interface CampaignDraft {
+  campaignId: string
+  form: CampaignDraftForm
+}
+
+let campaignDraft: CampaignDraft | null = null
+
+function saveCampaignDraft(campaignId: string, form: CampaignDraftForm) {
   campaignDraft = { campaignId, form: { ...form } }
 }
 
-function takeCampaignDraft(campaignId) {
+function takeCampaignDraft(campaignId: string): CampaignDraftForm | null {
   const draft = campaignDraft && campaignDraft.campaignId === campaignId ? campaignDraft.form : null
   campaignDraft = null
   return draft
@@ -23,7 +35,7 @@ function clearCampaignDraft() {
 }
 </script>
 
-<script setup>
+<script setup lang="ts">
 import { computed, reactive, ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -35,6 +47,7 @@ import BaseToggleSwitch from '@/components/base/BaseToggleSwitch.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import BaseMessage from '@/components/base/BaseMessage.vue'
 import BaseTable from '@/components/base/BaseTable.vue'
+import type { TableColumn } from '@/components/base/BaseTable.vue'
 import LifecycleStatus from '@/components/LifecycleStatus.vue'
 import DiscountKindTag from '@/components/DiscountKindTag.vue'
 import UnsavedChangesDialog from '@/components/UnsavedChangesDialog.vue'
@@ -47,6 +60,7 @@ import { toFieldErrors } from '@/models/formErrors'
 import { useBaseToast } from '@/composables/useBaseToast'
 import { useUnsavedChangesGuard } from '@/composables/useUnsavedChangesGuard'
 import { isoToZonedInput, zonedInputToIso } from '@/lib/timezone'
+import type { Discount } from '@/models/discount'
 
 const route = useRoute()
 const router = useRouter()
@@ -54,13 +68,13 @@ const auth = useAuthStore()
 const toast = useBaseToast()
 const { t } = useI18n()
 
-const campaignId = computed(() => route.params.id || null)
+const campaignId = computed(() => (route.params.id as string | undefined) || null)
 const isEdit = computed(() => !!campaignId.value)
 
 const loading = ref(false)
 const saving = ref(false)
 const loadError = ref('')
-const errors = ref({})
+const errors = ref<Record<string, string>>({})
 
 const form = reactive({
   name: '',
@@ -84,7 +98,7 @@ const { showDialog: showUnsavedDialog, confirmLeave, cancelLeave, bypassOnce } =
 async function load() {
   loading.value = true
   try {
-    const data = await getCampaign(campaignId.value, { token: auth.token, projectId: auth.project?.id })
+    const data = await getCampaign(campaignId.value!, { token: auth.token ?? undefined, projectId: auth.project?.id })
     form.name = data.name
     form.enabled = data.enabled
     form.valid_from = isoToZonedInput(data.valid_from, auth.project?.timezone)
@@ -97,7 +111,7 @@ async function load() {
     // A pending draft (left just before navigating off to edit one of this
     // campaign's discounts) wins over what the server has, so unsaved edits
     // survive that round trip instead of being clobbered by the fresh fetch.
-    const draft = takeCampaignDraft(campaignId.value)
+    const draft = takeCampaignDraft(campaignId.value!)
     if (draft) Object.assign(form, draft)
 
     await loadDiscounts()
@@ -110,38 +124,41 @@ async function load() {
 
 // --- discounts (edit mode only — a campaign needs to exist before it can have any) ---
 
-const discounts = ref([])
+const discounts = ref<Discount[]>([])
 const discountsLoading = ref(false)
 
 async function loadDiscounts() {
   discountsLoading.value = true
   try {
-    discounts.value = await listDiscounts({ campaignId: campaignId.value, token: auth.token, projectId: auth.project?.id })
+    discounts.value = await listDiscounts({ campaignId: campaignId.value!, token: auth.token ?? undefined, projectId: auth.project?.id })
   } finally {
     discountsLoading.value = false
   }
 }
 
-function editDiscount(discount) {
-  saveCampaignDraft(campaignId.value, form)
+function editDiscount(discount: Discount) {
+  saveCampaignDraft(campaignId.value!, form)
   bypassOnce()
   router.push({ name: 'discount-edit', params: { id: discount.id }, query: { return_to: 'campaign-edit' } })
 }
 
 function newDiscount() {
-  saveCampaignDraft(campaignId.value, form)
+  saveCampaignDraft(campaignId.value!, form)
   bypassOnce()
-  router.push({ name: 'discount-new', query: { campaign_id: campaignId.value, return_to: 'campaign-edit' } })
+  router.push({ name: 'discount-new', query: { campaign_id: campaignId.value!, return_to: 'campaign-edit' } })
 }
 
 // Same per-kind validity-field lookup as CampaignDetailView.vue/DiscountKindTable.vue
 // (promotion/loyalty: active_from/active_until, coupon: valid_from/valid_until).
-function validityFields(discount) {
-  if (discount.kind === 'coupon') return { from: discount.coupon?.valid_from, until: discount.coupon?.valid_until }
-  return { from: discount[discount.kind]?.active_from, until: discount[discount.kind]?.active_until }
+function validityFields(discount: Discount): { from: string | null | undefined; until: string | null | undefined } {
+  if (discount.kind === 'coupon') {
+    return { from: discount.coupon?.valid_from as string | null | undefined, until: discount.coupon?.valid_until as string | null | undefined }
+  }
+  const kindConfig = discount[discount.kind] as Record<string, unknown> | null
+  return { from: kindConfig?.active_from as string | null | undefined, until: kindConfig?.active_until as string | null | undefined }
 }
 
-const discountColumns = computed(() => [
+const discountColumns = computed<TableColumn[]>(() => [
   { field: 'name', header: t('campaignDetail.nameColumn'), sortable: true, hideable: false, filter: { type: 'string' } },
   {
     field: 'kind',
@@ -193,13 +210,13 @@ async function submit() {
   saving.value = true
   try {
     if (isEdit.value) {
-      await updateCampaign(campaignId.value, result.data, { token: auth.token, projectId: auth.project?.id })
+      await updateCampaign(campaignId.value!, result.data, { token: auth.token ?? undefined, projectId: auth.project?.id })
       clearCampaignDraft()
       toast.add({ severity: 'success', summary: t('campaignForm.updatedToast'), life: 3000 })
       bypassOnce()
-      router.push({ name: 'campaign-show', params: { id: campaignId.value } })
+      router.push({ name: 'campaign-show', params: { id: campaignId.value! } })
     } else {
-      const campaign = await createCampaign(result.data, { token: auth.token, projectId: auth.project?.id })
+      const campaign = await createCampaign(result.data, { token: auth.token ?? undefined, projectId: auth.project?.id })
       toast.add({ severity: 'success', summary: t('campaignForm.createdToast'), life: 3000 })
       bypassOnce()
       router.push({ name: 'campaign-show', params: { id: campaign.id } })
@@ -272,7 +289,7 @@ function cancel() {
           :loading="discountsLoading"
           row-key="id"
           :create-label="$t('campaignDetail.newDiscountButton')"
-          @row-click="editDiscount($event.data)"
+          @row-click="editDiscount($event.data as unknown as Discount)"
           @refresh="loadDiscounts"
           @create="newDiscount"
         >

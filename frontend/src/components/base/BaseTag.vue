@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { computed, useAttrs } from 'vue'
 import Tag from 'openvue/tag'
 
@@ -7,7 +7,7 @@ import Tag from 'openvue/tag'
 defineOptions({ inheritAttrs: false })
 const attrs = useAttrs()
 
-const SEVERITY = {
+const SEVERITY: Record<string, string> = {
   success: 'bg-success-bg text-success-text',
   danger: 'bg-danger-bg text-danger-text',
   warn: 'bg-warning-bg text-warning-text',
@@ -17,7 +17,7 @@ const SEVERITY = {
 }
 
 const rootClass = computed(() => {
-  const severity = attrs.severity ?? 'secondary'
+  const severity = (attrs.severity as string) ?? 'secondary'
   const rounded = attrs.rounded !== undefined && attrs.rounded !== false
   return [
     'inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium',

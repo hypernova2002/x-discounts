@@ -1,16 +1,27 @@
-<script setup>
+<script setup lang="ts">
 import TrendIndicator from '@/components/TrendIndicator.vue'
+
+interface Trend {
+  current: number
+  previous: number
+  caption: string
+}
+
+interface MetricCardProps {
+  label: string
+  value: string | number
+  caption?: string
+  trend?: Trend | null
+}
 
 // A subtle-surface summary card: big primary value, small muted label, optional
 // caption underneath — per .claude/rules/component-design.md's card tokens
 // (subtle background/border, clear primary-number hierarchy, smaller secondary
 // label). `trend` (optional) is { current, previous, caption } — omit it for a
 // metric that isn't period-scoped (e.g. a live "total X right now" count).
-defineProps({
-  label: { type: String, required: true },
-  value: { type: [String, Number], required: true },
-  caption: { type: String, default: '' },
-  trend: { type: Object, default: null },
+withDefaults(defineProps<MetricCardProps>(), {
+  caption: '',
+  trend: null,
 })
 </script>
 

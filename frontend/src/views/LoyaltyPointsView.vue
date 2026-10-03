@@ -1,14 +1,16 @@
-<script setup>
+<script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import AppShell from '@/components/AppShell.vue'
 import PageHeader from '@/components/PageHeader.vue'
 import DateRangePicker from '@/components/DateRangePicker.vue'
+import type { DateRange } from '@/components/DateRangePicker.vue'
 import BaseCard from '@/components/base/BaseCard.vue'
 import MetricCard from '@/components/base/MetricCard.vue'
 import BaseChart from '@/components/base/BaseChart.vue'
 import BaseTable from '@/components/base/BaseTable.vue'
+import type { TableColumn } from '@/components/base/BaseTable.vue'
 import EntityLink from '@/components/EntityLink.vue'
 import DiscountKindTable from '@/components/DiscountKindTable.vue'
 import { useAuthStore } from '@/stores/auth'
@@ -22,15 +24,15 @@ const toast = useBaseToast()
 const router = useRouter()
 const { t } = useI18n()
 
-const range = ref(null)
+const range = ref<DateRange | null>(null)
 
 const { data: analytics, loading, error, reload } = useAsync(
-  () => (range.value ? getLoyaltyAnalytics({ ...range.value, token: auth.token, projectId: auth.project?.id }) : Promise.resolve(null)),
+  () => (range.value ? getLoyaltyAnalytics({ ...range.value, token: auth.token ?? undefined, projectId: auth.project?.id }) : Promise.resolve(null)),
   { immediate: false },
 )
 
 watch(error, (e) => {
-  if (e) toast.add({ severity: 'error', summary: t('loyaltyPoints.analyticsLoadError'), detail: e.message, life: 4000 })
+  if (e) toast.add({ severity: 'error', summary: t('loyaltyPoints.analyticsLoadError'), detail: e instanceof Error ? e.message : String(e), life: 4000 })
 })
 
 watch(range, () => {
@@ -46,21 +48,21 @@ const {
   loading: activeRedemptionsLoading,
   error: activeRedemptionsError,
   reload: reloadActiveRedemptions,
-} = useAsync(() => getActiveLoyaltyRedemptions({ token: auth.token, projectId: auth.project?.id }))
+} = useAsync(() => getActiveLoyaltyRedemptions({ token: auth.token ?? undefined, projectId: auth.project?.id }))
 
 watch(activeRedemptionsError, (e) => {
-  if (e) toast.add({ severity: 'error', summary: t('loyaltyPoints.activeRedemptionsLoadError'), detail: e.message, life: 4000 })
+  if (e) toast.add({ severity: 'error', summary: t('loyaltyPoints.activeRedemptionsLoadError'), detail: e instanceof Error ? e.message : String(e), life: 4000 })
 })
 
 const activeRedemptions = computed(() => activeRedemptionsData.value?.active_redemptions || [])
 
-const activeRedemptionsColumns = computed(() => [
-  { field: 'customer', header: t('loyaltyPoints.customerColumn'), hideable: false, filter: { type: 'string', accessor: (row) => row.customer.external_id } },
+const activeRedemptionsColumns = computed<TableColumn[]>(() => [
+  { field: 'customer', header: t('loyaltyPoints.customerColumn'), hideable: false, filter: { type: 'string', accessor: (row) => (row as { customer: { external_id: string } }).customer.external_id } },
   { field: 'quantity', header: t('loyaltyPoints.quantityColumn'), sortable: true, filter: { type: 'number' } },
   { field: 'expires_at', header: t('loyaltyPoints.expirationColumn'), sortable: true, filter: { type: 'date' } },
 ])
 
-function viewCustomer(customer) {
+function viewCustomer(customer: { id: string }) {
   router.push({ name: 'customer-show', params: { id: customer.id } })
 }
 </script>
@@ -105,7 +107,7 @@ function viewCustomer(customer) {
     <BaseCard class="section-card">
       <template #title>{{ t('loyaltyPoints.chartTitle') }}</template>
       <template #content>
-        <BaseChart v-if="hasChartData" :labels="chartLabels" :datasets="chartDatasets" :format-value="(v) => formatNumber(v)" />
+        <BaseChart v-if="hasChartData" :labels="chartLabels" :datasets="chartDatasets" :format-value="(v: number) => formatNumber(v)" />
         <p v-else-if="!loading" class="empty-hint">{{ t('loyaltyPoints.noChartData') }}</p>
       </template>
     </BaseCard>

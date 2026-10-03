@@ -1,9 +1,10 @@
-<script setup>
+<script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AppShell from '@/components/AppShell.vue'
 import PageHeader from '@/components/PageHeader.vue'
 import DateRangePicker from '@/components/DateRangePicker.vue'
+import type { DateRange } from '@/components/DateRangePicker.vue'
 import BaseCard from '@/components/base/BaseCard.vue'
 import MetricCard from '@/components/base/MetricCard.vue'
 import BaseChart from '@/components/base/BaseChart.vue'
@@ -18,15 +19,15 @@ const auth = useAuthStore()
 const toast = useBaseToast()
 const { t } = useI18n()
 
-const range = ref(null)
+const range = ref<DateRange | null>(null)
 
 const { data: analytics, loading, error, reload } = useAsync(
-  () => (range.value ? getCouponAnalytics({ ...range.value, token: auth.token, projectId: auth.project?.id }) : Promise.resolve(null)),
+  () => (range.value ? getCouponAnalytics({ ...range.value, token: auth.token ?? undefined, projectId: auth.project?.id }) : Promise.resolve(null)),
   { immediate: false },
 )
 
 watch(error, (e) => {
-  if (e) toast.add({ severity: 'error', summary: t('coupons.analyticsLoadError'), detail: e.message, life: 4000 })
+  if (e) toast.add({ severity: 'error', summary: t('coupons.analyticsLoadError'), detail: e instanceof Error ? e.message : String(e), life: 4000 })
 })
 
 watch(range, () => {
@@ -66,7 +67,7 @@ const hasChartData = computed(() => (analytics.value?.series || []).some((s) => 
     <BaseCard class="section-card">
       <template #title>{{ t('coupons.chartTitle') }}</template>
       <template #content>
-        <BaseChart v-if="hasChartData" :labels="chartLabels" :datasets="chartDatasets" :format-value="(v) => formatNumber(v)" />
+        <BaseChart v-if="hasChartData" :labels="chartLabels" :datasets="chartDatasets" :format-value="(v: number) => formatNumber(v)" />
         <p v-else-if="!loading" class="empty-hint">{{ t('coupons.noChartData') }}</p>
       </template>
     </BaseCard>

@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -15,8 +15,10 @@ import BaseSelectButton from '@/components/base/BaseSelectButton.vue'
 import BaseSelect from '@/components/base/BaseSelect.vue'
 import BaseMultiSelect from '@/components/base/BaseMultiSelect.vue'
 import BaseTable from '@/components/base/BaseTable.vue'
+import type { TableColumn } from '@/components/base/BaseTable.vue'
 import BaseMessage from '@/components/base/BaseMessage.vue'
 import ConditionSummary from '@/components/discounts/ConditionSummary.vue'
+import type { ConditionNode } from '@/components/discounts/ConditionSummary.vue'
 import KeyValueEditor from '@/components/discounts/KeyValueEditor.vue'
 import { useAuthStore } from '@/stores/auth'
 import { ApiError, apiFileUrl } from '@/lib/api'
@@ -26,9 +28,14 @@ import { listCouponCodes, generateCouponCodes, deleteCouponCode } from '@/api/co
 import { listCustomers } from '@/api/customers'
 import { validateDiscounts } from '@/api/discountRedemption'
 import { couponCodeGenerateInputSchema } from '@/models/couponCode'
+import type { Discount, DiscountEffect } from '@/models/discount'
+import type { CouponCode } from '@/models/couponCode'
+import type { Customer } from '@/models/customer'
+import type { ValidationResult } from '@/models/discountRedemption'
 import { toFieldErrors } from '@/models/formErrors'
 import { couponCodeGeneratePayload } from '@/services/couponCodes'
 import { attrsToObject, lineItemsToPayload } from '@/services/cartAttrs'
+import type { KeyValuePair } from '@/services/cartAttrs'
 import { useBaseToast } from '@/composables/useBaseToast'
 import { formatNumber, formatCurrency, formatDateTime } from '@/lib/format'
 import { zonedInputToIso } from '@/lib/timezone'
@@ -39,7 +46,7 @@ const auth = useAuthStore()
 const toast = useBaseToast()
 const { t } = useI18n()
 
-const discount = ref(null)
+const discount = ref<Discount | null>(null)
 const loading = ref(false)
 const loadError = ref('')
 
@@ -47,7 +54,7 @@ async function loadDiscount() {
   loading.value = true
   loadError.value = ''
   try {
-    discount.value = await getDiscount(route.params.id, { token: auth.token, projectId: auth.project?.id })
+    discount.value = await getDiscount(route.params.id as string, { token: auth.token ?? undefined, projectId: auth.project?.id })
     if (discount.value.kind === 'coupon') loadCouponCodes()
   } catch (e) {
     loadError.value = e instanceof ApiError ? e.message : t('discountDetail.loadError')
@@ -58,38 +65,38 @@ async function loadDiscount() {
 
 // --- coupon codes (bulk / personalized generation) ---
 
-const couponCodes = ref([])
+const couponCodes = ref<CouponCode[]>([])
 const couponCodesLoading = ref(false)
 
 async function loadCouponCodes() {
   couponCodesLoading.value = true
   try {
-    couponCodes.value = await listCouponCodes({ discountId: discount.value.id, perPage: 200, token: auth.token, projectId: auth.project?.id })
+    couponCodes.value = await listCouponCodes({ discountId: discount.value!.id, perPage: 200, token: auth.token ?? undefined, projectId: auth.project?.id })
   } catch (e) {
-    toast.add({ severity: 'error', summary: t('discountDetail.loadCouponCodesError'), detail: e.message, life: 4000 })
+    toast.add({ severity: 'error', summary: t('discountDetail.loadCouponCodesError'), detail: e instanceof Error ? e.message : String(e), life: 4000 })
   } finally {
     couponCodesLoading.value = false
   }
 }
 
 const generateDialogOpen = ref(false)
-const topMode = ref('oneoff') // 'oneoff' | 'bulk'
-const bulkMode = ref('count') // 'count' | 'customers'
+const topMode = ref<'oneoff' | 'bulk'>('oneoff')
+const bulkMode = ref<'count' | 'customers'>('count')
 const oneoffCode = ref('')
-const oneoffCustomerId = ref(null)
+const oneoffCustomerId = ref<string | null>(null)
 const generateCount = ref(10)
-const generateCustomerIds = ref([])
+const generateCustomerIds = ref<string[]>([])
 const generatePrefix = ref('')
 const generateSuffix = ref('')
 const generateMaxRedemptions = ref(1)
 const generating = ref(false)
-const generateErrors = ref({})
+const generateErrors = ref<Record<string, string>>({})
 
-const customers = ref([])
+const customers = ref<Customer[]>([])
 const customerOptions = computed(() => customers.value.map((c) => ({ label: c.external_id, value: c.id })))
 
 async function loadCustomers() {
-  customers.value = await listCustomers({ perPage: 500, token: auth.token, projectId: auth.project?.id })
+  customers.value = await listCustomers({ perPage: 500, token: auth.token ?? undefined, projectId: auth.project?.id })
 }
 
 function openGenerate() {
@@ -132,11 +139,11 @@ async function submitGenerate() {
 
   generating.value = true
   try {
-    await generateCouponCodes(discount.value.id, result.data, { token: auth.token, projectId: auth.project?.id })
+    await generateCouponCodes(discount.value!.id, result.data, { token: auth.token ?? undefined, projectId: auth.project?.id })
     toast.add({ severity: 'success', summary: t('discountDetail.couponCodesGeneratedToast'), life: 3000 })
     generateDialogOpen.value = false
     await loadCouponCodes()
-    discount.value = await getDiscount(discount.value.id, { token: auth.token, projectId: auth.project?.id })
+    discount.value = await getDiscount(discount.value!.id, { token: auth.token ?? undefined, projectId: auth.project?.id })
   } catch (e) {
     generateErrors.value = e instanceof ApiError ? toFieldErrors(e) : { _root: t('discountDetail.genericError') }
   } finally {
@@ -144,29 +151,29 @@ async function submitGenerate() {
   }
 }
 
-async function revokeCode(code) {
+async function revokeCode(code: CouponCode) {
   try {
-    await deleteCouponCode(discount.value.id, code.id, { token: auth.token, projectId: auth.project?.id })
+    await deleteCouponCode(discount.value!.id, code.id, { token: auth.token ?? undefined, projectId: auth.project?.id })
     toast.add({ severity: 'success', summary: t('discountDetail.codeRevokedToast'), life: 3000 })
     await loadCouponCodes()
-    discount.value = await getDiscount(discount.value.id, { token: auth.token, projectId: auth.project?.id })
+    discount.value = await getDiscount(discount.value!.id, { token: auth.token ?? undefined, projectId: auth.project?.id })
   } catch (e) {
-    toast.add({ severity: 'error', summary: t('discountDetail.revokeCodeError'), detail: e.message, life: 4000 })
+    toast.add({ severity: 'error', summary: t('discountDetail.revokeCodeError'), detail: e instanceof Error ? e.message : String(e), life: 4000 })
   }
 }
 
-const couponCodeColumns = computed(() => [
+const couponCodeColumns = computed<TableColumn[]>(() => [
   { field: 'code', header: t('discountDetail.codeColumn'), sortable: true, hideable: false, filter: { type: 'string' } },
   {
     field: 'customer',
     header: t('discountDetail.assignedToColumn'),
-    filter: { type: 'string', accessor: (row) => row.customer?.external_id ?? '' },
+    filter: { type: 'string', accessor: (row) => (row as unknown as CouponCode).customer?.external_id ?? '' },
   },
   { field: 'redemption_count', header: t('discountDetail.redemptionsColumn'), filter: { type: 'number' } },
   { field: 'actions', header: t('discountDetail.actionsColumn'), hideable: false },
 ])
 
-async function copyCode(code) {
+async function copyCode(code: string) {
   try {
     await navigator.clipboard.writeText(code)
     toast.add({ severity: 'success', summary: t('discountDetail.copiedToast'), life: 1500 })
@@ -174,6 +181,22 @@ async function copyCode(code) {
     // clipboard access can be denied by the browser — not fatal, just skip the toast
   }
 }
+
+// promotion/coupon/loyalty live on the loosely-typed kind_config bag (Record<
+// string, unknown> on the Discount model, since kind_config's exact sub-shape
+// varies by kind) — these narrow the active kind's config to what this view
+// actually reads from it.
+const promotionConfig = computed(() => discount.value?.promotion as { active_from?: string | null; active_until?: string | null } | null)
+const couponConfig = computed(
+  () =>
+    discount.value?.coupon as {
+      valid_from?: string | null
+      valid_until?: string | null
+      design_image_url?: string | null
+      design_html?: string | null
+    } | null,
+)
+const loyaltyConfig = computed(() => discount.value?.loyalty as { active_from?: string | null; active_until?: string | null } | null)
 
 const hasUsageLimits = computed(() => {
   if (!discount.value) return false
@@ -187,28 +210,35 @@ const hasUsageLimits = computed(() => {
   ].some((v) => v != null)
 })
 
-function configSummary(effect) {
-  const c = effect.config
-  if (effect.effect_type === 'percentage_off') return t('discountDetail.percentageOff', { percentage: formatNumber(c.percentage) })
-  if (effect.effect_type === 'fixed_amount_off') return t('discountDetail.fixedAmountOff', { amount: formatCurrency(c.amount, c.currency) })
+function configSummary(effect: DiscountEffect): string {
+  const c = effect.config as Record<string, unknown>
+  if (effect.effect_type === 'percentage_off') return t('discountDetail.percentageOff', { percentage: c.percentage as number })
+  if (effect.effect_type === 'fixed_amount_off') return t('discountDetail.fixedAmountOff', { amount: formatCurrency(c.amount as number, c.currency as string) })
   if (effect.effect_type === 'free_item') {
     return c.repeatable
-      ? t('discountDetail.freeItemEffectRepeatable', { buyQuantity: c.buy_quantity, getQuantity: c.get_quantity })
-      : t('discountDetail.freeItemEffect', { buyQuantity: c.buy_quantity, getQuantity: c.get_quantity })
+      ? t('discountDetail.freeItemEffectRepeatable', { buyQuantity: c.buy_quantity as number, getQuantity: c.get_quantity as number })
+      : t('discountDetail.freeItemEffect', { buyQuantity: c.buy_quantity as number, getQuantity: c.get_quantity as number })
   }
-  if (effect.effect_type === 'points_per_currency') return t('discountDetail.pointsPerCurrency', { rate: c.rate })
-  if (effect.effect_type === 'points_flat') return t('discountDetail.pointsFlat', { points: c.points })
-  if (effect.effect_type === 'points_per_item') return t('discountDetail.pointsPerItem', { pointsPerItem: c.points_per_item })
-  if (effect.effect_type === 'points_multiplier') return t('discountDetail.pointsMultiplierSuffix', { multiplier: c.multiplier })
+  if (effect.effect_type === 'points_per_currency') return t('discountDetail.pointsPerCurrency', { rate: c.rate as number })
+  if (effect.effect_type === 'points_flat') return t('discountDetail.pointsFlat', { points: c.points as number })
+  if (effect.effect_type === 'points_per_item') return t('discountDetail.pointsPerItem', { pointsPerItem: c.points_per_item as number })
+  if (effect.effect_type === 'points_multiplier') return t('discountDetail.pointsMultiplierSuffix', { multiplier: c.multiplier as number })
   return ''
 }
 
+// eligibility_condition/target_condition/config.*_condition are all stored as
+// loosely-typed jsonb on the backend (z.unknown() in the model) — this just
+// narrows them to the recursive shape ConditionSummary actually expects.
+function conditionNode(value: unknown): ConditionNode | null {
+  return (value as ConditionNode | null) ?? null
+}
+
 function editDiscount() {
-  router.push({ name: 'discount-edit', params: { id: route.params.id } })
+  router.push({ name: 'discount-edit', params: { id: route.params.id as string } })
 }
 
 function viewCampaign() {
-  router.push({ name: 'campaign-show', params: { id: discount.value.campaign.id } })
+  router.push({ name: 'campaign-show', params: { id: discount.value!.campaign.id } })
 }
 
 const duplicating = ref(false)
@@ -216,11 +246,11 @@ const duplicating = ref(false)
 async function duplicateDiscountAction() {
   duplicating.value = true
   try {
-    const copy = await duplicateDiscount(discount.value.id, { token: auth.token, projectId: auth.project?.id })
+    const copy = await duplicateDiscount(discount.value!.id, { token: auth.token ?? undefined, projectId: auth.project?.id })
     toast.add({ severity: 'success', summary: t('discountDetail.duplicatedToast'), life: 3000 })
     router.push({ name: 'discount-show', params: { id: copy.id } })
   } catch (e) {
-    toast.add({ severity: 'error', summary: t('discountDetail.genericError'), detail: e.message, life: 4000 })
+    toast.add({ severity: 'error', summary: t('discountDetail.genericError'), detail: e instanceof Error ? e.message : String(e), life: 4000 })
   } finally {
     duplicating.value = false
   }
@@ -234,11 +264,11 @@ const deleting = ref(false)
 async function confirmDelete() {
   deleting.value = true
   try {
-    await deleteDiscount(discount.value.id, { token: auth.token, projectId: auth.project?.id })
+    await deleteDiscount(discount.value!.id, { token: auth.token ?? undefined, projectId: auth.project?.id })
     toast.add({ severity: 'success', summary: t('discountDetail.discountDeletedToast'), life: 3000 })
-    router.push({ name: 'campaign-show', params: { id: discount.value.campaign.id } })
+    router.push({ name: 'campaign-show', params: { id: discount.value!.campaign.id } })
   } catch (e) {
-    toast.add({ severity: 'error', summary: t('discountDetail.deleteDiscountError'), detail: e.message, life: 4000 })
+    toast.add({ severity: 'error', summary: t('discountDetail.deleteDiscountError'), detail: e instanceof Error ? e.message : String(e), life: 4000 })
   } finally {
     deleting.value = false
     deleteDialogOpen.value = false
@@ -247,21 +277,28 @@ async function confirmDelete() {
 
 // --- validation tester ---
 
-function defaultLineItem() {
+interface LineItemForm {
+  sku: string
+  quantity: number
+  unit_price: number
+  attrs: KeyValuePair[]
+}
+
+function defaultLineItem(): LineItemForm {
   return { sku: '', quantity: 1, unit_price: 0, attrs: [] }
 }
 
-const lineItems = ref([defaultLineItem()])
-const cartAttrs = ref([])
+const lineItems = ref<LineItemForm[]>([defaultLineItem()])
+const cartAttrs = ref<KeyValuePair[]>([])
 const customerExternalId = ref('test-customer')
-const customerAttrs = ref([])
+const customerAttrs = ref<KeyValuePair[]>([])
 const couponCode = ref('')
 const asOf = ref('')
 
 function addLineItem() {
   lineItems.value = [...lineItems.value, defaultLineItem()]
 }
-function removeLineItem(index) {
+function removeLineItem(index: number) {
   lineItems.value = lineItems.value.filter((_, i) => i !== index)
 }
 
@@ -277,14 +314,14 @@ function buildPayload() {
 
 const testing = ref(false)
 const testError = ref('')
-const testResult = ref(null)
+const testResult = ref<ValidationResult | null>(null)
 
 async function runTest() {
   testing.value = true
   testError.value = ''
   testResult.value = null
   try {
-    testResult.value = await validateDiscounts(buildPayload(), { token: auth.token, projectId: auth.project?.id })
+    testResult.value = await validateDiscounts(buildPayload(), { token: auth.token ?? undefined, projectId: auth.project?.id })
   } catch (e) {
     testError.value = e instanceof ApiError ? e.message : t('discountDetail.genericError')
   } finally {
@@ -358,9 +395,9 @@ onMounted(loadDiscount)
           <template #content>
             <dl class="details">
               <dt>{{ $t('discountDetail.activeFromLabel') }}</dt>
-              <dd>{{ formatDateTime(discount.promotion.active_from, auth.project?.timezone) }}</dd>
+              <dd>{{ formatDateTime(promotionConfig!.active_from, auth.project?.timezone) }}</dd>
               <dt>{{ $t('discountDetail.activeUntilLabel') }}</dt>
-              <dd>{{ discount.promotion.active_until ? formatDateTime(discount.promotion.active_until, auth.project?.timezone) : $t('discountDetail.noEndDate') }}</dd>
+              <dd>{{ promotionConfig!.active_until ? formatDateTime(promotionConfig!.active_until, auth.project?.timezone) : $t('discountDetail.noEndDate') }}</dd>
             </dl>
           </template>
         </BaseCard>
@@ -370,12 +407,12 @@ onMounted(loadDiscount)
           <template #content>
             <dl class="details">
               <dt>{{ $t('discountDetail.codesLabel') }}</dt>
-              <dd>{{ $t('discountDetail.codesAvailableOfTotal', { available: discount.coupon_code_stats.available, total: discount.coupon_code_stats.total }) }}</dd>
+              <dd>{{ $t('discountDetail.codesAvailableOfTotal', { available: discount.coupon_code_stats!.available, total: discount.coupon_code_stats!.total }) }}</dd>
               <dt>{{ $t('discountDetail.validLabel') }}</dt>
               <dd>
-                {{ discount.coupon.valid_from ? formatDateTime(discount.coupon.valid_from, auth.project?.timezone) : $t('discountDetail.anytime') }}
+                {{ couponConfig!.valid_from ? formatDateTime(couponConfig!.valid_from, auth.project?.timezone) : $t('discountDetail.anytime') }}
                 &ndash;
-                {{ discount.coupon.valid_until ? formatDateTime(discount.coupon.valid_until, auth.project?.timezone) : $t('discountDetail.noEnd') }}
+                {{ couponConfig!.valid_until ? formatDateTime(couponConfig!.valid_until, auth.project?.timezone) : $t('discountDetail.noEnd') }}
               </dd>
             </dl>
           </template>
@@ -386,24 +423,24 @@ onMounted(loadDiscount)
           <template #content>
             <dl class="details">
               <dt>{{ $t('discountDetail.activeFromLabel') }}</dt>
-              <dd>{{ formatDateTime(discount.loyalty.active_from, auth.project?.timezone) }}</dd>
+              <dd>{{ formatDateTime(loyaltyConfig!.active_from, auth.project?.timezone) }}</dd>
               <dt>{{ $t('discountDetail.activeUntilLabel') }}</dt>
-              <dd>{{ discount.loyalty.active_until ? formatDateTime(discount.loyalty.active_until, auth.project?.timezone) : $t('discountDetail.noEndDate') }}</dd>
+              <dd>{{ loyaltyConfig!.active_until ? formatDateTime(loyaltyConfig!.active_until, auth.project?.timezone) : $t('discountDetail.noEndDate') }}</dd>
             </dl>
           </template>
         </BaseCard>
 
-        <BaseCard v-if="discount.kind === 'coupon' && (discount.coupon.design_image_url || discount.coupon.design_html)">
+        <BaseCard v-if="discount.kind === 'coupon' && (couponConfig!.design_image_url || couponConfig!.design_html)">
           <template #title>{{ $t('discountDetail.designTitle') }}</template>
           <template #content>
             <img
-              v-if="discount.coupon.design_image_url"
-              :src="apiFileUrl(discount.coupon.design_image_url)"
+              v-if="couponConfig!.design_image_url"
+              :src="apiFileUrl(couponConfig!.design_image_url)"
               :alt="$t('discountDetail.designImageAlt')"
               class="design-image-preview"
             />
             <!-- eslint-disable-next-line vue/no-v-html -- the one deliberate v-html in this app; sanitizeHtml() is the only thing ever passed to it -->
-            <div v-if="discount.coupon.design_html" class="design-preview" v-html="sanitizeHtml(discount.coupon.design_html)" />
+            <div v-if="couponConfig!.design_html" class="design-preview" v-html="sanitizeHtml(couponConfig!.design_html)" />
           </template>
         </BaseCard>
 
@@ -442,7 +479,7 @@ onMounted(loadDiscount)
         <BaseCard>
           <template #title>{{ $t('discountDetail.eligibilityTitle') }}</template>
           <template #content>
-            <ConditionSummary :node="discount.eligibility_condition" />
+            <ConditionSummary :node="conditionNode(discount.eligibility_condition)" />
           </template>
         </BaseCard>
 
@@ -457,11 +494,11 @@ onMounted(loadDiscount)
                 <span>{{ configSummary(effect) }}</span>
               </div>
               <div v-if="effect.scope === 'line_item'" class="effect-summary__condition">
-                {{ $t('discountDetail.appliesToLineItemsWhere') }} <ConditionSummary :node="effect.target_condition" />
+                {{ $t('discountDetail.appliesToLineItemsWhere') }} <ConditionSummary :node="conditionNode(effect.target_condition)" />
               </div>
               <div v-if="effect.effect_type === 'free_item'" class="effect-summary__condition">
-                {{ $t('discountDetail.buyLabel') }} <ConditionSummary :node="effect.config.buy_condition" /><br />
-                {{ $t('discountDetail.getLabel') }} <ConditionSummary :node="effect.config.get_condition" />
+                {{ $t('discountDetail.buyLabel') }} <ConditionSummary :node="conditionNode(effect.config.buy_condition)" /><br />
+                {{ $t('discountDetail.getLabel') }} <ConditionSummary :node="conditionNode(effect.config.get_condition)" />
               </div>
             </div>
           </template>

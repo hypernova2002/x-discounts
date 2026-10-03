@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { useAttrs } from 'vue'
 import { useRoute } from 'vue-router'
 import Menu from 'openvue/menu'
@@ -27,8 +27,13 @@ defineOptions({ inheritAttrs: false })
 const attrs = useAttrs()
 const route = useRoute()
 
-function isActive(item) {
-  return item?.routeNames?.includes(route.name)
+interface MenuItemModel {
+  routeNames?: string[]
+  nested?: boolean
+}
+
+function isActive(item?: MenuItemModel): boolean {
+  return typeof route.name === 'string' && !!item?.routeNames?.includes(route.name)
 }
 
 const pt = {
@@ -38,7 +43,7 @@ const pt = {
   end: 'mt-2',
   item: '',
   itemContent: 'rounded-md',
-  itemLink: ({ context }) => ({
+  itemLink: ({ context }: { context: { item?: MenuItemModel } }) => ({
     class: [
       'flex items-center gap-3 rounded-md border-l-2 border-l-transparent pr-3 py-2 text-sm no-underline outline-none transition-colors',
       context.item?.nested ? 'pl-6' : 'pl-2.5',
@@ -53,7 +58,7 @@ const pt = {
         : 'text-text hover:bg-primary-subtle/50',
     ],
   }),
-  itemIcon: ({ context }) => ({
+  itemIcon: ({ context }: { context: { item?: MenuItemModel } }) => ({
     class: ['shrink-0', context.item?.nested ? 'text-sm' : 'text-base', isActive(context.item) ? 'text-primary' : 'text-text-muted'],
   }),
   itemLabel: 'truncate',

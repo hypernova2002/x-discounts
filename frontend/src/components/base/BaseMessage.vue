@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { computed, useAttrs } from 'vue'
 import Message from 'openvue/message'
 
@@ -7,7 +7,7 @@ import Message from 'openvue/message'
 defineOptions({ inheritAttrs: false })
 const attrs = useAttrs()
 
-const SEVERITY = {
+const SEVERITY: Record<string, string> = {
   error: 'bg-danger-bg border-danger text-danger-text',
   danger: 'bg-danger-bg border-danger text-danger-text',
   warn: 'bg-warning-bg border-warning text-warning-text',
@@ -17,7 +17,7 @@ const SEVERITY = {
 }
 
 const rootClass = computed(() => {
-  const severity = attrs.severity ?? 'info'
+  const severity = (attrs.severity as string) ?? 'info'
   return ['flex items-start gap-2 rounded-md border p-3 text-sm', SEVERITY[severity] || SEVERITY.info].join(' ')
 })
 

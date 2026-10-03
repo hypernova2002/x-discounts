@@ -1,10 +1,10 @@
-<script setup>
+<script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import BaseDialog from '@/components/base/BaseDialog.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 
-defineProps({ visible: { type: Boolean, required: true } })
-const emit = defineEmits(['stay', 'discard'])
+defineProps<{ visible: boolean }>()
+const emit = defineEmits<{ stay: []; discard: [] }>()
 
 const { t } = useI18n()
 </script>
@@ -16,7 +16,7 @@ const { t } = useI18n()
     :closable="false"
     :header="t('unsavedChanges.title')"
     :style="{ width: '24rem' }"
-    @update:visible="(v) => !v && emit('stay')"
+    @update:visible="(v: boolean) => !v && emit('stay')"
   >
     <p class="message">{{ t('unsavedChanges.message') }}</p>
     <div class="actions">

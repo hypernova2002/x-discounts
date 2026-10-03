@@ -1,15 +1,20 @@
-<script setup>
+<script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import BaseSelectButton from '@/components/base/BaseSelectButton.vue'
 import BaseInputText from '@/components/base/BaseInputText.vue'
 
+export interface DateRange {
+  from: string
+  to: string
+}
+
 // v-model is { from, to } (ISO date strings, e.g. "2026-08-22") — shared across
 // every analytics dashboard's date-range control (spec: "consistent date-range
 // control... across analytics views"). Defaults to a 30-day trailing window on
 // mount and emits immediately so the parent's first fetch has a real range.
-const props = defineProps({ modelValue: { type: Object, default: null } })
-const emit = defineEmits(['update:modelValue'])
+const props = defineProps<{ modelValue?: DateRange | null }>()
+const emit = defineEmits<{ 'update:modelValue': [value: DateRange] }>()
 
 const { t } = useI18n()
 
@@ -24,11 +29,11 @@ const preset = ref('30')
 const customFrom = ref('')
 const customTo = ref('')
 
-function isoDate(date) {
+function isoDate(date: Date): string {
   return date.toISOString().slice(0, 10)
 }
 
-function applyPreset(days) {
+function applyPreset(days: string) {
   const to = new Date()
   const from = new Date()
   from.setDate(from.getDate() - (Number(days) - 1))
@@ -38,7 +43,7 @@ function applyPreset(days) {
   emit('update:modelValue', range)
 }
 
-function onPresetChange(value) {
+function onPresetChange(value: string) {
   preset.value = value
   if (value !== 'custom') applyPreset(value)
 }

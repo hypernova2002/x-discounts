@@ -1,16 +1,22 @@
-<script setup>
+<script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 
 defineOptions({ name: 'ConditionSummary' })
 
-const props = defineProps({
-  node: { type: Object, default: null },
-})
+export interface ConditionNode {
+  operator: string
+  entity?: string
+  key?: string
+  value?: unknown
+  conditions?: ConditionNode[]
+}
+
+withDefaults(defineProps<{ node?: ConditionNode | null }>(), { node: null })
 
 const { t } = useI18n()
 
-const GROUP_LABEL_KEYS = { and: 'all', or: 'any', not: 'not' }
-const OPERATOR_LABEL_KEYS = {
+const GROUP_LABEL_KEYS: Record<string, string> = { and: 'all', or: 'any', not: 'not' }
+const OPERATOR_LABEL_KEYS: Record<string, string> = {
   eq: 'eq',
   ne: 'ne',
   gt: 'gt',
@@ -25,21 +31,21 @@ const OPERATOR_LABEL_KEYS = {
 }
 const NULLARY_OPERATORS = ['is_null', 'is_not_null']
 
-function isGroup(node) {
+function isGroup(node?: ConditionNode | null): boolean {
   return !!node && ['and', 'or', 'not'].includes(node.operator)
 }
 
-function groupLabel(operator) {
+function groupLabel(operator: string): string {
   const key = GROUP_LABEL_KEYS[operator]
   return key ? t(`conditionSummary.groups.${key}`) : operator
 }
 
-function operatorLabel(operator) {
+function operatorLabel(operator: string): string {
   const key = OPERATOR_LABEL_KEYS[operator]
   return key ? t(`conditionSummary.operators.${key}`) : operator
 }
 
-function formatValue(value) {
+function formatValue(value: unknown): string {
   if (value == null) return ''
   return Array.isArray(value) ? value.join(', ') : String(value)
 }

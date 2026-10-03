@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import BaseSelect from '@/components/base/BaseSelect.vue'
@@ -7,11 +7,14 @@ import { useCoupons } from '@/composables/useCoupons'
 
 defineOptions({ name: 'CouponCodeSelect' })
 
-const props = defineProps({
-  modelValue: { type: String, default: null },
-  excludeCodes: { type: Array, default: () => [] },
-})
-const emit = defineEmits(['update:modelValue'])
+const props = withDefaults(
+  defineProps<{
+    modelValue?: string | null
+    excludeCodes?: string[]
+  }>(),
+  { modelValue: null, excludeCodes: () => [] },
+)
+const emit = defineEmits<{ 'update:modelValue': [value: string | null] }>()
 
 const auth = useAuthStore()
 const { load, coupons } = useCoupons()
@@ -20,15 +23,15 @@ const { t } = useI18n()
 watch(
   () => auth.project?.id,
   (projectId) => {
-    if (projectId) load({ token: auth.token, projectId })
+    if (projectId) load({ token: auth.token ?? undefined, projectId })
   },
   { immediate: true }
 )
 
 const options = computed(() =>
   coupons()
-    .filter((d) => d.coupon?.code && !props.excludeCodes.includes(d.coupon.code))
-    .map((d) => ({ label: t('couponCodeSelect.optionLabel', { code: d.coupon.code, name: d.name }), value: d.coupon.code }))
+    .filter((d) => d.coupon?.code && !props.excludeCodes.includes(d.coupon.code as string))
+    .map((d) => ({ label: t('couponCodeSelect.optionLabel', { code: d.coupon!.code as string, name: d.name }), value: d.coupon!.code as string }))
 )
 </script>
 
@@ -41,6 +44,6 @@ const options = computed(() =>
     :placeholder="t('couponCodeSelect.placeholder')"
     filter
     :filter-placeholder="t('couponCodeSelect.filterPlaceholder')"
-    @update:model-value="(v) => emit('update:modelValue', v)"
+    @update:model-value="(v: string | null) => emit('update:modelValue', v)"
   />
 </template>

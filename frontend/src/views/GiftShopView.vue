@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -17,35 +17,36 @@ import { useAsync } from '@/composables/useAsync'
 import { listGiftShopItems, redeemGiftShopItem } from '@/api/giftShopItems'
 import { useBaseToast } from '@/composables/useBaseToast'
 import { formatNumber } from '@/lib/format'
+import type { GiftShopItem } from '@/models/giftShopItem'
 
 const auth = useAuthStore()
 const toast = useBaseToast()
 const router = useRouter()
 const { t } = useI18n()
 
-const { data: items, loading, error, reload: loadItems } = useAsync(() => listGiftShopItems({ token: auth.token, projectId: auth.project?.id }))
+const { data: items, loading, error, reload: loadItems } = useAsync(() => listGiftShopItems({ token: auth.token ?? undefined, projectId: auth.project?.id }))
 
 watch(error, (e) => {
-  if (e) toast.add({ severity: 'error', summary: t('giftShop.loadError'), detail: e.message, life: 4000 })
+  if (e) toast.add({ severity: 'error', summary: t('giftShop.loadError'), detail: e instanceof Error ? e.message : String(e), life: 4000 })
 })
 
 function createItem() {
   router.push({ name: 'gift-shop-item-new' })
 }
 
-function editItem(item) {
+function editItem(item: GiftShopItem) {
   router.push({ name: 'gift-shop-item-edit', params: { id: item.id } })
 }
 
 // --- redeem dialog ---
 
-const redeemingItem = ref(null)
+const redeemingItem = ref<GiftShopItem | null>(null)
 const redeemExternalId = ref('')
 const redeemQuantity = ref(1)
 const redeeming = ref(false)
 const redeemError = ref('')
 
-function openRedeem(item) {
+function openRedeem(item: GiftShopItem) {
   redeemingItem.value = item
   redeemExternalId.value = ''
   redeemQuantity.value = 1
@@ -57,9 +58,9 @@ async function submitRedeem() {
   redeemError.value = ''
   try {
     await redeemGiftShopItem(
-      redeemingItem.value.id,
+      redeemingItem.value!.id,
       { customer_external_id: redeemExternalId.value, quantity: redeemQuantity.value },
-      { token: auth.token, projectId: auth.project?.id },
+      { token: auth.token ?? undefined, projectId: auth.project?.id },
     )
     toast.add({ severity: 'success', summary: t('giftShop.redeemed'), life: 3000 })
     redeemingItem.value = null

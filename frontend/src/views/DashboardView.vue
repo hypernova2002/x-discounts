@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
@@ -8,6 +8,7 @@ import { useBaseToast } from '@/composables/useBaseToast'
 import AppShell from '@/components/AppShell.vue'
 import PageHeader from '@/components/PageHeader.vue'
 import DateRangePicker from '@/components/DateRangePicker.vue'
+import type { DateRange } from '@/components/DateRangePicker.vue'
 import DiscountKindTag from '@/components/DiscountKindTag.vue'
 import OrderStatusTag from '@/components/OrderStatusTag.vue'
 import EntityLink from '@/components/EntityLink.vue'
@@ -15,31 +16,34 @@ import BaseCard from '@/components/base/BaseCard.vue'
 import BaseTag from '@/components/base/BaseTag.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import BaseTable from '@/components/base/BaseTable.vue'
+import type { TableColumn } from '@/components/base/BaseTable.vue'
 import MetricCard from '@/components/base/MetricCard.vue'
 import BaseChart from '@/components/base/BaseChart.vue'
 import { getOrderAnalytics, getCustomerAnalytics, getCampaignAnalytics, getAttentionItems } from '@/api/analytics'
 import { listOrders } from '@/api/orders'
 import { formatNumber, formatCurrency, formatCalendarDate, formatMonthDayYear, formatDateTime } from '@/lib/format'
+import type { Order } from '@/models/order'
+import type { Discount } from '@/models/discount'
 
 const auth = useAuthStore()
 const toast = useBaseToast()
 const router = useRouter()
 const { t } = useI18n()
 
-const range = ref(null)
+const range = ref<DateRange | null>(null)
 
 // One combined fetch — the KPI row and chart are all one screen's worth of
 // data pulled from three already-built per-domain analytics endpoints
 // (orders/customers/campaigns), rather than three separately-loading widgets.
 const { data: overview, loading: overviewLoading, error: overviewError, reload: reloadOverview } = useAsync(async () => {
   if (!range.value) return null
-  const params = { ...range.value, token: auth.token, projectId: auth.project?.id }
+  const params = { ...range.value, token: auth.token ?? undefined, projectId: auth.project?.id }
   const [orders, customers, campaigns] = await Promise.all([getOrderAnalytics(params), getCustomerAnalytics(params), getCampaignAnalytics(params)])
   return { orders, customers, campaigns }
 }, { immediate: false })
 
 watch(overviewError, (e) => {
-  if (e) toast.add({ severity: 'error', summary: t('dashboard.overviewLoadError'), detail: e.message, life: 4000 })
+  if (e) toast.add({ severity: 'error', summary: t('dashboard.overviewLoadError'), detail: e instanceof Error ? e.message : String(e), life: 4000 })
 })
 
 watch(range, () => {
@@ -55,49 +59,53 @@ const hasChartData = computed(
   () => (overview.value?.orders.orders_series || []).some((s) => s.value > 0) || (overview.value?.orders.revenue_series || []).some((s) => s.value > 0),
 )
 
-function formatTooltipValue(value, datasetLabel) {
+function formatTooltipValue(value: number, datasetLabel?: string): string {
   return datasetLabel === t('dashboard.revenueSeriesLabel') ? formatCurrency(value, auth.project?.currency) : formatNumber(value)
 }
 
 const { data: attention, loading: attentionLoading, error: attentionError } = useAsync(() =>
-  getAttentionItems({ token: auth.token, projectId: auth.project?.id }),
+  getAttentionItems({ token: auth.token ?? undefined, projectId: auth.project?.id }),
 )
 
 watch(attentionError, (e) => {
-  if (e) toast.add({ severity: 'error', summary: t('dashboard.attentionLoadError'), detail: e.message, life: 4000 })
+  if (e) toast.add({ severity: 'error', summary: t('dashboard.attentionLoadError'), detail: e instanceof Error ? e.message : String(e), life: 4000 })
 })
 
-const attentionItems = computed(() => {
+type AttentionItem =
+  | { type: 'campaign'; id: string; name: string; until: string }
+  | { type: 'discount'; id: string; name: string; kind: Discount['kind']; until: string }
+
+const attentionItems = computed<AttentionItem[]>(() => {
   if (!attention.value) return []
-  const campaigns = attention.value.campaigns.map((c) => ({ type: 'campaign', id: c.id, name: c.name, until: c.until }))
-  const discounts = attention.value.discounts.map((d) => ({ type: 'discount', id: d.id, name: d.name, kind: d.kind, until: d.until }))
-  return [...campaigns, ...discounts].sort((a, b) => new Date(a.until) - new Date(b.until))
+  const campaigns: AttentionItem[] = attention.value.campaigns.map((c) => ({ type: 'campaign', id: c.id, name: c.name, until: c.until }))
+  const discounts: AttentionItem[] = attention.value.discounts.map((d) => ({ type: 'discount', id: d.id, name: d.name, kind: d.kind, until: d.until }))
+  return [...campaigns, ...discounts].sort((a, b) => new Date(a.until).getTime() - new Date(b.until).getTime())
 })
 
-function daysUntil(iso) {
-  const ms = new Date(iso) - new Date()
+function daysUntil(iso: string): number {
+  const ms = new Date(iso).getTime() - new Date().getTime()
   return Math.max(0, Math.ceil(ms / (24 * 60 * 60 * 1000)))
 }
 
-function endsInLabel(iso) {
+function endsInLabel(iso: string): string {
   const days = daysUntil(iso)
   return days === 0 ? t('lifecycleStatus.endsToday') : t('lifecycleStatus.endsInDays', { days })
 }
 
-function viewAttentionItem(item) {
+function viewAttentionItem(item: AttentionItem) {
   if (item.type === 'campaign') router.push({ name: 'campaign-show', params: { id: item.id } })
   else router.push({ name: 'discount-show', params: { id: item.id } })
 }
 
 const { data: recentOrders, loading: recentOrdersLoading, error: recentOrdersError } = useAsync(() =>
-  listOrders({ perPage: 5, token: auth.token, projectId: auth.project?.id }),
+  listOrders({ perPage: 5, token: auth.token ?? undefined, projectId: auth.project?.id }),
 )
 
 watch(recentOrdersError, (e) => {
-  if (e) toast.add({ severity: 'error', summary: t('dashboard.recentOrdersLoadError'), detail: e.message, life: 4000 })
+  if (e) toast.add({ severity: 'error', summary: t('dashboard.recentOrdersLoadError'), detail: e instanceof Error ? e.message : String(e), life: 4000 })
 })
 
-const recentOrdersColumns = computed(() => [
+const recentOrdersColumns = computed<TableColumn[]>(() => [
   { field: 'id', header: t('orders.order'), hideable: false },
   { field: 'customer', header: t('orders.customer'), hideable: false },
   { field: 'total_amount', header: t('orders.total'), hideable: false },
@@ -105,11 +113,11 @@ const recentOrdersColumns = computed(() => [
   { field: 'created_at', header: t('orders.created'), hideable: false },
 ])
 
-function viewOrder(order) {
+function viewOrder(order: Order) {
   router.push({ name: 'order-show', params: { id: order.id } })
 }
 
-function viewCustomer(customer) {
+function viewCustomer(customer: { id: string }) {
   router.push({ name: 'customer-show', params: { id: customer.id } })
 }
 
@@ -216,7 +224,7 @@ function viewAllOrders() {
             :columns="recentOrdersColumns"
             :loading="recentOrdersLoading"
             row-key="id"
-            @row-click="viewOrder($event.data)"
+            @row-click="viewOrder($event.data as unknown as Order)"
           >
             <template #cell-customer="{ data }">
               <EntityLink @click="viewCustomer(data.customer)">{{ data.customer.external_id }}</EntityLink>

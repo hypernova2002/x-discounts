@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { computed, useAttrs } from 'vue'
 import Textarea from 'openvue/textarea'
 

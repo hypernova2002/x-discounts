@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { computed, useAttrs } from 'vue'
 import Password from 'openvue/password'
 
@@ -34,7 +34,7 @@ const attrs = useAttrs()
 // camelCase form here silently always evaluated false, which desynced this
 // wrapper's own padding/icon-offset math from the real toggle/clear icons the
 // underlying Password component was still correctly rendering — check both forms.
-function boolAttr(camel, kebab) {
+function boolAttr(camel: string, kebab: string): boolean {
   const v = attrs[camel] !== undefined ? attrs[camel] : attrs[kebab]
   return v !== undefined && v !== false
 }

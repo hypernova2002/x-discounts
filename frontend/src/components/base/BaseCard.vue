@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import Card from 'openvue/card'
 
 // Wraps OpenVue's Card in unstyled mode. Purely a structural/style container —

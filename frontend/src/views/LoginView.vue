@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter, useRoute, RouterLink } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
@@ -18,7 +18,7 @@ const route = useRoute()
 async function submit() {
   try {
     await auth.login(email.value.trim(), password.value)
-    if (!auth.otpChallengeToken) router.push(route.query.redirect || { name: 'dashboard' })
+    if (!auth.otpChallengeToken) router.push((route.query.redirect as string) || { name: 'dashboard' })
   } catch {
     // error is surfaced via auth.error in the template
   }
@@ -27,7 +27,7 @@ async function submit() {
 async function submitOtp() {
   try {
     await auth.verifyOtp(code.value.trim())
-    router.push(route.query.redirect || { name: 'dashboard' })
+    router.push((route.query.redirect as string) || { name: 'dashboard' })
   } catch {
     // error is surfaced via auth.error in the template
   }
@@ -39,6 +39,7 @@ function backToLogin() {
   password.value = ''
   code.value = ''
 }
+
 </script>
 
 <template>

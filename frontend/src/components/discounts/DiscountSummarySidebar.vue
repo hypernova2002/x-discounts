@@ -1,10 +1,43 @@
-<script setup>
+<script setup lang="ts">
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import BaseCard from '@/components/base/BaseCard.vue'
 import BaseTag from '@/components/base/BaseTag.vue'
 import { formatCurrency, formatNumber, formatDateRange } from '@/lib/format'
 import { zonedInputToIso } from '@/lib/timezone'
+import type { ConditionNode } from './ConditionSummary.vue'
+
+interface FormEffect {
+  effect_type: string
+  scope: string
+  config?: Record<string, unknown>
+}
+
+interface FormPeriod {
+  issued_from?: string | null
+  issued_until?: string | null
+  valid_from?: string | null
+  valid_until?: string | null
+  active_from?: string | null
+  active_until?: string | null
+}
+
+// Loose, intentionally permissive mirror of the in-progress discount form —
+// this is a live preview of whatever the form currently holds (possibly not
+// yet valid), not the saved/validated DiscountInput shape, so every field
+// stays optional here regardless of `kind`.
+interface DiscountFormPreview {
+  kind?: string
+  name?: string
+  key?: string
+  enabled?: boolean
+  eligibility_condition?: unknown
+  effects?: FormEffect[]
+  max_redemptions?: number | null
+  max_redemptions_per_customer?: number | null
+  coupon?: FormPeriod
+  promotion?: FormPeriod
+}
 
 // A live, read-only reflection of the discount form — never mutates `form`,
 // so there's no event surface here and no risk to the actual save payload.
@@ -15,12 +48,15 @@ import { zonedInputToIso } from '@/lib/timezone'
 // this summary doesn't attempt to render, so it isn't shown there) — the
 // "Coupon"/"Promotion" section title and the Availability section's shape
 // (two named periods vs. one) are the only kind-specific parts.
-const props = defineProps({
-  form: { type: Object, required: true },
-  timezone: { type: String, default: null },
-  currency: { type: String, default: null },
-  activeSection: { type: String, default: null },
-})
+const props = withDefaults(
+  defineProps<{
+    form: DiscountFormPreview
+    timezone?: string | null
+    currency?: string | null
+    activeSection?: string | null
+  }>(),
+  { timezone: null, currency: null, activeSection: null },
+)
 
 const { t } = useI18n()
 
@@ -29,7 +65,7 @@ const NULLARY_OPERATORS = ['is_null', 'is_not_null']
 // Same mapping as ConditionSummary.vue — duplicated rather than shared since
 // the two components summarize differently (full nested tree vs. a flat,
 // capped leaf list) and this map is a handful of lines.
-const OPERATOR_LABEL_KEYS = {
+const OPERATOR_LABEL_KEYS: Record<string, string> = {
   eq: 'eq',
   ne: 'ne',
   gt: 'gt',
@@ -49,17 +85,18 @@ const LEAF_CAP = 4
 // deliberate simplification (see the plan): this sidebar shows "what
 // generally has to be true," not the exact logical structure, since
 // reproducing the full tree here is what the design explicitly avoids.
-function collectLeaves(node, acc = []) {
-  if (!node) return acc
-  if (GROUP_OPERATORS.includes(node.operator)) {
-    for (const child of node.conditions || []) collectLeaves(child, acc)
-  } else if (node.entity) {
-    acc.push(node)
+function collectLeaves(node: unknown, acc: ConditionNode[] = []): ConditionNode[] {
+  const n = node as ConditionNode | null | undefined
+  if (!n) return acc
+  if (GROUP_OPERATORS.includes(n.operator)) {
+    for (const child of n.conditions || []) collectLeaves(child, acc)
+  } else if (n.entity) {
+    acc.push(n)
   }
   return acc
 }
 
-function formatValue(value) {
+function formatValue(value: unknown): string {
   if (value == null) return ''
   return Array.isArray(value) ? value.join(' / ') : String(value)
 }
@@ -68,7 +105,7 @@ function formatValue(value) {
 // natural-language translator per custom-attribute key, since the app has no
 // reliable way to know what an arbitrary key like "days_before_departure"
 // means beyond its literal name.
-function formatLeaf(node) {
+function formatLeaf(node: ConditionNode): string {
   const opKey = OPERATOR_LABEL_KEYS[node.operator]
   const opLabel = opKey ? t(`conditionSummary.operators.${opKey}`) : node.operator
   const valueText = NULLARY_OPERATORS.includes(node.operator) ? '' : formatValue(node.value)
@@ -86,19 +123,19 @@ const eligibilitySummaryLines = computed(() =>
 // here).
 const SUMMARIZABLE_EFFECT_TYPES = ['percentage_off', 'fixed_amount_off', 'free_item']
 
-function scopeLabel(scope) {
+function scopeLabel(scope: string): string {
   return t(`effectEditor.scopes.${scope === 'line_item' ? 'lineItem' : 'cart'}`)
 }
 
-function formatEffect(effect) {
+function formatEffect(effect: FormEffect): string {
   if (effect.effect_type === 'percentage_off') {
-    return t('discountSummarySidebar.percentageOffSummary', { percentage: effect.config?.percentage ?? 0, scope: scopeLabel(effect.scope) })
+    return t('discountSummarySidebar.percentageOffSummary', { percentage: (effect.config?.percentage as number) ?? 0, scope: scopeLabel(effect.scope) })
   }
   if (effect.effect_type === 'fixed_amount_off') {
-    return t('discountSummarySidebar.fixedAmountOffSummary', { amount: formatCurrency(effect.config?.amount ?? 0, props.currency), scope: scopeLabel(effect.scope) })
+    return t('discountSummarySidebar.fixedAmountOffSummary', { amount: formatCurrency((effect.config?.amount as number) ?? 0, props.currency), scope: scopeLabel(effect.scope) })
   }
   if (effect.effect_type === 'free_item') {
-    return t('discountSummarySidebar.freeItemSummary', { buy: effect.config?.buy_quantity ?? 0, get: effect.config?.get_quantity ?? 0 })
+    return t('discountSummarySidebar.freeItemSummary', { buy: (effect.config?.buy_quantity as number) ?? 0, get: (effect.config?.get_quantity as number) ?? 0 })
   }
   return effect.effect_type
 }
@@ -106,7 +143,7 @@ function formatEffect(effect) {
 const effectSummaries = computed(() => (props.form.effects || []).filter((e) => SUMMARIZABLE_EFFECT_TYPES.includes(e.effect_type)).map(formatEffect))
 
 const usageSummaryLines = computed(() => {
-  const lines = []
+  const lines: string[] = []
   if (props.form.max_redemptions) lines.push(t('discountSummarySidebar.totalRedemptionsLabel', { count: formatNumber(props.form.max_redemptions) }))
   if (props.form.max_redemptions_per_customer) {
     lines.push(t('discountSummarySidebar.perCustomerLabel', { count: formatNumber(props.form.max_redemptions_per_customer) }))
@@ -115,12 +152,12 @@ const usageSummaryLines = computed(() => {
 })
 
 // *_from/_until are datetime-local wall-clock strings (see
-// isoToZonedInput/zonedInputToIso in lib/timezone.js) — not real ISO instants
+// isoToZonedInput/zonedInputToIso in lib/timezone.ts) — not real ISO instants
 // — so they need converting back to a real instant before formatDateRange
 // re-renders them in the project timezone, or the date could shift by a day
 // depending on the zone's offset (same class of bug fixed earlier this
 // session for analytics chart labels).
-function formatPeriod(fromLocal, untilLocal) {
+function formatPeriod(fromLocal?: string | null, untilLocal?: string | null): string {
   if (!fromLocal && !untilLocal) return t('discountSummarySidebar.anytimeLabel')
   const fromIso = fromLocal ? zonedInputToIso(fromLocal, props.timezone) : null
   const untilIso = untilLocal ? zonedInputToIso(untilLocal, props.timezone) : null
@@ -136,7 +173,7 @@ const activePeriodText = computed(() => formatPeriod(props.form.promotion?.activ
 // Conservative, entirely client-side derivable warnings only — see the plan's
 // explicit "don't invent what can't be reliably determined" constraint.
 const warnings = computed(() => {
-  const list = []
+  const list: string[] = []
   if (!props.form.effects || props.form.effects.length === 0) list.push(t('discountSummarySidebar.warningNoEffects'))
   if (isCoupon.value) {
     const c = props.form.coupon || {}

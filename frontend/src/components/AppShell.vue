@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
@@ -19,13 +19,14 @@ const { t } = useI18n()
 
 const sidebarOpen = ref(false)
 
-function go(name) {
+function go(name: string) {
   router.push({ name })
   sidebarOpen.value = false
 }
 
-function toMenuItem(section) {
-  return { label: t(section.labelKey), icon: section.icon, routeNames: section.routeNames, nested: section.nested, command: () => go(section.to.name) }
+function toMenuItem(section: (typeof NAV_SECTIONS)[number]) {
+  const to = section.to as { name: string }
+  return { label: t(section.labelKey), icon: section.icon, routeNames: section.routeNames, nested: section.nested, command: () => go(to.name) }
 }
 
 // Each group renders as a labeled block (OpenVue Menu's `{ label, items }`
@@ -34,12 +35,12 @@ function toMenuItem(section) {
 // sit), while admin/account still land at the bottom, separated, exactly as
 // before. Adding a new group is just tagging its sections with `group` and
 // naming it here — no other change needed.
-const GROUP_LABELS = { campaigns: 'nav.campaigns', admin: 'nav.admin', account: 'nav.account' }
+const GROUP_LABELS: Record<string, string> = { campaigns: 'nav.campaigns', admin: 'nav.admin', account: 'nav.account' }
 const SEPARATOR_BEFORE_GROUP = 'admin'
 
 const navItems = computed(() => {
-  const items = []
-  const seenGroups = new Set()
+  const items: Record<string, unknown>[] = []
+  const seenGroups = new Set<string>()
   for (const section of NAV_SECTIONS) {
     if (!section.group) {
       items.push(toMenuItem(section))
@@ -64,7 +65,7 @@ async function logout() {
 
 const switchingProject = ref(false)
 
-async function switchProject(projectId) {
+async function switchProject(projectId: string) {
   if (!projectId || projectId === auth.project?.id) return
   switchingProject.value = true
   try {
@@ -74,7 +75,7 @@ async function switchProject(projectId) {
     // somewhere always valid instead of risking a 404 on the new project.
     router.push({ name: 'dashboard' })
   } catch (e) {
-    toast.add({ severity: 'error', summary: t('nav.switchProjectError'), detail: e.message, life: 4000 })
+    toast.add({ severity: 'error', summary: t('nav.switchProjectError'), detail: e instanceof Error ? e.message : String(e), life: 4000 })
   } finally {
     switchingProject.value = false
   }

@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -8,6 +8,7 @@ import EntityLink from '@/components/EntityLink.vue'
 import BaseCard from '@/components/base/BaseCard.vue'
 import BaseMessage from '@/components/base/BaseMessage.vue'
 import BaseTable from '@/components/base/BaseTable.vue'
+import type { TableColumn } from '@/components/base/BaseTable.vue'
 import BaseSelect from '@/components/base/BaseSelect.vue'
 import BaseTag from '@/components/base/BaseTag.vue'
 import BaseTimeline from '@/components/base/BaseTimeline.vue'
@@ -21,10 +22,12 @@ import { getCustomer, updateCustomer, grantPoints as grantPointsRequest, duplica
 import { listOrders } from '@/api/orders'
 import { listMembershipSchemes } from '@/api/membershipSchemes'
 import { grantPointsInputSchema } from '@/models/customer'
+import type { CustomerDetail } from '@/models/customer'
 import { toFieldErrors } from '@/models/formErrors'
-import { useBaseToast } from '@/composables/useBaseToast.js'
+import { useBaseToast } from '@/composables/useBaseToast'
 import { formatNumber, formatCurrency, formatDate, formatDateTime } from '@/lib/format'
 import { zonedInputToIso } from '@/lib/timezone'
+import type { Order } from '@/models/order'
 
 const route = useRoute()
 const router = useRouter()
@@ -32,17 +35,17 @@ const auth = useAuthStore()
 const toast = useBaseToast()
 const { t } = useI18n()
 
-const customer = ref(null)
+const customer = ref<CustomerDetail | null>(null)
 const loadError = ref('')
-const tierOptions = ref([])
+const tierOptions = ref<{ label: string; value: string }[]>([])
 const savingMembership = ref(false)
-const orders = ref([])
+const orders = ref<Order[]>([])
 const ordersLoading = ref(false)
 
 async function loadCustomer() {
   loadError.value = ''
   try {
-    customer.value = await getCustomer(route.params.id, { token: auth.token, projectId: auth.project?.id })
+    customer.value = await getCustomer(route.params.id as string, { token: auth.token ?? undefined, projectId: auth.project?.id })
     await Promise.all([loadTierOptions(), loadOrders()])
   } catch (e) {
     loadError.value = e instanceof ApiError ? e.message : t('customerDetail.loadError')
@@ -52,24 +55,25 @@ async function loadCustomer() {
 async function loadOrders() {
   ordersLoading.value = true
   try {
-    orders.value = await listOrders({ customerExternalId: customer.value.external_id, token: auth.token, projectId: auth.project?.id })
+    orders.value = await listOrders({ customerExternalId: customer.value!.external_id, token: auth.token ?? undefined, projectId: auth.project?.id })
   } finally {
     ordersLoading.value = false
   }
 }
 
-const ACTIVITY_LABELS = computed(() => ({
+const ACTIVITY_LABELS = computed<Record<string, string>>(() => ({
   order: t('customerDetail.activityLabels.order'),
   gift_shop_redemption: t('customerDetail.activityLabels.giftShopRedemption'),
   membership: t('customerDetail.activityLabels.membership'),
 }))
-const ACTIVITY_SEVERITIES = {
+const ACTIVITY_SEVERITIES: Record<string, string> = {
   order: 'success',
   gift_shop_redemption: 'info',
   membership: 'warn',
 }
+const LOYALTY_LOT_STATUS_SEVERITIES: Record<string, string> = { active: 'success', expired: 'secondary', cancelled: 'danger' }
 
-function viewOrder(orderId) {
+function viewOrder(orderId: string) {
   router.push({ name: 'order-show', params: { id: orderId } })
 }
 
@@ -78,17 +82,17 @@ const duplicating = ref(false)
 async function duplicateCustomerAction() {
   duplicating.value = true
   try {
-    const copy = await duplicateCustomer(customer.value.id, { token: auth.token, projectId: auth.project?.id })
+    const copy = await duplicateCustomer(customer.value!.id, { token: auth.token ?? undefined, projectId: auth.project?.id })
     toast.add({ severity: 'success', summary: t('customerDetail.duplicatedToast'), life: 3000 })
     router.push({ name: 'customer-show', params: { id: copy.id } })
   } catch (e) {
-    toast.add({ severity: 'error', summary: t('customerDetail.genericError'), detail: e.message, life: 4000 })
+    toast.add({ severity: 'error', summary: t('customerDetail.genericError'), detail: e instanceof Error ? e.message : String(e), life: 4000 })
   } finally {
     duplicating.value = false
   }
 }
 
-const loyaltyPointLotColumns = computed(() => [
+const loyaltyPointLotColumns = computed<TableColumn[]>(() => [
   {
     field: 'source',
     header: t('customerDetail.loyaltyPoints.source'),
@@ -121,7 +125,7 @@ const loyaltyPointLotColumns = computed(() => [
   { field: 'expires_at', header: t('customerDetail.loyaltyPoints.expires'), sortable: true, filter: { type: 'date' } },
 ])
 
-const customerOrderColumns = computed(() => [
+const customerOrderColumns = computed<TableColumn[]>(() => [
   { field: 'id', header: t('customerDetail.orders.order'), sortable: true, hideable: false, filter: { type: 'string' } },
   { field: 'created_at', header: t('customerDetail.orders.placed'), sortable: true, filter: { type: 'date' } },
   { field: 'total_amount', header: t('customerDetail.orders.total'), sortable: true, filter: { type: 'number' } },
@@ -131,20 +135,20 @@ const customerOrderColumns = computed(() => [
 ])
 
 async function loadTierOptions() {
-  const schemes = await listMembershipSchemes({ perPage: 500, token: auth.token, projectId: auth.project?.id })
+  const schemes = await listMembershipSchemes({ perPage: 500, token: auth.token ?? undefined, projectId: auth.project?.id })
   tierOptions.value = schemes.flatMap((scheme) => scheme.tiers.map((tier) => ({ label: `${scheme.name} — ${tier.name}`, value: tier.id })))
 }
 
-async function setMembershipTier(tierId) {
+async function setMembershipTier(tierId: string | null) {
   savingMembership.value = true
   try {
     // PATCH returns only the base customer fields, not stats/activity/loyalty_point_lots —
     // merge onto the existing detail object rather than replacing it wholesale.
-    const updated = await updateCustomer(customer.value.id, { membership_tier_id: tierId }, { token: auth.token, projectId: auth.project?.id })
-    customer.value = { ...customer.value, ...updated }
+    const updated = await updateCustomer(customer.value!.id, { membership_tier_id: tierId }, { token: auth.token ?? undefined, projectId: auth.project?.id })
+    customer.value = { ...customer.value!, ...updated }
     toast.add({ severity: 'success', summary: t('customerDetail.membershipUpdated'), life: 3000 })
   } catch (e) {
-    toast.add({ severity: 'error', summary: t('customerDetail.membershipUpdateError'), detail: e.message, life: 4000 })
+    toast.add({ severity: 'error', summary: t('customerDetail.membershipUpdateError'), detail: e instanceof Error ? e.message : String(e), life: 4000 })
   } finally {
     savingMembership.value = false
   }
@@ -153,11 +157,11 @@ async function setMembershipTier(tierId) {
 // --- grant points ---
 
 const grantDialogOpen = ref(false)
-const grantPoints = ref(null)
+const grantPoints = ref<number | null>(null)
 const grantExpiresAt = ref('')
 const grantReason = ref('')
 const granting = ref(false)
-const grantErrors = ref({})
+const grantErrors = ref<Record<string, string>>({})
 
 function openGrantPoints() {
   grantPoints.value = null
@@ -184,7 +188,7 @@ async function submitGrantPoints() {
 
   granting.value = true
   try {
-    customer.value = await grantPointsRequest(customer.value.id, result.data, { token: auth.token, projectId: auth.project?.id })
+    customer.value = await grantPointsRequest(customer.value!.id, result.data, { token: auth.token ?? undefined, projectId: auth.project?.id })
     toast.add({ severity: 'success', summary: t('customerDetail.pointsGranted'), life: 3000 })
     grantDialogOpen.value = false
   } catch (e) {
@@ -372,7 +376,7 @@ onMounted(loadCustomer)
             <template #cell-points_remaining="{ data }">{{ formatNumber(data.points_remaining) }}</template>
             <template #cell-status="{ data }">
               <BaseTag
-                :severity="{ active: 'success', expired: 'secondary', cancelled: 'danger' }[data.status]"
+                :severity="LOYALTY_LOT_STATUS_SEVERITIES[data.status]"
                 :value="data.status"
               />
             </template>
@@ -403,7 +407,7 @@ onMounted(loadCustomer)
       <BaseCard class="section-card">
         <template #title>{{ $t('customerDetail.orders.title') }}</template>
         <template #content>
-          <BaseTable :data="orders" :columns="customerOrderColumns" :loading="ordersLoading" row-key="id" @row-click="viewOrder($event.data.id)" @refresh="loadOrders">
+          <BaseTable :data="orders" :columns="customerOrderColumns" :loading="ordersLoading" row-key="id" @row-click="viewOrder(($event.data.id as string))" @refresh="loadOrders">
             <template #cell-created_at="{ data }">{{ formatDateTime(data.created_at, auth.project?.timezone) }}</template>
             <template #cell-total_amount="{ data }">{{ formatCurrency(data.total_amount, auth.project?.currency) }}</template>
             <template #cell-total_discount_amount="{ data }">{{ formatCurrency(data.total_discount_amount, auth.project?.currency) }}</template>

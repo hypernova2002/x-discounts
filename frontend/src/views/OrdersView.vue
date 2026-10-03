@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -7,7 +7,9 @@ import PageHeader from '@/components/PageHeader.vue'
 import EntityLink from '@/components/EntityLink.vue'
 import OrderStatusTag from '@/components/OrderStatusTag.vue'
 import DateRangePicker from '@/components/DateRangePicker.vue'
+import type { DateRange } from '@/components/DateRangePicker.vue'
 import BaseTable from '@/components/base/BaseTable.vue'
+import type { TableColumn } from '@/components/base/BaseTable.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import BaseCard from '@/components/base/BaseCard.vue'
 import MetricCard from '@/components/base/MetricCard.vue'
@@ -18,6 +20,7 @@ import { listOrders, exportOrders as exportOrdersRequest } from '@/api/orders'
 import { getOrderAnalytics } from '@/api/analytics'
 import { useBaseToast } from '@/composables/useBaseToast'
 import { formatNumber, formatDateTime, formatCurrency, formatCalendarDate } from '@/lib/format'
+import type { Order } from '@/models/order'
 
 const auth = useAuthStore()
 const toast = useBaseToast()
@@ -25,21 +28,21 @@ const router = useRouter()
 const { t } = useI18n()
 
 const exporting = ref(false)
-const range = ref(null)
+const range = ref<DateRange | null>(null)
 
-const { data: orders, loading, error, reload } = useAsync(() => listOrders({ token: auth.token, projectId: auth.project?.id }))
+const { data: orders, loading, error, reload } = useAsync(() => listOrders({ token: auth.token ?? undefined, projectId: auth.project?.id }))
 
 watch(error, (e) => {
-  if (e) toast.add({ severity: 'error', summary: t('orders.loadError'), detail: e.message, life: 4000 })
+  if (e) toast.add({ severity: 'error', summary: t('orders.loadError'), detail: e instanceof Error ? e.message : String(e), life: 4000 })
 })
 
 const { data: analytics, loading: analyticsLoading, error: analyticsError, reload: reloadAnalytics } = useAsync(
-  () => (range.value ? getOrderAnalytics({ ...range.value, token: auth.token, projectId: auth.project?.id }) : Promise.resolve(null)),
+  () => (range.value ? getOrderAnalytics({ ...range.value, token: auth.token ?? undefined, projectId: auth.project?.id }) : Promise.resolve(null)),
   { immediate: false },
 )
 
 watch(analyticsError, (e) => {
-  if (e) toast.add({ severity: 'error', summary: t('orders.analyticsLoadError'), detail: e.message, life: 4000 })
+  if (e) toast.add({ severity: 'error', summary: t('orders.analyticsLoadError'), detail: e instanceof Error ? e.message : String(e), life: 4000 })
 })
 
 watch(range, () => {
@@ -55,14 +58,14 @@ const hasChartData = computed(
   () => (analytics.value?.orders_series || []).some((s) => s.value > 0) || (analytics.value?.revenue_series || []).some((s) => s.value > 0),
 )
 
-function formatTooltipValue(value, datasetLabel) {
+function formatTooltipValue(value: number, datasetLabel?: string): string {
   return datasetLabel === t('orders.revenueSeriesLabel') ? formatCurrency(value, auth.project?.currency) : formatNumber(value)
 }
 
-const columns = computed(() => [
+const columns = computed<TableColumn[]>(() => [
   { field: 'id', header: t('orders.order'), sortable: true, hideable: false, filter: { type: 'string' } },
-  { field: 'customer', header: t('orders.customer'), hideable: false, filter: { type: 'string', accessor: (row) => row.customer.external_id } },
-  { field: 'line_items', header: t('orders.items'), filter: { type: 'number', accessor: (row) => row.line_items.length } },
+  { field: 'customer', header: t('orders.customer'), hideable: false, filter: { type: 'string', accessor: (row) => (row as unknown as Order).customer.external_id } },
+  { field: 'line_items', header: t('orders.items'), filter: { type: 'number', accessor: (row) => (row as unknown as Order).line_items.length } },
   { field: 'total_amount', header: t('orders.total'), sortable: true, filter: { type: 'number' } },
   { field: 'total_discount_amount', header: t('orders.discount'), sortable: true, filter: { type: 'number' } },
   {
@@ -80,20 +83,20 @@ function createOrder() {
   router.push({ name: 'order-new' })
 }
 
-function viewOrder(order) {
+function viewOrder(order: Order) {
   router.push({ name: 'order-show', params: { id: order.id } })
 }
 
-function viewCustomer(customer) {
+function viewCustomer(customer: { id: string }) {
   router.push({ name: 'customer-show', params: { id: customer.id } })
 }
 
 async function exportOrders() {
   exporting.value = true
   try {
-    await exportOrdersRequest({ token: auth.token, projectId: auth.project?.id })
+    await exportOrdersRequest({ token: auth.token ?? undefined, projectId: auth.project?.id })
   } catch (e) {
-    toast.add({ severity: 'error', summary: t('orders.exportError'), detail: e.message, life: 4000 })
+    toast.add({ severity: 'error', summary: t('orders.exportError'), detail: e instanceof Error ? e.message : String(e), life: 4000 })
   } finally {
     exporting.value = false
   }
@@ -156,7 +159,7 @@ async function exportOrders() {
           :search-placeholder="$t('orders.searchPlaceholder')"
           :export-label="$t('orders.exportButton')"
           :exporting="exporting"
-          @row-click="viewOrder($event.data)"
+          @row-click="viewOrder($event.data as unknown as Order)"
           @refresh="reload"
           @export="exportOrders"
         >

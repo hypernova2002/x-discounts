@@ -1,8 +1,8 @@
-<script setup>
+<script setup lang="ts">
 import { computed } from 'vue'
 import { countryFlag, countryName } from '@/lib/country'
 
-const props = defineProps({ code: { type: String, default: null } })
+const props = withDefaults(defineProps<{ code?: string | null }>(), { code: null })
 
 const flag = computed(() => countryFlag(props.code))
 const name = computed(() => countryName(props.code))

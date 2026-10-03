@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -18,7 +18,9 @@ import { ApiError } from '@/lib/api'
 import { getOrder, cancelOrder } from '@/api/orders'
 import { refundDiscount, refundPointsRedemption } from '@/api/refunds'
 import { OrderCancelInputSchema } from '@/models/order'
+import type { Order, OrderDiscount, RefundHistoryEntry } from '@/models/order'
 import { refundInputSchema } from '@/models/refund'
+import type { RefundUnit } from '@/models/refund'
 import { toFieldErrors } from '@/models/formErrors'
 import { useBaseToast } from '@/composables/useBaseToast'
 import { formatNumber, formatCurrency, formatDateTime } from '@/lib/format'
@@ -29,7 +31,7 @@ const auth = useAuthStore()
 const toast = useBaseToast()
 const { t } = useI18n()
 
-const order = ref(null)
+const order = ref<Order | null>(null)
 const loading = ref(false)
 const loadError = ref('')
 
@@ -37,7 +39,7 @@ async function loadOrder() {
   loading.value = true
   loadError.value = ''
   try {
-    order.value = await getOrder(route.params.id, { token: auth.token, projectId: auth.project?.id })
+    order.value = await getOrder(route.params.id as string, { token: auth.token ?? undefined, projectId: auth.project?.id })
   } catch (e) {
     loadError.value = e instanceof ApiError ? e.message : t('orderDetail.loadError')
   } finally {
@@ -45,9 +47,9 @@ async function loadOrder() {
   }
 }
 
-function discountAmount(discount) {
+function discountAmount(discount: OrderDiscount): string {
   if (discount.amount_off != null) return t('orderDetail.amountOff', { amount: formatCurrency(discount.amount_off, auth.project?.currency) })
-  if (discount.free_items?.length) return discount.free_items.map((f) => t('orderDetail.freeItem', { quantity: formatNumber(f.quantity), sku: f.sku })).join(', ')
+  if (discount.free_items?.length) return (discount.free_items as { sku: string; quantity: number }[]).map((f) => t('orderDetail.freeItem', { quantity: formatNumber(f.quantity), sku: f.sku })).join(', ')
   if (discount.points_earned != null) return t('orderDetail.pointsEarnedAmount', { points: formatNumber(discount.points_earned) })
   if (discount.effect_type === 'points_multiplier') return t('orderDetail.multiplierApplied')
   return ''
@@ -57,17 +59,17 @@ function discountAmount(discount) {
 
 const loyaltyDiscounts = computed(() => (order.value?.discounts || []).filter((d) => d.kind === 'loyalty'))
 const cartDiscounts = computed(() => (order.value?.discounts || []).filter((d) => d.kind !== 'loyalty' && !d.sku))
-function lineItemDiscounts(sku) {
+function lineItemDiscounts(sku: string): OrderDiscount[] {
   return (order.value?.discounts || []).filter((d) => d.kind !== 'loyalty' && d.sku === sku)
 }
 
-function remainingRefundable(discount) {
-  if (discount.amount_off != null) return discount.amount_off - discount.refunded_amount_off
-  if (discount.points_earned != null) return discount.points_earned - discount.refunded_points
+function remainingRefundable(discount: OrderDiscount): number {
+  if (discount.amount_off != null) return Number(discount.amount_off) - Number(discount.refunded_amount_off)
+  if (discount.points_earned != null) return discount.points_earned - (discount.refunded_points ?? 0)
   return 0
 }
 
-function refundedSoFar(discount) {
+function refundedSoFar(discount: OrderDiscount): string {
   if (discount.amount_off != null) {
     return t('orderDetail.refundedOf', { refunded: formatCurrency(discount.refunded_amount_off, auth.project?.currency), total: formatCurrency(discount.amount_off, auth.project?.currency) })
   }
@@ -75,12 +77,12 @@ function refundedSoFar(discount) {
   return '—'
 }
 
-function canRefundLine(discount) {
+function canRefundLine(discount: OrderDiscount): boolean {
   return (discount.amount_off != null || discount.points_earned != null) && remainingRefundable(discount) > 0
 }
 
 function viewCustomer() {
-  router.push({ name: 'customer-show', params: { id: order.value.customer.id } })
+  router.push({ name: 'customer-show', params: { id: order.value!.customer.id } })
 }
 
 // --- cancel order ---
@@ -89,7 +91,7 @@ const cancelDialogOpen = ref(false)
 const cancelRefund = ref(true)
 const cancelReason = ref('')
 const cancelling = ref(false)
-const cancelErrors = ref({})
+const cancelErrors = ref<Record<string, string>>({})
 
 function openCancel() {
   cancelRefund.value = true
@@ -110,11 +112,11 @@ async function submitCancel() {
 
   cancelling.value = true
   try {
-    order.value = await cancelOrder(order.value.id, result.data, { token: auth.token, projectId: auth.project?.id })
+    order.value = await cancelOrder(order.value!.id, result.data, { token: auth.token ?? undefined, projectId: auth.project?.id })
     toast.add({ severity: 'success', summary: t('orderDetail.orderCancelled'), life: 3000 })
     cancelDialogOpen.value = false
   } catch (e) {
-    toast.add({ severity: 'error', summary: t('orderDetail.cancelOrderError'), detail: e.message, life: 4000 })
+    toast.add({ severity: 'error', summary: t('orderDetail.cancelOrderError'), detail: e instanceof Error ? e.message : String(e), life: 4000 })
   } finally {
     cancelling.value = false
   }
@@ -122,16 +124,23 @@ async function submitCancel() {
 
 // --- refund a single line (an order_discount or the points redemption) ---
 
-const refundTarget = ref(null)
-const refundAmount = ref(null)
+interface RefundTarget {
+  kind: 'order_discount' | 'points_redemption'
+  id: string
+  label: string
+  unit: RefundUnit
+}
+
+const refundTarget = ref<RefundTarget | null>(null)
+const refundAmount = ref<number | null>(null)
 const refundReason = ref('')
 const refunding = ref(false)
 const refundError = ref('')
-const refundErrors = ref({})
+const refundErrors = ref<Record<string, string>>({})
 
 const refundAmountError = computed(() => (refundTarget.value ? refundErrors.value[refundTarget.value.unit] : null))
 
-function openRefundDiscount(discount) {
+function openRefundDiscount(discount: OrderDiscount) {
   refundTarget.value = { kind: 'order_discount', id: discount.id, label: discount.discount_name, unit: discount.points_earned != null ? 'points' : 'amount_off' }
   refundAmount.value = remainingRefundable(discount)
   refundReason.value = ''
@@ -140,7 +149,7 @@ function openRefundDiscount(discount) {
 }
 
 function openRefundPoints() {
-  const pr = order.value.points_redemption
+  const pr = order.value!.points_redemption!
   refundTarget.value = { kind: 'points_redemption', id: pr.id, label: t('orderDetail.loyaltyPointsRedeemedLabel'), unit: 'points' }
   refundAmount.value = pr.points_redeemed - pr.refunded_points
   refundReason.value = ''
@@ -152,7 +161,7 @@ async function submitRefund() {
   refundError.value = ''
   refundErrors.value = {}
 
-  const unit = refundTarget.value.unit
+  const unit = refundTarget.value!.unit
   const payload = { [unit]: refundAmount.value, reason: refundReason.value || null }
   const result = refundInputSchema(t, unit).safeParse(payload)
   if (!result.success) {
@@ -162,8 +171,8 @@ async function submitRefund() {
 
   refunding.value = true
   try {
-    const refund = refundTarget.value.kind === 'order_discount' ? refundDiscount : refundPointsRedemption
-    await refund(refundTarget.value.id, result.data, { token: auth.token, projectId: auth.project?.id })
+    const refund = refundTarget.value!.kind === 'order_discount' ? refundDiscount : refundPointsRedemption
+    await refund(refundTarget.value!.id, result.data, { token: auth.token ?? undefined, projectId: auth.project?.id })
     toast.add({ severity: 'success', summary: t('orderDetail.refunded'), life: 3000 })
     refundTarget.value = null
     await loadOrder()
@@ -176,8 +185,13 @@ async function submitRefund() {
 
 // --- refund history viewer (read-only) ---
 
-const historyTarget = ref(null)
-function openHistory(discountOrRedemption, label) {
+interface HistoryTarget {
+  label: string
+  entries: RefundHistoryEntry[]
+}
+
+const historyTarget = ref<HistoryTarget | null>(null)
+function openHistory(discountOrRedemption: { refund_history: RefundHistoryEntry[] }, label: string) {
   historyTarget.value = { label, entries: discountOrRedemption.refund_history }
 }
 

@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { computed, ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -11,12 +11,16 @@ import BaseInputNumber from '@/components/base/BaseInputNumber.vue'
 import BaseDialog from '@/components/base/BaseDialog.vue'
 import BaseMessage from '@/components/base/BaseMessage.vue'
 import BaseTable from '@/components/base/BaseTable.vue'
+import type { TableColumn } from '@/components/base/BaseTable.vue'
 import BaseTag from '@/components/base/BaseTag.vue'
 import MembershipRequirementEditor from '@/components/discounts/MembershipRequirementEditor.vue'
+import type { RequirementNode } from '@/components/discounts/MembershipRequirementEditor.vue'
 import { useAuthStore } from '@/stores/auth'
 import { ApiError } from '@/lib/api'
 import { getMembershipScheme, createMembershipTier, updateMembershipTier, evaluateMembershipSchemes } from '@/api/membershipSchemes'
 import { membershipTierInputSchema } from '@/models/membershipTier'
+import type { MembershipScheme } from '@/models/membershipScheme'
+import type { MembershipTier } from '@/models/membershipTier'
 import { toFieldErrors } from '@/models/formErrors'
 import { useBaseToast } from '@/composables/useBaseToast'
 
@@ -25,17 +29,17 @@ const auth = useAuthStore()
 const toast = useBaseToast()
 const { t } = useI18n()
 
-const scheme = ref(null)
+const scheme = ref<MembershipScheme | null>(null)
 const loadError = ref('')
 const evaluating = ref(false)
 
 async function runEvaluation() {
   evaluating.value = true
   try {
-    const data = await evaluateMembershipSchemes({ token: auth.token, projectId: auth.project?.id })
+    const data = await evaluateMembershipSchemes({ token: auth.token ?? undefined, projectId: auth.project?.id })
     toast.add({ severity: 'success', summary: t('membershipSchemeDetail.reevaluatedCustomers', { count: data.evaluated }), life: 3000 })
   } catch (e) {
-    toast.add({ severity: 'error', summary: t('membershipSchemeDetail.evaluationFailed'), detail: e.message, life: 4000 })
+    toast.add({ severity: 'error', summary: t('membershipSchemeDetail.evaluationFailed'), detail: e instanceof Error ? e.message : String(e), life: 4000 })
   } finally {
     evaluating.value = false
   }
@@ -44,7 +48,7 @@ async function runEvaluation() {
 async function loadScheme() {
   loadError.value = ''
   try {
-    scheme.value = await getMembershipScheme(route.params.id, { token: auth.token, projectId: auth.project?.id })
+    scheme.value = await getMembershipScheme(route.params.id as string, { token: auth.token ?? undefined, projectId: auth.project?.id })
   } catch (e) {
     loadError.value = e instanceof ApiError ? e.message : t('membershipSchemeDetail.loadError')
   }
@@ -52,7 +56,7 @@ async function loadScheme() {
 
 onMounted(loadScheme)
 
-const tierColumns = computed(() => [
+const tierColumns = computed<TableColumn[]>(() => [
   { field: 'rank', header: t('membershipSchemeDetail.columns.rank'), sortable: true, hideable: false, filter: { type: 'number' } },
   { field: 'name', header: t('membershipSchemeDetail.columns.name'), sortable: true, hideable: false, filter: { type: 'string' } },
   {
@@ -72,9 +76,9 @@ const tierColumns = computed(() => [
 // --- add tier ---
 
 const newTierName = ref('')
-const newTierRank = ref(null)
+const newTierRank = ref<number | null>(null)
 const addingTier = ref(false)
-const addTierErrors = ref({})
+const addTierErrors = ref<Record<string, string>>({})
 
 async function addTier() {
   addTierErrors.value = {}
@@ -88,7 +92,7 @@ async function addTier() {
 
   addingTier.value = true
   try {
-    await createMembershipTier(scheme.value.id, result.data, { token: auth.token, projectId: auth.project?.id })
+    await createMembershipTier(scheme.value!.id, result.data, { token: auth.token ?? undefined, projectId: auth.project?.id })
     newTierName.value = ''
     newTierRank.value = null
     toast.add({ severity: 'success', summary: t('membershipSchemeDetail.tierAdded'), life: 3000 })
@@ -102,17 +106,22 @@ async function addTier() {
 
 // --- edit tier ---
 
-const editingTier = ref(null)
-const editForm = ref({ name: '', rank: null, requirements_condition: null, grace_period_days: null })
+const editingTier = ref<MembershipTier | null>(null)
+const editForm = ref<{ name: string; rank: number | null; requirements_condition: RequirementNode | null; grace_period_days: number | null }>({
+  name: '',
+  rank: null,
+  requirements_condition: null,
+  grace_period_days: null,
+})
 const editSaving = ref(false)
-const editErrors = ref({})
+const editErrors = ref<Record<string, string>>({})
 
-function openEdit(tier) {
+function openEdit(tier: MembershipTier) {
   editingTier.value = tier
   editForm.value = {
     name: tier.name,
     rank: tier.rank,
-    requirements_condition: Object.keys(tier.requirements_condition || {}).length ? tier.requirements_condition : null,
+    requirements_condition: (Object.keys(tier.requirements_condition || {}).length ? tier.requirements_condition : null) as RequirementNode | null,
     grace_period_days: tier.grace_period_days,
   }
   editErrors.value = {}
@@ -130,15 +139,15 @@ async function saveEdit() {
   editSaving.value = true
   try {
     await updateMembershipTier(
-      scheme.value.id,
-      editingTier.value.id,
+      scheme.value!.id,
+      editingTier.value!.id,
       {
         name: result.data.name,
         rank: result.data.rank,
         requirements_condition: editForm.value.requirements_condition,
         grace_period_days: editForm.value.grace_period_days,
       },
-      { token: auth.token, projectId: auth.project?.id }
+      { token: auth.token ?? undefined, projectId: auth.project?.id }
     )
     toast.add({ severity: 'success', summary: t('membershipSchemeDetail.tierUpdated'), life: 3000 })
     editingTier.value = null

@@ -1,8 +1,14 @@
-<script setup>
+<script setup lang="ts">
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
+import type { RouteLocationRaw } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { findSection } from '@/lib/navSections'
+
+interface Crumb {
+  label: string
+  to?: RouteLocationRaw
+}
 
 // The section crumb (e.g. "Customers") and the overall page heading now live
 // in AppShell's top bar, computed from the same NAV_SECTIONS lookup — this
@@ -12,24 +18,27 @@ import { findSection } from '@/lib/navSections'
 // page's own subheading (the #title slot, demoted from <h1> to <h2> — see
 // the .page-header__title :deep(h2) rule below). List pages pass no #title
 // slot at all, matching the top bar already fully identifying them.
-const props = defineProps({
-  // Extra crumb segments between the section and this page, e.g. the parent
-  // campaign's name for a discount: [{ label, to }]. `to` omitted -> plain text.
-  crumbs: { type: Array, default: () => [] },
-})
+withDefaults(
+  defineProps<{
+    // Extra crumb segments between the section and this page, e.g. the parent
+    // campaign's name for a discount: [{ label, to }]. `to` omitted -> plain text.
+    crumbs?: Crumb[]
+  }>(),
+  { crumbs: () => [] },
+)
 
 const route = useRoute()
 const { t } = useI18n()
 
 const section = computed(() => findSection(route.name))
-const isSectionListPage = computed(() => section.value && route.name === section.value.to.name)
+const isSectionListPage = computed(() => section.value && route.name === (section.value.to as { name: string }).name)
 const showBreadcrumb = computed(() => section.value && !isSectionListPage.value)
 </script>
 
 <template>
   <div class="page-header">
     <nav v-if="showBreadcrumb" class="page-header__breadcrumb" :aria-label="t('pageHeader.breadcrumbLabel')">
-      <RouterLink :to="section.to">{{ t(section.labelKey) }}</RouterLink>
+      <RouterLink :to="section!.to">{{ t(section!.labelKey) }}</RouterLink>
       <template v-for="(crumb, i) in crumbs" :key="i">
         <i class="pi pi-angle-right" aria-hidden="true" />
         <RouterLink v-if="crumb.to" :to="crumb.to">{{ crumb.label }}</RouterLink>

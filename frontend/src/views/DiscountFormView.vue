@@ -1,6 +1,7 @@
-<script setup>
+<script setup lang="ts">
 import { computed, reactive, ref, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import type { RouteLocationRaw } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import AppShell from '@/components/AppShell.vue'
 import PageHeader from '@/components/PageHeader.vue'
@@ -15,7 +16,9 @@ import BaseMultiSelect from '@/components/base/BaseMultiSelect.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import BaseMessage from '@/components/base/BaseMessage.vue'
 import ConditionTreeEditor from '@/components/discounts/ConditionTreeEditor.vue'
+import type { ConditionNode } from '@/components/discounts/ConditionSummary.vue'
 import EffectEditor from '@/components/discounts/EffectEditor.vue'
+import type { EffectFormModel } from '@/components/discounts/EffectEditor.vue'
 import DiscountSummarySidebar from '@/components/discounts/DiscountSummarySidebar.vue'
 import UnsavedChangesDialog from '@/components/UnsavedChangesDialog.vue'
 import { useAuthStore } from '@/stores/auth'
@@ -32,8 +35,12 @@ import {
 import { listCampaigns } from '@/api/campaigns'
 import { listCustomers } from '@/api/customers'
 import { discountInputSchema } from '@/models/discount'
+import type { Discount, DiscountInput } from '@/models/discount'
+import type { Campaign } from '@/models/campaign'
+import type { Customer } from '@/models/customer'
 import { toFieldErrors } from '@/models/formErrors'
 import { couponCodeGeneratePayload } from '@/services/couponCodes'
+import type { CouponCodeGeneratePayload } from '@/services/couponCodes'
 import { useBaseToast } from '@/composables/useBaseToast'
 import { useUnsavedChangesGuard } from '@/composables/useUnsavedChangesGuard'
 import { sanitizeHtml } from '@/lib/sanitizeHtml'
@@ -45,7 +52,7 @@ const auth = useAuthStore()
 const toast = useBaseToast()
 const { t } = useI18n()
 
-const discountId = computed(() => route.params.id || null)
+const discountId = computed(() => (route.params.id as string | undefined) || null)
 const isEdit = computed(() => !!discountId.value)
 
 const KIND_OPTIONS = computed(() => [
@@ -57,39 +64,39 @@ const KIND_OPTIONS = computed(() => [
 const loading = ref(false)
 const saving = ref(false)
 const loadError = ref('')
-const errors = ref({})
+const errors = ref<Record<string, string>>({})
 
 // Which summary-sidebar section to subtly highlight, driven by plain focus
 // bubbling from each major card — purely presentational, no interaction model.
-const activeSection = ref(null)
+const activeSection = ref<string | null>(null)
 
 // The summary sidebar only knows how to summarize coupon/promotion discounts
 // (see DiscountSummarySidebar.vue) — loyalty's points-based effects aren't
 // covered, so loyalty keeps the original single-column layout.
 const showSummary = computed(() => ['coupon', 'promotion'].includes(form.kind))
 
-const campaigns = ref([])
+const campaigns = ref<Campaign[]>([])
 const campaignOptions = computed(() => campaigns.value.map((c) => ({ label: c.name, value: c.id })))
 const currentCampaign = computed(() => campaigns.value.find((c) => c.id === form.campaign_id))
 
 async function loadCampaigns() {
-  campaigns.value = await listCampaigns({ perPage: 500, token: auth.token, projectId: auth.project?.id })
+  campaigns.value = await listCampaigns({ perPage: 500, token: auth.token ?? undefined, projectId: auth.project?.id })
 }
 
 // --- compatible discounts (stacking exceptions) ---
 
-const allDiscounts = ref([])
+const allDiscounts = ref<Discount[]>([])
 const discountOptions = computed(() =>
   allDiscounts.value.filter((d) => d.id !== discountId.value).map((d) => ({ label: `${d.name} (${d.kind})`, value: d.id }))
 )
-const compatibleDiscountIds = ref([])
+const compatibleDiscountIds = ref<string[]>([])
 const savingCompatibility = ref(false)
 
 async function loadAllDiscounts() {
-  allDiscounts.value = await listDiscounts({ perPage: 500, token: auth.token, projectId: auth.project?.id })
+  allDiscounts.value = await listDiscounts({ perPage: 500, token: auth.token ?? undefined, projectId: auth.project?.id })
 }
 
-async function updateCompatibleDiscounts(newIds) {
+async function updateCompatibleDiscounts(newIds: string[]) {
   const previousIds = compatibleDiscountIds.value
   const added = newIds.filter((id) => !previousIds.includes(id))
   const removed = previousIds.filter((id) => !newIds.includes(id))
@@ -97,14 +104,14 @@ async function updateCompatibleDiscounts(newIds) {
   savingCompatibility.value = true
   try {
     for (const id of added) {
-      await addCompatibleDiscount(discountId.value, id, { token: auth.token, projectId: auth.project?.id })
+      await addCompatibleDiscount(discountId.value!, id, { token: auth.token ?? undefined, projectId: auth.project?.id })
     }
     for (const id of removed) {
-      await removeCompatibleDiscount(discountId.value, id, { token: auth.token, projectId: auth.project?.id })
+      await removeCompatibleDiscount(discountId.value!, id, { token: auth.token ?? undefined, projectId: auth.project?.id })
     }
   } catch (e) {
     compatibleDiscountIds.value = previousIds
-    toast.add({ severity: 'error', summary: t('discountForm.compatibilityError'), detail: e.message, life: 4000 })
+    toast.add({ severity: 'error', summary: t('discountForm.compatibilityError'), detail: e instanceof Error ? e.message : String(e), life: 4000 })
   } finally {
     savingCompatibility.value = false
   }
@@ -113,16 +120,16 @@ async function updateCompatibleDiscounts(newIds) {
 // --- coupon codes (only offered at creation — after that, use the discount's own
 // Coupon codes section, which supports the same one-off/bulk modes) ---
 
-const customers = ref([])
+const customers = ref<Customer[]>([])
 const customerOptions = computed(() => customers.value.map((c) => ({ label: c.external_id, value: c.id })))
 async function loadCustomers() {
-  customers.value = await listCustomers({ perPage: 500, token: auth.token, projectId: auth.project?.id })
+  customers.value = await listCustomers({ perPage: 500, token: auth.token ?? undefined, projectId: auth.project?.id })
 }
 
-const couponCodeMode = ref('oneoff') // 'oneoff' | 'bulk'
-const couponBulkMode = ref('count') // 'count' | 'customers'
+const couponCodeMode = ref<'oneoff' | 'bulk'>('oneoff')
+const couponBulkMode = ref<'count' | 'customers'>('count')
 
-function couponCodePayload() {
+function couponCodePayload(): CouponCodeGeneratePayload | Record<string, never> {
   // Coupon codes are optional at creation time — an empty one-off code means
   // "skip code generation entirely," unlike the detail page's dialog, which is
   // only ever opened to intentionally generate something.
@@ -141,9 +148,45 @@ function couponCodePayload() {
   })
 }
 
-const form = reactive({
+interface DiscountForm {
+  kind: Discount['kind']
+  campaign_id: string | null
+  key: string
+  name: string
+  stackable: boolean
+  refundable: boolean
+  enabled: boolean
+  eligibility_condition: ConditionNode | null
+  max_redemptions: number | null
+  max_redemptions_per_customer: number | null
+  max_redemptions_per_day: number | null
+  max_redemption_amount: number | null
+  max_redemption_amount_per_day: number | null
+  max_redemption_amount_per_customer: number | null
+  promotion: { active_from: string; active_until: string }
+  coupon: {
+    issued_from: string
+    issued_until: string
+    valid_from: string
+    valid_until: string
+    design_html: string
+  }
+  loyalty: { active_from: string; active_until: string; points_expire_after_days: number | null }
+  couponCode: {
+    code: string
+    customerId: string | null
+    count: number
+    customerIds: string[]
+    prefix: string
+    suffix: string
+    maxRedemptions: number
+  }
+  effects: EffectFormModel[]
+}
+
+const form = reactive<DiscountForm>({
   kind: 'promotion',
-  campaign_id: route.query.campaign_id || null,
+  campaign_id: (route.query.campaign_id as string | undefined) || null,
   key: '',
   name: '',
   stackable: false,
@@ -179,7 +222,7 @@ function isDirty() {
 
 const { showDialog: showUnsavedDialog, confirmLeave, cancelLeave, bypassOnce } = useUnsavedChangesGuard(isDirty)
 
-function defaultEffect() {
+function defaultEffect(): EffectFormModel {
   if (form.kind === 'loyalty') {
     return { effect_type: 'points_per_currency', scope: 'cart', target_condition: null, config: { rate: 1 } }
   }
@@ -189,18 +232,18 @@ function defaultEffect() {
 function addEffect() {
   form.effects.push(defaultEffect())
 }
-function removeEffect(i) {
+function removeEffect(i: number) {
   form.effects.splice(i, 1)
 }
 
 // Coupon design image — same upload-after-save pattern as GiftShopItemFormView.vue's
 // photo (a separate multipart request, not part of the main JSON payload).
-const existingDesignImageUrl = ref(null)
-const designImageFile = ref(null)
-const designImagePreviewUrl = ref(null)
+const existingDesignImageUrl = ref<string | null>(null)
+const designImageFile = ref<File | null>(null)
+const designImagePreviewUrl = ref<string | null>(null)
 
-function onDesignImageSelected(event) {
-  const file = event.target.files?.[0]
+function onDesignImageSelected(event: Event) {
+  const file = (event.target as HTMLInputElement).files?.[0]
   if (!file) return
   designImageFile.value = file
   if (designImagePreviewUrl.value) URL.revokeObjectURL(designImagePreviewUrl.value)
@@ -211,15 +254,15 @@ onBeforeUnmount(() => {
   if (designImagePreviewUrl.value) URL.revokeObjectURL(designImagePreviewUrl.value)
 })
 
-async function uploadDesignImageIfSelected(id) {
+async function uploadDesignImageIfSelected(id: string) {
   if (!designImageFile.value) return
-  await uploadCouponDesignImage(id, designImageFile.value, { token: auth.token, projectId: auth.project?.id })
+  await uploadCouponDesignImage(id, designImageFile.value, { token: auth.token ?? undefined, projectId: auth.project?.id })
 }
 
 async function load() {
   loading.value = true
   try {
-    const data = await getDiscount(discountId.value, { token: auth.token, projectId: auth.project?.id })
+    const data = await getDiscount(discountId.value!, { token: auth.token ?? undefined, projectId: auth.project?.id })
     form.kind = data.kind
     form.campaign_id = data.campaign.id
     form.key = data.key
@@ -227,7 +270,10 @@ async function load() {
     form.stackable = data.stackable
     form.refundable = data.refundable
     form.enabled = data.enabled
-    form.eligibility_condition = data.eligibility_condition && Object.keys(data.eligibility_condition).length ? data.eligibility_condition : null
+    form.eligibility_condition =
+      data.eligibility_condition && Object.keys(data.eligibility_condition as Record<string, unknown>).length
+        ? (data.eligibility_condition as ConditionNode)
+        : null
     form.max_redemptions = data.max_redemptions
     form.max_redemptions_per_customer = data.max_redemptions_per_customer
     form.max_redemptions_per_day = data.max_redemptions_per_day
@@ -236,37 +282,47 @@ async function load() {
     form.max_redemption_amount_per_customer = data.max_redemption_amount_per_customer
 
     if (data.promotion) {
+      const promotion = data.promotion as { active_from: string | null; active_until: string | null }
       form.promotion = {
-        active_from: isoToZonedInput(data.promotion.active_from, auth.project?.timezone),
-        active_until: isoToZonedInput(data.promotion.active_until, auth.project?.timezone),
+        active_from: isoToZonedInput(promotion.active_from, auth.project?.timezone),
+        active_until: isoToZonedInput(promotion.active_until, auth.project?.timezone),
       }
     }
     if (data.coupon) {
-      form.coupon = {
-        issued_from: isoToZonedInput(data.coupon.issued_from, auth.project?.timezone),
-        issued_until: isoToZonedInput(data.coupon.issued_until, auth.project?.timezone),
-        valid_from: isoToZonedInput(data.coupon.valid_from, auth.project?.timezone),
-        valid_until: isoToZonedInput(data.coupon.valid_until, auth.project?.timezone),
-        design_html: data.coupon.design_html || '',
+      const coupon = data.coupon as {
+        issued_from: string | null
+        issued_until: string | null
+        valid_from: string | null
+        valid_until: string | null
+        design_html: string | null
+        design_image_url: string | null
       }
-      existingDesignImageUrl.value = data.coupon.design_image_url
+      form.coupon = {
+        issued_from: isoToZonedInput(coupon.issued_from, auth.project?.timezone),
+        issued_until: isoToZonedInput(coupon.issued_until, auth.project?.timezone),
+        valid_from: isoToZonedInput(coupon.valid_from, auth.project?.timezone),
+        valid_until: isoToZonedInput(coupon.valid_until, auth.project?.timezone),
+        design_html: coupon.design_html || '',
+      }
+      existingDesignImageUrl.value = coupon.design_image_url
     }
     if (data.loyalty) {
+      const loyalty = data.loyalty as { active_from: string | null; active_until: string | null; points_expire_after_days: number | null }
       form.loyalty = {
-        active_from: isoToZonedInput(data.loyalty.active_from, auth.project?.timezone),
-        active_until: isoToZonedInput(data.loyalty.active_until, auth.project?.timezone),
-        points_expire_after_days: data.loyalty.points_expire_after_days,
+        active_from: isoToZonedInput(loyalty.active_from, auth.project?.timezone),
+        active_until: isoToZonedInput(loyalty.active_until, auth.project?.timezone),
+        points_expire_after_days: loyalty.points_expire_after_days,
       }
     }
 
     form.effects = (data.effects || []).map((e) => ({
       effect_type: e.effect_type,
       scope: e.scope,
-      target_condition: e.target_condition && Object.keys(e.target_condition).length ? e.target_condition : null,
+      target_condition: e.target_condition && Object.keys(e.target_condition as Record<string, unknown>).length ? (e.target_condition as ConditionNode) : null,
       config: e.config,
     }))
 
-    compatibleDiscountIds.value = (data.compatible_discounts || []).map((d) => d.id)
+    compatibleDiscountIds.value = (data.compatible_discounts || []).map((d) => d.id as string)
     initialSnapshot.value = JSON.stringify(form)
   } catch (e) {
     loadError.value = e instanceof ApiError ? e.message : t('discountForm.loadError')
@@ -289,8 +345,29 @@ onMounted(() => {
 // branch for validation, even on update where it isn't sent to the server (the
 // update endpoint dispatches on the existing discount's kind, not the body) — see
 // submit(), which strips it back out of the request body when isEdit.
-function buildPayload() {
-  const payload = {
+interface DiscountFormPayload {
+  kind: Discount['kind']
+  key: string | null
+  name: string
+  campaign_id: string | null
+  stackable: boolean
+  refundable: boolean
+  enabled: boolean
+  eligibility_condition: ConditionNode | null
+  effects: EffectFormModel[]
+  max_redemptions: number | null
+  max_redemptions_per_customer: number | null
+  max_redemptions_per_day: number | null
+  max_redemption_amount: number | null
+  max_redemption_amount_per_day: number | null
+  max_redemption_amount_per_customer: number | null
+  promotion?: { active_from: string | null; active_until: string | null }
+  coupon?: Record<string, unknown>
+  loyalty?: { active_from: string | null; active_until: string | null; points_expire_after_days: number | null }
+}
+
+function buildPayload(): DiscountFormPayload {
+  const payload: DiscountFormPayload = {
     kind: form.kind,
     key: form.key || null,
     name: form.name,
@@ -337,7 +414,7 @@ function buildPayload() {
 // and saving should hand control back to that screen — not the discount's
 // own detail page, which is where every other entry point into this form
 // sends you.
-function returnRoute() {
+function returnRoute(): RouteLocationRaw | null {
   if (route.query.return_to === 'campaign-edit' && form.campaign_id) {
     return { name: 'campaign-edit', params: { id: form.campaign_id } }
   }
@@ -354,19 +431,18 @@ async function submit() {
     return
   }
 
-  const body = { ...result.data }
-  if (isEdit.value) delete body.kind
-
   saving.value = true
   try {
     if (isEdit.value) {
-      await updateDiscount(discountId.value, body, { token: auth.token, projectId: auth.project?.id })
-      await uploadDesignImageIfSelected(discountId.value)
+      const body: Partial<DiscountInput> = { ...result.data }
+      delete body.kind
+      await updateDiscount(discountId.value!, body, { token: auth.token ?? undefined, projectId: auth.project?.id })
+      await uploadDesignImageIfSelected(discountId.value!)
       toast.add({ severity: 'success', summary: t('discountForm.updatedToast'), life: 3000 })
       bypassOnce()
-      router.push(returnRoute() || { name: 'discount-show', params: { id: discountId.value } })
+      router.push(returnRoute() || { name: 'discount-show', params: { id: discountId.value! } })
     } else {
-      const discount = await createDiscount(body, { token: auth.token, projectId: auth.project?.id })
+      const discount = await createDiscount(result.data, { token: auth.token ?? undefined, projectId: auth.project?.id })
       await uploadDesignImageIfSelected(discount.id)
       toast.add({ severity: 'success', summary: t('discountForm.createdToast'), life: 3000 })
       bypassOnce()
@@ -380,8 +456,9 @@ async function submit() {
 }
 
 function cancel() {
-  if (returnRoute()) {
-    router.push(returnRoute())
+  const target = returnRoute()
+  if (target) {
+    router.push(target)
   } else if (form.campaign_id) {
     router.push({ name: 'campaign-show', params: { id: form.campaign_id } })
   } else {

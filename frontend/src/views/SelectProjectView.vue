@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -6,13 +6,14 @@ import { useAuthStore } from '@/stores/auth'
 import BaseCard from '@/components/base/BaseCard.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import BaseMessage from '@/components/base/BaseMessage.vue'
+import type { Project } from '@/models/project'
 
 const auth = useAuthStore()
 const router = useRouter()
 const route = useRoute()
 const { t } = useI18n()
 const loading = ref(false)
-const error = ref(null)
+const error = ref<string | null>(null)
 
 onMounted(async () => {
   loading.value = true
@@ -25,12 +26,12 @@ onMounted(async () => {
   }
 })
 
-async function choose(project) {
+async function choose(project: Project) {
   loading.value = true
   error.value = null
   try {
     await auth.selectProject(project.id)
-    router.push(route.query.redirect || { name: 'dashboard' })
+    router.push((route.query.redirect as string) || { name: 'dashboard' })
   } catch {
     error.value = t('selectProject.selectError')
   } finally {

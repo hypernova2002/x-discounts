@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AppShell from '@/components/AppShell.vue'
@@ -22,7 +22,7 @@ const toast = useBaseToast()
 const { t } = useI18n()
 
 const profileForm = ref({ name: auth.user?.name ?? '', email: auth.user?.email ?? '' })
-const profileErrors = ref({})
+const profileErrors = ref<Record<string, string>>({})
 const savingProfile = ref(false)
 
 async function saveProfile() {
@@ -36,8 +36,8 @@ async function saveProfile() {
 
   savingProfile.value = true
   try {
-    await updateUser(auth.user.id, result.data, { token: auth.token, projectId: auth.project?.id })
-    await auth.loadMe(auth.project.id)
+    await updateUser(auth.user!.id, result.data, { token: auth.token ?? undefined, projectId: auth.project?.id })
+    await auth.loadMe(auth.project!.id)
     toast.add({ severity: 'success', summary: t('userSettings.profileUpdatedSuccess'), life: 3000 })
   } catch (e) {
     profileErrors.value = e instanceof ApiError ? toFieldErrors(e) : { _root: t('userSettings.genericError') }
@@ -47,7 +47,7 @@ async function saveProfile() {
 }
 
 const passwordForm = ref({ current_password: '', new_password: '', new_password_confirmation: '' })
-const passwordErrors = ref({})
+const passwordErrors = ref<Record<string, string>>({})
 const savingPassword = ref(false)
 
 async function savePassword() {
@@ -61,7 +61,7 @@ async function savePassword() {
 
   savingPassword.value = true
   try {
-    await updatePassword(result.data, { token: auth.token, projectId: auth.project?.id })
+    await updatePassword(result.data, { token: auth.token ?? undefined, projectId: auth.project?.id })
     passwordForm.value = { current_password: '', new_password: '', new_password_confirmation: '' }
     toast.add({ severity: 'success', summary: t('userSettings.passwordUpdatedSuccess'), life: 3000 })
   } catch (e) {

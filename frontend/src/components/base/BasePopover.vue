@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { useAttrs, useTemplateRef } from 'vue'
 import Popover from 'openvue/popover'
 
@@ -10,9 +10,9 @@ import Popover from 'openvue/popover'
 // its component instance, not as props/emits.
 defineOptions({ inheritAttrs: false })
 const attrs = useAttrs()
-const popoverRef = useTemplateRef('popoverRef')
+const popoverRef = useTemplateRef<InstanceType<typeof Popover>>('popoverRef')
 
-function toggle(event) {
+function toggle(event: Event) {
   popoverRef.value?.toggle(event)
 }
 

@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { computed, reactive, ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -21,20 +21,20 @@ const auth = useAuthStore()
 const toast = useBaseToast()
 const { t } = useI18n()
 
-const schemeId = computed(() => route.params.id || null)
+const schemeId = computed(() => (route.params.id as string | undefined) || null)
 const isEdit = computed(() => !!schemeId.value)
 
 const loading = ref(false)
 const saving = ref(false)
 const loadError = ref('')
-const errors = ref({})
+const errors = ref<Record<string, string>>({})
 
 const form = reactive({ name: '' })
 
 async function load() {
   loading.value = true
   try {
-    const data = await getMembershipScheme(schemeId.value, { token: auth.token, projectId: auth.project?.id })
+    const data = await getMembershipScheme(schemeId.value!, { token: auth.token ?? undefined, projectId: auth.project?.id })
     form.name = data.name
   } catch (e) {
     loadError.value = e instanceof ApiError ? e.message : t('membershipSchemeForm.loadError')
@@ -61,11 +61,11 @@ async function submit() {
   saving.value = true
   try {
     if (isEdit.value) {
-      await updateMembershipScheme(schemeId.value, result.data, { token: auth.token, projectId: auth.project?.id })
+      await updateMembershipScheme(schemeId.value!, result.data, { token: auth.token ?? undefined, projectId: auth.project?.id })
       toast.add({ severity: 'success', summary: t('membershipSchemeForm.schemeUpdated'), life: 3000 })
-      router.push({ name: 'membership-scheme-show', params: { id: schemeId.value } })
+      router.push({ name: 'membership-scheme-show', params: { id: schemeId.value! } })
     } else {
-      const scheme = await createMembershipScheme(result.data, { token: auth.token, projectId: auth.project?.id })
+      const scheme = await createMembershipScheme(result.data, { token: auth.token ?? undefined, projectId: auth.project?.id })
       toast.add({ severity: 'success', summary: t('membershipSchemeForm.schemeCreated'), life: 3000 })
       router.push({ name: 'membership-scheme-show', params: { id: scheme.id } })
     }

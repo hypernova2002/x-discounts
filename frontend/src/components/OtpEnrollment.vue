@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import QRCode from 'qrcode'
@@ -16,31 +16,33 @@ import { useBaseToast } from '@/composables/useBaseToast'
 // Mountable section (no AppShell) — used both by OtpSetupView.vue (the forced,
 // account-requires-OTP interstitial) and UserSettingsView.vue (voluntary), so
 // the enroll flow exists in exactly one place.
-const emit = defineEmits(['enabled'])
+const emit = defineEmits<{ enabled: [] }>()
 
 const auth = useAuthStore()
 const toast = useBaseToast()
 const { t } = useI18n()
 
+type OtpStatus = 'idle' | 'provisioning' | 'backupCodes' | 'enabled'
+
 // idle -> provisioning (QR + code confirm) -> backupCodes (shown once) -> enabled
-const status = ref(auth.user?.otp_enabled ? 'enabled' : 'idle')
+const status = ref<OtpStatus>(auth.user?.otp_enabled ? 'enabled' : 'idle')
 const qrDataUrl = ref('')
 const secret = ref('')
 const code = ref('')
-const backupCodes = ref([])
-const errors = ref({})
+const backupCodes = ref<string[]>([])
+const errors = ref<Record<string, string>>({})
 const submitting = ref(false)
 
 async function startSetup() {
   errors.value = {}
   submitting.value = true
   try {
-    const data = await setupOtp({ token: auth.token, projectId: auth.project?.id })
+    const data = await setupOtp({ token: auth.token ?? undefined, projectId: auth.project?.id })
     secret.value = data.secret
     qrDataUrl.value = await QRCode.toDataURL(data.provisioning_uri)
     status.value = 'provisioning'
   } catch (e) {
-    toast.add({ severity: 'error', summary: t('otpEnrollment.setupError'), detail: e.message, life: 4000 })
+    toast.add({ severity: 'error', summary: t('otpEnrollment.setupError'), detail: e instanceof Error ? e.message : String(e), life: 4000 })
   } finally {
     submitting.value = false
   }
@@ -57,8 +59,8 @@ async function confirmCode() {
 
   submitting.value = true
   try {
-    const data = await enableOtp(result.data, { token: auth.token, projectId: auth.project?.id })
-    auth.user = { ...auth.user, otp_enabled: true }
+    const data = await enableOtp(result.data, { token: auth.token ?? undefined, projectId: auth.project?.id })
+    if (auth.user) auth.user = { ...auth.user, otp_enabled: true }
     backupCodes.value = data.backup_codes
     status.value = 'backupCodes'
   } catch (e) {
@@ -75,7 +77,7 @@ function acknowledgeBackupCodes() {
 
 const disabling = ref(false)
 const disablePassword = ref('')
-const disableErrors = ref({})
+const disableErrors = ref<Record<string, string>>({})
 
 async function confirmDisable() {
   disableErrors.value = {}
@@ -87,8 +89,8 @@ async function confirmDisable() {
 
   submitting.value = true
   try {
-    await disableOtp({ current_password: disablePassword.value }, { token: auth.token, projectId: auth.project?.id })
-    auth.user = { ...auth.user, otp_enabled: false }
+    await disableOtp({ current_password: disablePassword.value }, { token: auth.token ?? undefined, projectId: auth.project?.id })
+    if (auth.user) auth.user = { ...auth.user, otp_enabled: false }
     status.value = 'idle'
     disabling.value = false
     disablePassword.value = ''

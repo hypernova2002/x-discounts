@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -18,8 +18,10 @@ import { useAuthStore } from '@/stores/auth'
 import { ApiError } from '@/lib/api'
 import { validateDiscounts, redeemDiscounts } from '@/api/discountRedemption'
 import { discountRedemptionInputSchema } from '@/models/discountRedemption'
+import type { ValidationResult, DiscountEffectResult } from '@/models/discountRedemption'
 import { toFieldErrors } from '@/models/formErrors'
 import { attrsToObject, lineItemsToPayload } from '@/services/cartAttrs'
+import type { KeyValuePair } from '@/services/cartAttrs'
 import { useBaseToast } from '@/composables/useBaseToast'
 import { useCoupons } from '@/composables/useCoupons'
 import { formatCurrency } from '@/lib/format'
@@ -30,37 +32,44 @@ const router = useRouter()
 const { t } = useI18n()
 const { coupons } = useCoupons()
 
-function discountForCode(code) {
+function discountForCode(code: string) {
   return coupons().find((d) => d.coupon?.code === code)
 }
 
-function defaultLineItem() {
+interface LineItemForm {
+  sku: string
+  quantity: number
+  unit_price: number
+  attrs: KeyValuePair[]
+}
+
+function defaultLineItem(): LineItemForm {
   return { sku: '', quantity: 1, unit_price: 0, attrs: [] }
 }
 
-const lineItems = ref([defaultLineItem()])
-const cartAttrs = ref([])
+const lineItems = ref<LineItemForm[]>([defaultLineItem()])
+const cartAttrs = ref<KeyValuePair[]>([])
 const customerExternalId = ref('')
 const customerName = ref('')
 const customerEmail = ref('')
-const customerAttrs = ref([])
-const couponCodes = ref([])
-const pendingCouponCode = ref(null)
-const redeemPoints = ref(null)
+const customerAttrs = ref<KeyValuePair[]>([])
+const couponCodes = ref<string[]>([])
+const pendingCouponCode = ref<string | null>(null)
+const redeemPoints = ref<number | null>(null)
 
 function addLineItem() {
   lineItems.value = [...lineItems.value, defaultLineItem()]
 }
-function removeLineItem(index) {
+function removeLineItem(index: number) {
   lineItems.value = lineItems.value.filter((_, i) => i !== index)
 }
 
-function addCouponCode(code) {
+function addCouponCode(code: string | null) {
   if (!code || couponCodes.value.includes(code)) return
   couponCodes.value = [...couponCodes.value, code]
   pendingCouponCode.value = null
 }
-function removeCouponCode(code) {
+function removeCouponCode(code: string) {
   couponCodes.value = couponCodes.value.filter((c) => c !== code)
 }
 
@@ -85,10 +94,10 @@ function buildPayload() {
 // means it can't go out of sync with what was actually last previewed.
 const previewing = ref(false)
 const previewError = ref('')
-const previewResult = ref(null)
-const lastPreviewedPayload = ref(null)
+const previewResult = ref<ValidationResult | null>(null)
+const lastPreviewedPayload = ref<string | null>(null)
 const previewStale = computed(() => JSON.stringify(buildPayload()) !== lastPreviewedPayload.value)
-const errors = ref({})
+const errors = ref<Record<string, string>>({})
 
 async function runPreview() {
   errors.value = {}
@@ -103,7 +112,7 @@ async function runPreview() {
   previewing.value = true
   previewError.value = ''
   try {
-    previewResult.value = await validateDiscounts(result.data, { token: auth.token, projectId: auth.project?.id })
+    previewResult.value = await validateDiscounts(result.data, { token: auth.token ?? undefined, projectId: auth.project?.id })
     lastPreviewedPayload.value = JSON.stringify(payload)
   } catch (e) {
     previewError.value = e instanceof ApiError ? e.message : t('orderForm.genericError')
@@ -129,7 +138,7 @@ async function createOrder() {
   creating.value = true
   createError.value = ''
   try {
-    const order = await redeemDiscounts(result.data, { token: auth.token, projectId: auth.project?.id })
+    const order = await redeemDiscounts(result.data, { token: auth.token ?? undefined, projectId: auth.project?.id })
     toast.add({ severity: 'success', summary: t('orderForm.orderCreated'), life: 3000 })
     router.push({ name: 'order-show', params: { id: order.id } })
   } catch (e) {
@@ -139,7 +148,7 @@ async function createOrder() {
   }
 }
 
-function describeDiscount(d) {
+function describeDiscount(d: DiscountEffectResult): string {
   if (d.amount_off != null) return t('orderForm.amountOff', { amount: formatCurrency(d.amount_off, auth.project?.currency) })
   if (d.free_items) return d.free_items.map((f) => t('orderForm.freeItem', { quantity: f.quantity, sku: f.sku })).join(', ')
   return ''
@@ -194,7 +203,7 @@ function describeDiscount(d) {
                   <template v-if="previewResult.coupons.find((c) => c.code === code)?.valid">
                     <BaseTag severity="success" :value="$t('orderForm.coupons.valid')" />
                     <span
-                      v-for="(d, i) in previewResult.coupons.find((c) => c.code === code).discounts"
+                      v-for="(d, i) in previewResult.coupons.find((c) => c.code === code)?.discounts ?? []"
                       :key="i"
                       class="coupon-effect"
                     >
@@ -209,7 +218,7 @@ function describeDiscount(d) {
                 <BaseButton text severity="danger" icon="pi pi-times" @click.stop="removeCouponCode(code)" />
               </div>
             </template>
-            <DiscountRulesSummary v-if="discountForCode(code)" :discount="discountForCode(code)" />
+            <DiscountRulesSummary v-if="discountForCode(code)" :discount="discountForCode(code)!" />
             <p v-else class="empty-hint">{{ $t('orderForm.coupons.rulesUnavailable') }}</p>
           </BasePanel>
           <CouponCodeSelect :model-value="pendingCouponCode" :exclude-codes="couponCodes" @update:model-value="addCouponCode" />

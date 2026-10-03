@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import BaseSelect from '@/components/base/BaseSelect.vue'
@@ -8,6 +8,25 @@ import BaseInputText from '@/components/base/BaseInputText.vue'
 import BaseToggleSwitch from '@/components/base/BaseToggleSwitch.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import ConditionTreeEditor from './ConditionTreeEditor.vue'
+import type { ConditionNode } from './ConditionSummary.vue'
+
+// Loose, intentionally permissive mirror of the in-progress effect form —
+// a live, possibly-not-yet-valid preview of whatever the editor currently
+// holds, not the saved DiscountEffect shape.
+export interface EffectFormModel {
+  effect_type: string
+  scope: string
+  target_condition?: ConditionNode | null
+  config: Record<string, unknown>
+}
+
+// buy_condition/get_condition live on the loosely-typed `config` bag — this
+// narrows them to the shape ConditionTreeEditor expects. A plain `as X | Y`
+// cast inline in the template gets misparsed by vue-eslint-parser as a
+// (deprecated) Vue 2 filter pipe, hence the helper instead of an inline cast.
+function conditionNode(value: unknown): ConditionNode | null {
+  return (value as ConditionNode | null) ?? null
+}
 
 const { t } = useI18n()
 
@@ -30,7 +49,7 @@ const SCOPE_OPTIONS = computed(() => [
 // A meaningful configuration choice, not a generic dropdown (coupon-editor UX
 // pass, point 4) — icon per effect type, drawn from this app's one icon system
 // (PrimeIcons, already used elsewhere e.g. nav's pi-percentage for Promotions).
-const EFFECT_TYPE_ICONS = {
+const EFFECT_TYPE_ICONS: Record<string, string> = {
   percentage_off: 'pi-percentage',
   fixed_amount_off: 'pi-dollar',
   free_item: 'pi-gift',
@@ -42,7 +61,7 @@ const EFFECT_TYPE_ICONS = {
 
 // A computed (not a plain object) so it re-evaluates on a live locale switch —
 // same reactivity requirement as any other t()-driven lookup table in this app.
-const EFFECT_TYPE_DESCRIPTIONS = computed(() => ({
+const EFFECT_TYPE_DESCRIPTIONS = computed<Record<string, string>>(() => ({
   percentage_off: t('effectEditor.effectTypeDescriptions.percentageOff'),
   fixed_amount_off: t('effectEditor.effectTypeDescriptions.fixedAmountOff'),
   free_item: t('effectEditor.effectTypeDescriptions.freeItem'),
@@ -52,19 +71,25 @@ const EFFECT_TYPE_DESCRIPTIONS = computed(() => ({
   points_multiplier: t('effectEditor.effectTypeDescriptions.pointsMultiplier'),
 }))
 
-const props = defineProps({
-  modelValue: { type: Object, required: true },
-  kind: { type: String, default: 'promotion' },
-})
-const emit = defineEmits(['update:modelValue', 'remove'])
+const props = withDefaults(
+  defineProps<{
+    modelValue: EffectFormModel
+    kind?: string
+  }>(),
+  { kind: 'promotion' },
+)
+const emit = defineEmits<{
+  'update:modelValue': [value: EffectFormModel]
+  remove: []
+}>()
 
 const effectTypeOptions = computed(() => (props.kind === 'loyalty' ? LOYALTY_EFFECT_TYPE_OPTIONS.value : DISCOUNT_EFFECT_TYPE_OPTIONS.value))
 
-function defaultLeaf() {
+function defaultLeaf(): ConditionNode {
   return { entity: 'cart', key: '', operator: 'eq', value: '' }
 }
 
-function defaultConfigFor(type) {
+function defaultConfigFor(type: string): Record<string, unknown> {
   if (type === 'percentage_off') return { percentage: 10 }
   if (type === 'fixed_amount_off') return { amount: 1, currency: 'USD' }
   if (type === 'points_per_currency') return { rate: 1 }
@@ -80,21 +105,21 @@ function defaultConfigFor(type) {
   }
 }
 
-function update(patch) {
+function update(patch: Partial<EffectFormModel>) {
   emit('update:modelValue', { ...props.modelValue, ...patch })
 }
 
-function updateConfig(patch) {
+function updateConfig(patch: Record<string, unknown>) {
   update({ config: { ...props.modelValue.config, ...patch } })
 }
 
-function setEffectType(type) {
+function setEffectType(type: string) {
   const scope = type === 'points_per_item' ? 'line_item' : props.modelValue.scope
   const target_condition = scope === 'line_item' ? props.modelValue.target_condition || defaultLeaf() : null
   emit('update:modelValue', { ...props.modelValue, effect_type: type, scope, target_condition, config: defaultConfigFor(type) })
 }
 
-function setScope(scope) {
+function setScope(scope: string) {
   const target_condition = scope === 'line_item' ? props.modelValue.target_condition || defaultLeaf() : null
   update({ scope, target_condition })
 }
@@ -151,18 +176,18 @@ function setScope(scope) {
         :min="0"
         :max="100"
         :aria-label="$t('effectEditor.fields.percentageOff')"
-        @update:model-value="(v) => updateConfig({ percentage: v })"
+        @update:model-value="(v: number) => updateConfig({ percentage: v })"
       />
     </div>
 
     <div v-else-if="modelValue.effect_type === 'fixed_amount_off'" class="effect-config-row">
       <div class="effect-field">
         <label>{{ $t('effectEditor.fields.amount') }}</label>
-        <BaseInputNumber :model-value="modelValue.config.amount" :min-fraction-digits="2" @update:model-value="(v) => updateConfig({ amount: v })" />
+        <BaseInputNumber :model-value="modelValue.config.amount" :min-fraction-digits="2" @update:model-value="(v: number) => updateConfig({ amount: v })" />
       </div>
       <div class="effect-field">
         <label>{{ $t('effectEditor.fields.currency') }}</label>
-        <BaseInputText :model-value="modelValue.config.currency" placeholder="USD" @update:model-value="(v) => updateConfig({ currency: v })" />
+        <BaseInputText :model-value="modelValue.config.currency" placeholder="USD" @update:model-value="(v: string) => updateConfig({ currency: v })" />
       </div>
     </div>
 
@@ -174,7 +199,7 @@ function setScope(scope) {
           :model-value="modelValue.config.buy_quantity"
           :min="1"
           :aria-label="$t('effectEditor.fields.buyQuantity')"
-          @update:model-value="(v) => updateConfig({ buy_quantity: v })"
+          @update:model-value="(v: number) => updateConfig({ buy_quantity: v })"
         />
         <i class="pi pi-arrow-right free-item-arrow" aria-hidden="true" />
         <span class="free-item-word">{{ $t('effectEditor.freeItemGetWord') }}</span>
@@ -183,29 +208,29 @@ function setScope(scope) {
           :model-value="modelValue.config.get_quantity"
           :min="1"
           :aria-label="$t('effectEditor.fields.getQuantity')"
-          @update:model-value="(v) => updateConfig({ get_quantity: v })"
+          @update:model-value="(v: number) => updateConfig({ get_quantity: v })"
         />
         <span class="free-item-word">{{ $t('effectEditor.freeItemFreeWord') }}</span>
         <span class="free-item-spacer" />
         <label class="free-item-repeatable">
-          <BaseToggleSwitch :model-value="modelValue.config.repeatable" @update:model-value="(v) => updateConfig({ repeatable: v })" />
+          <BaseToggleSwitch :model-value="modelValue.config.repeatable" @update:model-value="(v: boolean) => updateConfig({ repeatable: v })" />
           {{ $t('effectEditor.fields.repeatable') }}
         </label>
       </div>
       <div class="effect-field">
         <label>{{ $t('effectEditor.fields.buyCondition') }}</label>
         <ConditionTreeEditor
-          :model-value="modelValue.config.buy_condition"
+          :model-value="conditionNode(modelValue.config.buy_condition)"
           :allow-empty="false"
-          @update:model-value="(v) => updateConfig({ buy_condition: v })"
+          @update:model-value="(v: ConditionNode | null) => updateConfig({ buy_condition: v })"
         />
       </div>
       <div class="effect-field">
         <label>{{ $t('effectEditor.fields.getCondition') }}</label>
         <ConditionTreeEditor
-          :model-value="modelValue.config.get_condition"
+          :model-value="conditionNode(modelValue.config.get_condition)"
           :allow-empty="false"
-          @update:model-value="(v) => updateConfig({ get_condition: v })"
+          @update:model-value="(v: ConditionNode | null) => updateConfig({ get_condition: v })"
         />
       </div>
     </template>
@@ -217,18 +242,18 @@ function setScope(scope) {
         :min="0"
         :min-fraction-digits="0"
         :max-fraction-digits="2"
-        @update:model-value="(v) => updateConfig({ rate: v })"
+        @update:model-value="(v: number) => updateConfig({ rate: v })"
       />
     </div>
 
     <div v-else-if="modelValue.effect_type === 'points_flat'" class="effect-field">
       <label>{{ $t('effectEditor.fields.points') }}</label>
-      <BaseInputNumber :model-value="modelValue.config.points" :min="1" @update:model-value="(v) => updateConfig({ points: v })" />
+      <BaseInputNumber :model-value="modelValue.config.points" :min="1" @update:model-value="(v: number) => updateConfig({ points: v })" />
     </div>
 
     <div v-else-if="modelValue.effect_type === 'points_per_item'" class="effect-field">
       <label>{{ $t('effectEditor.fields.pointsPerItem') }}</label>
-      <BaseInputNumber :model-value="modelValue.config.points_per_item" :min="1" @update:model-value="(v) => updateConfig({ points_per_item: v })" />
+      <BaseInputNumber :model-value="modelValue.config.points_per_item" :min="1" @update:model-value="(v: number) => updateConfig({ points_per_item: v })" />
     </div>
 
     <div v-else-if="modelValue.effect_type === 'points_multiplier'" class="effect-field">
@@ -239,14 +264,14 @@ function setScope(scope) {
         :min="1"
         :min-fraction-digits="0"
         :max-fraction-digits="2"
-        @update:model-value="(v) => updateConfig({ multiplier: v })"
+        @update:model-value="(v: number) => updateConfig({ multiplier: v })"
       />
       <p class="effect-hint">{{ $t('effectEditor.multiplierHint') }}</p>
     </div>
 
     <div v-if="modelValue.scope === 'line_item'" class="effect-field">
       <label>{{ $t('effectEditor.fields.appliesToLineItems') }}</label>
-      <ConditionTreeEditor :model-value="modelValue.target_condition" :allow-empty="false" @update:model-value="(v) => update({ target_condition: v })" />
+      <ConditionTreeEditor :model-value="modelValue.target_condition" :allow-empty="false" @update:model-value="(v: ConditionNode | null) => update({ target_condition: v })" />
     </div>
   </div>
 </template>

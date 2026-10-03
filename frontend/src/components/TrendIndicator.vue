@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { formatPercent } from '@/lib/format'
@@ -9,11 +9,14 @@ import { formatPercent } from '@/lib/format'
 // a real trend. Every metric this app currently shows a trend for is a "more is
 // better" one (redemptions, usage, earnings), so positive = success is a safe
 // default rather than something each caller has to specify.
-const props = defineProps({
-  current: { type: Number, required: true },
-  previous: { type: Number, default: null },
-  caption: { type: String, required: true },
-})
+const props = withDefaults(
+  defineProps<{
+    current: number
+    previous?: number | null
+    caption: string
+  }>(),
+  { previous: null },
+)
 
 const { t } = useI18n()
 
@@ -22,7 +25,7 @@ const percentChange = computed(() => {
   return ((props.current - props.previous) / props.previous) * 100
 })
 
-const direction = computed(() => (percentChange.value >= 0 ? 'up' : 'down'))
+const direction = computed(() => ((percentChange.value ?? 0) >= 0 ? 'up' : 'down'))
 </script>
 
 <template>

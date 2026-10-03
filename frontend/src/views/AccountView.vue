@@ -1,10 +1,11 @@
-<script setup>
+<script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AppShell from '@/components/AppShell.vue'
 import PageHeader from '@/components/PageHeader.vue'
 import BaseCard from '@/components/base/BaseCard.vue'
 import BaseTable from '@/components/base/BaseTable.vue'
+import type { TableColumn } from '@/components/base/BaseTable.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import BaseDialog from '@/components/base/BaseDialog.vue'
 import BaseInputText from '@/components/base/BaseInputText.vue'
@@ -18,6 +19,7 @@ import { getAccount, updateAccount } from '@/api/account'
 import { accountInputSchema } from '@/models/account'
 import { listProjects, createProject as createProjectRequest } from '@/api/projects'
 import { projectInputSchema } from '@/models/project'
+import type { Project } from '@/models/project'
 import { toFieldErrors } from '@/models/formErrors'
 import { useBaseToast } from '@/composables/useBaseToast'
 import { formatDate } from '@/lib/format'
@@ -28,11 +30,11 @@ const toast = useBaseToast()
 const { t } = useI18n()
 
 const { data: account, loading: accountLoading, error: accountError } = useAsync(() =>
-  getAccount({ token: auth.token, projectId: auth.project?.id }),
+  getAccount({ token: auth.token ?? undefined, projectId: auth.project?.id }),
 )
 
 watch(accountError, (e) => {
-  if (e) toast.add({ severity: 'error', summary: t('account.loadError'), detail: e.message, life: 4000 })
+  if (e) toast.add({ severity: 'error', summary: t('account.loadError'), detail: e instanceof Error ? e.message : String(e), life: 4000 })
 })
 
 const accountForm = ref({ name: '' })
@@ -48,7 +50,7 @@ watch(
   { immediate: true },
 )
 
-const accountErrors = ref({})
+const accountErrors = ref<Record<string, string>>({})
 const savingAccount = ref(false)
 
 async function saveAccount() {
@@ -62,7 +64,7 @@ async function saveAccount() {
 
   savingAccount.value = true
   try {
-    await updateAccount({ ...result.data, otp_required: otpRequired.value }, { token: auth.token, projectId: auth.project?.id })
+    await updateAccount({ ...result.data, otp_required: otpRequired.value }, { token: auth.token ?? undefined, projectId: auth.project?.id })
     toast.add({ severity: 'success', summary: t('account.updatedSuccess'), life: 3000 })
   } catch (e) {
     accountErrors.value = e instanceof ApiError ? toFieldErrors(e) : { _root: t('account.genericError') }
@@ -72,14 +74,14 @@ async function saveAccount() {
 }
 
 const { data: projects, loading: projectsLoading, error: projectsError, reload: reloadProjects } = useAsync(() =>
-  listProjects({ token: auth.token, projectId: auth.project?.id }),
+  listProjects({ token: auth.token ?? undefined, projectId: auth.project?.id }),
 )
 
 watch(projectsError, (e) => {
-  if (e) toast.add({ severity: 'error', summary: t('projects.loadError'), detail: e.message, life: 4000 })
+  if (e) toast.add({ severity: 'error', summary: t('projects.loadError'), detail: e instanceof Error ? e.message : String(e), life: 4000 })
 })
 
-const columns = computed(() => [
+const columns = computed<TableColumn[]>(() => [
   { field: 'id', header: t('projects.idColumn'), sortable: true, hideable: false },
   { field: 'name', header: t('projects.nameColumn'), sortable: true, filter: { type: 'string' } },
   { field: 'timezone', header: t('projects.timezoneColumn'), sortable: true, filter: { type: 'string' } },
@@ -88,13 +90,13 @@ const columns = computed(() => [
 
 const switchingProject = ref(false)
 
-async function selectProject(project) {
+async function selectProject(project: Project) {
   if (project.id === auth.project?.id) return
   switchingProject.value = true
   try {
     await auth.selectProject(project.id)
   } catch (e) {
-    toast.add({ severity: 'error', summary: t('nav.switchProjectError'), detail: e.message, life: 4000 })
+    toast.add({ severity: 'error', summary: t('nav.switchProjectError'), detail: e instanceof Error ? e.message : String(e), life: 4000 })
   } finally {
     switchingProject.value = false
   }
@@ -102,7 +104,7 @@ async function selectProject(project) {
 
 const dialogOpen = ref(false)
 const projectForm = ref({ name: '', timezone: '' })
-const projectErrors = ref({})
+const projectErrors = ref<Record<string, string>>({})
 const creatingProject = ref(false)
 
 function openCreate() {
@@ -122,7 +124,7 @@ async function submitProject() {
 
   creatingProject.value = true
   try {
-    await createProjectRequest(result.data, { token: auth.token, projectId: auth.project?.id })
+    await createProjectRequest(result.data, { token: auth.token ?? undefined, projectId: auth.project?.id })
     toast.add({ severity: 'success', summary: t('projects.createdSuccess'), life: 3000 })
     dialogOpen.value = false
     await reloadProjects()
@@ -172,7 +174,7 @@ async function submitProject() {
           :create-label="$t('projects.newProjectButton')"
           @refresh="reloadProjects"
           @create="openCreate"
-          @row-click="selectProject($event.data)"
+          @row-click="selectProject($event.data as unknown as Project)"
         >
           <template #cell-created_at="{ data }">{{ formatDate(data.created_at, auth.project?.timezone) }}</template>
         </BaseTable>

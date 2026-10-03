@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -8,7 +8,9 @@ import PageHeader from '@/components/PageHeader.vue'
 import LifecycleStatus from '@/components/LifecycleStatus.vue'
 import DiscountKindTag from '@/components/DiscountKindTag.vue'
 import DateRangePicker from '@/components/DateRangePicker.vue'
+import type { DateRange } from '@/components/DateRangePicker.vue'
 import BaseTable from '@/components/base/BaseTable.vue'
+import type { TableColumn } from '@/components/base/BaseTable.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import BaseToggleSwitch from '@/components/base/BaseToggleSwitch.vue'
 import BaseCard from '@/components/base/BaseCard.vue'
@@ -20,6 +22,7 @@ import { listCampaigns, exportCampaigns as exportCampaignsRequest } from '@/api/
 import { getCampaignAnalytics } from '@/api/analytics'
 import { useBaseToast } from '@/composables/useBaseToast'
 import { formatMonthDayYear, formatNumber, formatCurrency, formatCalendarDate } from '@/lib/format'
+import type { Campaign } from '@/models/campaign'
 
 const auth = useAuthStore()
 const toast = useBaseToast()
@@ -28,23 +31,23 @@ const { t } = useI18n()
 
 const showArchived = ref(false)
 const exporting = ref(false)
-const range = ref(null)
+const range = ref<DateRange | null>(null)
 
 const { data: campaigns, loading, error, reload } = useAsync(() =>
-  listCampaigns({ includeArchived: showArchived.value, token: auth.token, projectId: auth.project?.id })
+  listCampaigns({ includeArchived: showArchived.value, token: auth.token ?? undefined, projectId: auth.project?.id })
 )
 
 watch(error, (e) => {
-  if (e) toast.add({ severity: 'error', summary: t('campaigns.loadError'), detail: e.message, life: 4000 })
+  if (e) toast.add({ severity: 'error', summary: t('campaigns.loadError'), detail: e instanceof Error ? e.message : String(e), life: 4000 })
 })
 
 const { data: analytics, loading: analyticsLoading, error: analyticsError, reload: reloadAnalytics } = useAsync(
-  () => (range.value ? getCampaignAnalytics({ ...range.value, token: auth.token, projectId: auth.project?.id }) : Promise.resolve(null)),
+  () => (range.value ? getCampaignAnalytics({ ...range.value, token: auth.token ?? undefined, projectId: auth.project?.id }) : Promise.resolve(null)),
   { immediate: false },
 )
 
 watch(analyticsError, (e) => {
-  if (e) toast.add({ severity: 'error', summary: t('campaigns.analyticsLoadError'), detail: e.message, life: 4000 })
+  if (e) toast.add({ severity: 'error', summary: t('campaigns.analyticsLoadError'), detail: e instanceof Error ? e.message : String(e), life: 4000 })
 })
 
 watch(range, () => {
@@ -60,11 +63,11 @@ const hasChartData = computed(
   () => (analytics.value?.usage_series || []).some((s) => s.value > 0) || (analytics.value?.earnings_series || []).some((s) => s.value > 0),
 )
 
-function formatTooltipValue(value, datasetLabel) {
+function formatTooltipValue(value: number, datasetLabel?: string): string {
   return datasetLabel === t('campaigns.discountedSeriesLabel') ? formatCurrency(value, auth.project?.currency) : formatNumber(value)
 }
 
-const columns = computed(() => [
+const columns = computed<TableColumn[]>(() => [
   { field: 'name', header: t('campaigns.nameColumn'), sortable: true, hideable: false, filter: { type: 'string' } },
   { field: 'discount_kinds', header: t('campaigns.discountTypesColumn') },
   { field: 'valid_from', header: t('campaigns.validFromColumn'), sortable: true, filter: { type: 'date' } },
@@ -77,11 +80,11 @@ function createCampaign() {
   router.push({ name: 'campaign-new' })
 }
 
-function viewCampaign(campaign) {
+function viewCampaign(campaign: Campaign) {
   router.push({ name: 'campaign-show', params: { id: campaign.id } })
 }
 
-function editCampaign(campaign) {
+function editCampaign(campaign: Campaign) {
   router.push({ name: 'campaign-edit', params: { id: campaign.id } })
 }
 
@@ -92,9 +95,9 @@ function onShowArchivedChange() {
 async function exportCampaigns() {
   exporting.value = true
   try {
-    await exportCampaignsRequest({ includeArchived: showArchived.value, token: auth.token, projectId: auth.project?.id })
+    await exportCampaignsRequest({ includeArchived: showArchived.value, token: auth.token ?? undefined, projectId: auth.project?.id })
   } catch (e) {
-    toast.add({ severity: 'error', summary: t('campaigns.exportError'), detail: e.message, life: 4000 })
+    toast.add({ severity: 'error', summary: t('campaigns.exportError'), detail: e instanceof Error ? e.message : String(e), life: 4000 })
   } finally {
     exporting.value = false
   }
@@ -161,7 +164,7 @@ async function exportCampaigns() {
           :search-placeholder="$t('campaigns.searchPlaceholder')"
           :export-label="$t('campaigns.exportButton')"
           :exporting="exporting"
-          @row-click="viewCampaign($event.data)"
+          @row-click="viewCampaign($event.data as unknown as Campaign)"
           @refresh="reload"
           @export="exportCampaigns"
         >

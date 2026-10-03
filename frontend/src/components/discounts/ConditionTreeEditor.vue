@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import BaseSelect from '@/components/base/BaseSelect.vue'
@@ -8,6 +8,7 @@ import CustomAttributeSelect from './CustomAttributeSelect.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useCustomAttributes } from '@/composables/useCustomAttributes'
 import { reservedKeysFor } from '@/lib/reservedConditionKeys'
+import type { ConditionNode } from './ConditionSummary.vue'
 
 defineOptions({ name: 'ConditionTreeEditor' })
 
@@ -16,7 +17,7 @@ const { t } = useI18n()
 const GROUP_OPERATORS = ['and', 'or', 'not']
 const NULLARY_OPERATORS = ['is_null', 'is_not_null']
 
-const OPERATORS_BY_DATA_TYPE = {
+const OPERATORS_BY_DATA_TYPE: Record<string, string[]> = {
   string: ['eq', 'ne', 'in', 'not_in', 'contains', ...NULLARY_OPERATORS],
   number: ['eq', 'ne', 'gt', 'gte', 'lt', 'lte', 'in', 'not_in', ...NULLARY_OPERATORS],
   date: ['eq', 'ne', 'gt', 'gte', 'lt', 'lte', ...NULLARY_OPERATORS],
@@ -55,18 +56,24 @@ const ENTITY_OPTIONS = computed(() => [
 // coupon-editor UX pass) — distinguishing cart/line_item/customer at a glance
 // without touching the rest of the row (attribute/operator/value stay neutral,
 // per "The existing Eligibility rule builder is generally good").
-const ENTITY_ICONS = { cart: 'pi-shopping-cart', line_item: 'pi-box', customer: 'pi-user' }
+const ENTITY_ICONS: Record<string, string> = { cart: 'pi-shopping-cart', line_item: 'pi-box', customer: 'pi-user' }
 
-function defaultLeaf() {
+function defaultLeaf(): ConditionNode {
   return { entity: 'cart', key: '', operator: 'eq', value: '' }
 }
 
-const props = defineProps({
-  modelValue: { type: Object, default: null },
-  allowEmpty: { type: Boolean, default: true },
-  removable: { type: Boolean, default: false },
-})
-const emit = defineEmits(['update:modelValue', 'remove'])
+const props = withDefaults(
+  defineProps<{
+    modelValue?: ConditionNode | null
+    allowEmpty?: boolean
+    removable?: boolean
+  }>(),
+  { modelValue: null, allowEmpty: true, removable: false },
+)
+const emit = defineEmits<{
+  'update:modelValue': [value: ConditionNode | null]
+  remove: []
+}>()
 
 const auth = useAuthStore()
 const { load: loadCustomAttributes, attributesFor } = useCustomAttributes()
@@ -74,7 +81,7 @@ const { load: loadCustomAttributes, attributesFor } = useCustomAttributes()
 watch(
   () => props.modelValue?.entity,
   (entity) => {
-    if (entity) loadCustomAttributes(entity, { token: auth.token, projectId: auth.project?.id })
+    if (entity) loadCustomAttributes(entity, { token: auth.token ?? undefined, projectId: auth.project?.id })
   },
   { immediate: true }
 )
@@ -85,8 +92,8 @@ const isMultiValue = computed(() => !!props.modelValue && ['in', 'not_in'].inclu
 const isNullaryOperator = computed(() => !!props.modelValue && NULLARY_OPERATORS.includes(props.modelValue.operator))
 
 const entityAttributes = computed(() => [
-  ...reservedKeysFor(props.modelValue?.entity),
-  ...attributesFor(props.modelValue?.entity),
+  ...reservedKeysFor(props.modelValue?.entity ?? ''),
+  ...attributesFor(props.modelValue?.entity ?? ''),
 ])
 const selectedAttribute = computed(() => entityAttributes.value.find((a) => a.key === props.modelValue?.key))
 const availableOperators = computed(() => {
@@ -95,11 +102,11 @@ const availableOperators = computed(() => {
   return LEAF_OPERATOR_OPTIONS.value.filter((o) => OPERATORS_BY_DATA_TYPE[dataType].includes(o.value))
 })
 
-function update(patch) {
-  emit('update:modelValue', { ...props.modelValue, ...patch })
+function update(patch: Partial<ConditionNode>) {
+  emit('update:modelValue', { ...props.modelValue, ...patch } as ConditionNode)
 }
 
-function setNodeType(type) {
+function setNodeType(type: string) {
   if (type === 'group') {
     emit('update:modelValue', { operator: 'and', conditions: [props.modelValue || defaultLeaf()] })
   } else {
@@ -114,41 +121,41 @@ function addCondition() {
 // Turns a single leaf into a 2-condition AND group, keeping the leaf as-is instead
 // of requiring the user to manually switch to "Group" first (which used to discard it).
 function addSiblingCondition() {
-  emit('update:modelValue', { operator: 'and', conditions: [props.modelValue, defaultLeaf()] })
+  emit('update:modelValue', { operator: 'and', conditions: [props.modelValue as ConditionNode, defaultLeaf()] })
 }
 
-function setGroupOperator(op) {
-  const conditions = op === 'not' ? props.modelValue.conditions.slice(0, 1) : props.modelValue.conditions
+function setGroupOperator(op: string) {
+  const conditions = op === 'not' ? props.modelValue!.conditions!.slice(0, 1) : props.modelValue!.conditions
   update({ operator: op, conditions })
 }
 
-function setEntity(entity) {
+function setEntity(entity: string) {
   update({ entity, key: '', operator: 'eq', value: '' })
 }
 
-function setKey(key) {
+function setKey(key: string) {
   update({ key, operator: 'eq', value: '' })
 }
 
-function setOperator(operator) {
-  update({ operator, value: NULLARY_OPERATORS.includes(operator) ? null : props.modelValue.value })
+function setOperator(operator: string) {
+  update({ operator, value: NULLARY_OPERATORS.includes(operator) ? null : props.modelValue!.value })
 }
 
-function updateChild(index, value) {
-  const conditions = [...props.modelValue.conditions]
+function updateChild(index: number, value: ConditionNode) {
+  const conditions = [...props.modelValue!.conditions!]
   conditions[index] = value
   update({ conditions })
 }
 
 function addChild() {
-  update({ conditions: [...props.modelValue.conditions, defaultLeaf()] })
+  update({ conditions: [...props.modelValue!.conditions!, defaultLeaf()] })
 }
 
-function removeChild(index) {
-  update({ conditions: props.modelValue.conditions.filter((_, i) => i !== index) })
+function removeChild(index: number) {
+  update({ conditions: props.modelValue!.conditions!.filter((_, i) => i !== index) })
 }
 
-function coerce(str) {
+function coerce(str: string): string | number | boolean {
   const trimmed = str.trim()
   if (trimmed === 'true') return true
   if (trimmed === 'false') return false
@@ -157,12 +164,12 @@ function coerce(str) {
 }
 
 const valueDisplay = computed({
-  get() {
+  get(): string {
     const v = props.modelValue?.value
     if (v == null) return ''
     return Array.isArray(v) ? v.join(', ') : String(v)
   },
-  set(raw) {
+  set(raw: string) {
     if (isMultiValue.value) {
       update({
         value: raw
@@ -226,7 +233,7 @@ const valueDisplay = computed({
               </span>
             </template>
           </BaseSelect>
-          <CustomAttributeSelect :model-value="modelValue.key" :entity="modelValue.entity" @update:model-value="setKey" />
+          <CustomAttributeSelect :model-value="modelValue.key" :entity="modelValue.entity ?? ''" @update:model-value="setKey" />
           <BaseSelect
             :model-value="modelValue.operator"
             :options="availableOperators"
@@ -253,7 +260,7 @@ const valueDisplay = computed({
           :model-value="child"
           :allow-empty="false"
           removable
-          @update:model-value="(v) => updateChild(i, v)"
+          @update:model-value="(v: ConditionNode | null) => updateChild(i, v!)"
           @remove="removeChild(i)"
         />
         <BaseButton v-if="modelValue.operator !== 'not'" size="small" text :label="$t('conditionTreeEditor.addConditionButton')" @click="addChild" />

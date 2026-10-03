@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { computed, useAttrs } from 'vue'
 import Button from 'openvue/button'
 
@@ -21,7 +21,7 @@ const BASE =
   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ' +
   'disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none'
 
-const SIZE = {
+const SIZE: Record<string, string> = {
   small: 'px-2.5 py-1 text-xs',
   large: 'px-5 py-2.5 text-base',
 }
@@ -45,7 +45,7 @@ function variantClasses() {
   return 'bg-primary text-white hover:bg-primary-hover active:bg-primary-active'
 }
 
-const rootClass = computed(() => [BASE, SIZE[size.value] || DEFAULT_SIZE, variantClasses()].join(' '))
+const rootClass = computed(() => [BASE, SIZE[size.value as string] || DEFAULT_SIZE, variantClasses()].join(' '))
 </script>
 
 <template>

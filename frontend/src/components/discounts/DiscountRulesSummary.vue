@@ -1,24 +1,31 @@
-<script setup>
+<script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import BaseTag from '@/components/base/BaseTag.vue'
 import ConditionSummary from './ConditionSummary.vue'
+import type { ConditionNode } from './ConditionSummary.vue'
 import { formatNumber, formatCurrency } from '@/lib/format'
+import type { Discount, DiscountEffect } from '@/models/discount'
 
 defineOptions({ name: 'DiscountRulesSummary' })
 
-defineProps({
-  discount: { type: Object, required: true },
-})
+defineProps<{ discount: Discount }>()
 
 const { t } = useI18n()
 
-function configSummary(effect) {
-  const c = effect.config
-  if (effect.effect_type === 'percentage_off') return t('discountRulesSummary.percentageOff', { percentage: formatNumber(c.percentage) })
-  if (effect.effect_type === 'fixed_amount_off') return t('discountRulesSummary.fixedAmountOff', { amount: formatCurrency(c.amount, c.currency) })
+// eligibility_condition/target_condition/config.*_condition are all stored as
+// loosely-typed jsonb on the backend (z.unknown() in the model) — this just
+// narrows them to the recursive shape ConditionSummary actually expects.
+function conditionNode(value: unknown): ConditionNode | null {
+  return (value as ConditionNode | null) ?? null
+}
+
+function configSummary(effect: DiscountEffect): string {
+  const c = effect.config as Record<string, unknown>
+  if (effect.effect_type === 'percentage_off') return t('discountRulesSummary.percentageOff', { percentage: formatNumber(c.percentage as number) })
+  if (effect.effect_type === 'fixed_amount_off') return t('discountRulesSummary.fixedAmountOff', { amount: formatCurrency(c.amount as number, c.currency as string) })
   if (effect.effect_type === 'free_item') {
     const key = c.repeatable ? 'discountRulesSummary.freeItemRepeatable' : 'discountRulesSummary.freeItem'
-    return t(key, { buyQuantity: formatNumber(c.buy_quantity), getQuantity: formatNumber(c.get_quantity) })
+    return t(key, { buyQuantity: formatNumber(c.buy_quantity as number), getQuantity: formatNumber(c.get_quantity as number) })
   }
   return ''
 }
@@ -28,7 +35,7 @@ function configSummary(effect) {
   <div class="discount-rules">
     <div class="discount-rules__section">
       <h4>{{ $t('discountRulesSummary.eligibilityHeading') }}</h4>
-      <ConditionSummary :node="discount.eligibility_condition" />
+      <ConditionSummary :node="conditionNode(discount.eligibility_condition)" />
     </div>
     <div class="discount-rules__section">
       <h4>{{ $t('discountRulesSummary.effectsHeading') }}</h4>
@@ -40,11 +47,11 @@ function configSummary(effect) {
           <span>{{ configSummary(effect) }}</span>
         </div>
         <div v-if="effect.scope === 'line_item'" class="discount-rules__condition">
-          {{ $t('discountRulesSummary.appliesToLineItemsWhere') }} <ConditionSummary :node="effect.target_condition" />
+          {{ $t('discountRulesSummary.appliesToLineItemsWhere') }} <ConditionSummary :node="conditionNode(effect.target_condition)" />
         </div>
         <div v-if="effect.effect_type === 'free_item'" class="discount-rules__condition">
-          {{ $t('discountRulesSummary.buyLabel') }} <ConditionSummary :node="effect.config.buy_condition" /><br />
-          {{ $t('discountRulesSummary.getLabel') }} <ConditionSummary :node="effect.config.get_condition" />
+          {{ $t('discountRulesSummary.buyLabel') }} <ConditionSummary :node="conditionNode(effect.config.buy_condition)" /><br />
+          {{ $t('discountRulesSummary.getLabel') }} <ConditionSummary :node="conditionNode(effect.config.get_condition)" />
         </div>
       </div>
     </div>
