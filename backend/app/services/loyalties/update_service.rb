@@ -35,7 +35,7 @@ module Loyalties
       attrs[:stackable] = @request.stackable if @request.attributes.key?(:stackable)
       attrs[:refundable] = @request.refundable if @request.attributes.key?(:refundable)
       attrs[:enabled] = @request.enabled if @request.attributes.key?(:enabled)
-      attrs[:eligibility_condition] = @request.eligibility_condition&.to_h if @request.attributes.key?(:eligibility_condition)
+      attrs[:eligibility_condition] = @request.eligibility_condition&.to_h || {} if @request.attributes.key?(:eligibility_condition)
       attrs[:kind_config] = loyalty_kind_config if @request.attributes.key?(:loyalty)
       attrs[:max_redemptions] = @request.max_redemptions if @request.attributes.key?(:max_redemptions)
       if @request.attributes.key?(:max_redemptions_per_customer)

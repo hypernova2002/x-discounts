@@ -35,7 +35,7 @@ module Promotions
       attrs[:stackable] = @request.stackable if @request.attributes.key?(:stackable)
       attrs[:refundable] = @request.refundable if @request.attributes.key?(:refundable)
       attrs[:enabled] = @request.enabled if @request.attributes.key?(:enabled)
-      attrs[:eligibility_condition] = @request.eligibility_condition&.to_h if @request.attributes.key?(:eligibility_condition)
+      attrs[:eligibility_condition] = @request.eligibility_condition&.to_h || {} if @request.attributes.key?(:eligibility_condition)
       if @request.attributes.key?(:promotion)
         attrs[:kind_config] = { active_from: @request.promotion.active_from, active_until: @request.promotion.active_until }.compact
       end

@@ -111,6 +111,17 @@ RSpec.describe "Discounts API", type: :openapi do
 
         run_test!
       end
+
+      response 200, "clears eligibility_condition back to its default when explicitly sent as null" do
+        schema Schemas::Discount
+        let(:discount) { create(:discount, project: api_key.project, eligibility_condition: { entity: "customer", key: "tier", operator: "eq", value: "gold" }) }
+        let(:id) { discount.public_id }
+        let(:request_body) { { eligibility_condition: nil } }
+
+        run_test! do
+          expect(discount.refresh.eligibility_condition).to eq({})
+        end
+      end
     end
 
     delete "Delete a discount" do

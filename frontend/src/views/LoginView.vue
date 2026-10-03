@@ -46,8 +46,8 @@ function backToLogin() {
   <div class="auth-page">
     <BaseCard class="auth-card">
       <template v-if="!auth.otpChallengeToken" #title>{{ $t('login.appName') }}</template>
-      <template v-if="!auth.otpChallengeToken" #subtitle>{{ $t('login.subtitle') }}</template>
       <template v-else #title>{{ $t('login.otpTitle') }}</template>
+      <template v-if="!auth.otpChallengeToken" #subtitle>{{ $t('login.subtitle') }}</template>
       <template #content>
         <form v-if="!auth.otpChallengeToken" class="auth-form" @submit.prevent="submit">
           <label for="email">{{ $t('login.emailLabel') }}</label>
