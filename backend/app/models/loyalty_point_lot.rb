@@ -12,6 +12,7 @@ class LoyaltyPointLot < Sequel::Model
 
   plugin :timestamps, update_on_create: true
   plugin :validation_helpers
+  plugin :association_dependencies
 
   many_to_one :customer
   many_to_one :order
@@ -19,6 +20,8 @@ class LoyaltyPointLot < Sequel::Model
   many_to_one :refund_of_points_redemption, class: :PointsRedemption
   many_to_one :performed_by_user, class: :User
   one_to_many :ledger_entries, class: :LoyaltyPointLedgerEntry
+
+  add_association_dependencies ledger_entries: :destroy
 
   def validate
     super
