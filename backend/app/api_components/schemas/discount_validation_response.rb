@@ -27,14 +27,17 @@ module Schemas
           }
         },
         total_amount_off: { type: :number },
-        coupon: {
-          type: :object,
-          nullable: true,
-          description: "Present only when a coupon_code was submitted",
-          properties: {
-            code: { type: :string },
-            valid: { type: :boolean },
-            reason: { type: :string, nullable: true }
+        coupons: {
+          type: :array,
+          description: "One entry per submitted coupon_code",
+          items: {
+            type: :object,
+            properties: {
+              code: { type: :string },
+              valid: { type: :boolean },
+              reason: { type: :string, nullable: true },
+              discounts: { type: :array }
+            }
           }
         }
       }

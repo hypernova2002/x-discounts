@@ -35,11 +35,6 @@ FactoryBot.define do
     sequence(:name) { |n| "Discount #{n}" }
   end
 
-  factory :promotion do
-    discount
-    active_from { 1.year.ago }
-  end
-
   factory :coupon, class: "CouponCode" do
     discount
     project

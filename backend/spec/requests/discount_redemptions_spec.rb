@@ -22,8 +22,8 @@ RSpec.describe "Discount Redemptions API", type: :openapi do
         schema Schemas::Order
 
         before do
-          discount = create(:discount, project: project, kind: "promotion", key: "sitewide10")
-          create(:promotion, discount: discount, active_from: 1.year.ago)
+          discount = create(:discount, project: project, kind: "promotion", key: "sitewide10",
+                                        kind_config: { active_from: 1.year.ago.iso8601 })
           create(:discount_effect, discount: discount, effect_type: "percentage_off", scope: "cart", config: { percentage: 10 })
         end
 
@@ -34,7 +34,7 @@ RSpec.describe "Discount Redemptions API", type: :openapi do
         run_test! do
           body = JSON.parse(response.body)
           expect(body["total_discount_amount"]).to eq("10.0")
-          expect(Customer.where(project_id: project.id, external_id: "new-customer")).to exist
+          expect(Customer.where(project_id: project.id, external_id: "new-customer")).not_to be_empty
         end
       end
 

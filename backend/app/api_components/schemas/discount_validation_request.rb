@@ -30,7 +30,7 @@ module Schemas
           description: "external_id plus arbitrary keys matched against customer custom attributes.",
           properties: { external_id: { type: :string } }
         },
-        coupon_code: { type: :string },
+        coupon_codes: { type: :array, items: { type: :string } },
         as_of: {
           type: :string,
           format: "date-time",

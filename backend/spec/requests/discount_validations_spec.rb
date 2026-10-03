@@ -22,8 +22,8 @@ RSpec.describe "Discount Validations API", type: :openapi do
         schema Schemas::DiscountValidationResponse
 
         before do
-          discount = create(:discount, project: project, kind: "promotion", key: "sitewide10")
-          create(:promotion, discount: discount, active_from: 1.year.ago)
+          discount = create(:discount, project: project, kind: "promotion", key: "sitewide10",
+                                        kind_config: { active_from: 1.year.ago.iso8601 })
           create(:discount_effect, discount: discount, effect_type: "percentage_off", scope: "cart", config: { percentage: 10 })
         end
 
@@ -42,8 +42,8 @@ RSpec.describe "Discount Validations API", type: :openapi do
 
         before do
           discount = create(:discount, project: project, kind: "promotion", key: "gold5",
+                                        kind_config: { active_from: 1.year.ago.iso8601 },
                                         eligibility_condition: { entity: "customer", key: "tier", operator: "eq", value: "gold" })
-          create(:promotion, discount: discount, active_from: 1.year.ago)
           create(:discount_effect, discount: discount, effect_type: "fixed_amount_off", scope: "cart", config: { amount: 5, currency: "USD" })
         end
 
@@ -67,12 +67,13 @@ RSpec.describe "Discount Validations API", type: :openapi do
         end
 
         let(:request_body) do
-          { coupon_code: "SAVE20", line_items: [{ sku: "X", quantity: 1, unit_price: 100 }] }
+          { coupon_codes: ["SAVE20"], line_items: [{ sku: "X", quantity: 1, unit_price: 100 }] }
         end
 
         run_test! do
           body = JSON.parse(response.body)
-          expect(body["coupon"]).to eq({ "code" => "SAVE20", "valid" => true, "reason" => nil })
+          coupon = body["coupons"].find { |c| c["code"] == "SAVE20" }
+          expect(coupon).to include("valid" => true, "reason" => nil)
           expect(body["total_amount_off"]).to eq(20.0)
         end
       end
@@ -80,11 +81,11 @@ RSpec.describe "Discount Validations API", type: :openapi do
       response 200, "unknown coupon code is reported invalid, not an error" do
         schema Schemas::DiscountValidationResponse
 
-        let(:request_body) { { coupon_code: "NOPE", line_items: [{ sku: "X", quantity: 1, unit_price: 100 }] } }
+        let(:request_body) { { coupon_codes: ["NOPE"], line_items: [{ sku: "X", quantity: 1, unit_price: 100 }] } }
 
         run_test! do
           body = JSON.parse(response.body)
-          expect(body["coupon"]).to eq({ "code" => "NOPE", "valid" => false, "reason" => "not found" })
+          expect(body["coupons"]).to eq([{ "code" => "NOPE", "valid" => false, "reason" => "not found", "discounts" => [] }])
         end
       end
     end

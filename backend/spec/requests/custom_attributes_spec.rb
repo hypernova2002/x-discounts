@@ -11,6 +11,7 @@ RSpec.describe "Custom Attributes API", type: :openapi do
       operationId "listCustomAttributes"
       produces "application/json"
       security [{ BearerAuth: [] }]
+      parameter name: :entity, in: :query, schema: { type: :string }, required: false
 
       response 200, "returns custom attributes for the current project" do
         schema type: :object, properties: {
@@ -38,6 +39,7 @@ RSpec.describe "Custom Attributes API", type: :openapi do
         end
 
         let(:Authorization) { "Bearer #{api_key.raw_token}" }
+        let(:entity) { "cart" }
 
         run_test! do
           body = JSON.parse(response.body)
