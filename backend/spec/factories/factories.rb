@@ -84,6 +84,13 @@ FactoryBot.define do
     data_type { "string" }
   end
 
+  factory :export do
+    project
+    export_type { "campaigns" }
+    status { "pending" }
+    params { {} }
+  end
+
   factory :discount_refund do
     order_discount
     amount_off { 5 }

@@ -16,7 +16,8 @@ import MetricCard from '@/components/base/MetricCard.vue'
 import BaseChart from '@/components/base/BaseChart.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useAsync } from '@/composables/useAsync'
-import { listOrders, exportOrders as exportOrdersRequest } from '@/api/orders'
+import { useExportDownload } from '@/composables/useExportDownload'
+import { listOrders } from '@/api/orders'
 import { getOrderAnalytics } from '@/api/analytics'
 import { useBaseToast } from '@/composables/useBaseToast'
 import { formatNumber, formatDateTime, formatCurrency, formatCalendarDate } from '@/lib/format'
@@ -27,7 +28,7 @@ const toast = useBaseToast()
 const router = useRouter()
 const { t } = useI18n()
 
-const exporting = ref(false)
+const { exporting, runExport } = useExportDownload()
 const range = ref<DateRange | null>(null)
 
 const { data: orders, loading, error, reload } = useAsync(() => listOrders({ token: auth.token ?? undefined, projectId: auth.project?.id }))
@@ -92,13 +93,10 @@ function viewCustomer(customer: { id: string }) {
 }
 
 async function exportOrders() {
-  exporting.value = true
   try {
-    await exportOrdersRequest({ token: auth.token ?? undefined, projectId: auth.project?.id })
+    await runExport('orders')
   } catch (e) {
     toast.add({ severity: 'error', summary: t('orders.exportError'), detail: e instanceof Error ? e.message : String(e), life: 4000 })
-  } finally {
-    exporting.value = false
   }
 }
 </script>

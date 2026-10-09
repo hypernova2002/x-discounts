@@ -219,3 +219,33 @@ export async function createCustomAttribute(api: APIRequestContext, overrides: R
   })
   return parse(res, 'createCustomAttribute')
 }
+
+export interface ExportResource {
+  id: string
+  export_type: string
+  status: string
+}
+
+export async function createExport(api: APIRequestContext, exportType: string, params: Record<string, unknown> = {}): Promise<ExportResource> {
+  const res = await api.post('/api/v1/admin/exports', {
+    data: { export_type: exportType, params },
+  })
+  return parse(res, 'createExport')
+}
+
+export async function getExport(api: APIRequestContext, id: string): Promise<ExportResource> {
+  const res = await api.get(`/api/v1/admin/exports/${id}`)
+  return parse(res, 'getExport')
+}
+
+// The job usually finishes well under a second — poll briefly rather than
+// assume a fixed delay, so this isn't flaky under load.
+export async function waitForExportCompletion(api: APIRequestContext, id: string, timeoutMs = 15000): Promise<ExportResource> {
+  const start = Date.now()
+  let result = await getExport(api, id)
+  while ((result.status === 'pending' || result.status === 'processing') && Date.now() - start < timeoutMs) {
+    await new Promise((resolve) => setTimeout(resolve, 500))
+    result = await getExport(api, id)
+  }
+  return result
+}

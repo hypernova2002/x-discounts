@@ -123,6 +123,25 @@ Sequel.migration do
       index [:public_id], :name=>:custom_attributes_public_id_unique, :unique=>true
     end
     
+    create_table(:exports) do
+      primary_key :id
+      foreign_key :project_id, :projects, :null=>false, :key=>[:id]
+      foreign_key :user_id, :users, :key=>[:id], :on_delete=>:set_null
+      column :export_type, "text", :null=>false
+      column :params, "jsonb", :default=>Sequel::LiteralString.new("'{}'::jsonb"), :null=>false
+      column :status, "text", :default=>"pending", :null=>false
+      column :filename, "text"
+      column :content_type, "text"
+      column :byte_size, "integer"
+      column :error_message, "text"
+      column :public_id, "text", :null=>false
+      column :created_at, "timestamp with time zone", :default=>Sequel::CURRENT_TIMESTAMP, :null=>false
+      column :completed_at, "timestamp with time zone"
+      
+      index [:project_id, :created_at]
+      index [:public_id], :name=>:exports_public_id_unique, :unique=>true
+    end
+    
     create_table(:gift_shop_items) do
       primary_key :id
       foreign_key :project_id, :projects, :null=>false, :key=>[:id]
@@ -541,5 +560,6 @@ self << "INSERT INTO \"schema_migrations\" (\"filename\") VALUES ('2026091912000
 self << "INSERT INTO \"schema_migrations\" (\"filename\") VALUES ('20260920090001_add_otp_to_users_and_accounts.rb')"
 self << "INSERT INTO \"schema_migrations\" (\"filename\") VALUES ('20260926150001_add_currency_to_projects.rb')"
 self << "INSERT INTO \"schema_migrations\" (\"filename\") VALUES ('20260927013001_create_activity_logs.rb')"
+self << "INSERT INTO \"schema_migrations\" (\"filename\") VALUES ('20261009000001_create_exports.rb')"
                 end
               end

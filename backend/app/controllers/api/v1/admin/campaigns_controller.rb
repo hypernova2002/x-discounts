@@ -21,13 +21,6 @@ module Api
           render json: CampaignSummaryResource.new(@campaign).to_h
         end
 
-        def export
-          send_data Exports::CsvBuilder.build(filtered_campaigns_dataset),
-                     type: "text/csv",
-                     filename: export_filename(current_project.name, "campaigns", ext: "csv"),
-                     disposition: "attachment"
-        end
-
         def create
           campaign = Campaigns::CreateService.new(project: current_project, request: CampaignRequest.new(body)).call
           render json: CampaignResource.new(campaign).to_h, status: :created

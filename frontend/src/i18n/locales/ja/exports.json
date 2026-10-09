@@ -1,0 +1,26 @@
+{
+  "exports": {
+    "title": "エクスポート",
+    "loadError": "エクスポートの読み込みに失敗しました",
+    "typeColumn": "種類",
+    "statusColumn": "状態",
+    "requestedByColumn": "依頼者",
+    "createdAtColumn": "依頼日時",
+    "sizeColumn": "サイズ",
+    "actionsColumn": "操作",
+    "downloadButton": "ダウンロード",
+    "unknownRequester": "システム",
+    "types": {
+      "campaigns": "キャンペーン",
+      "customers": "顧客",
+      "orders": "注文",
+      "project": "プロジェクト全体"
+    },
+    "statuses": {
+      "pending": "待機中",
+      "processing": "処理中",
+      "completed": "完了",
+      "failed": "失敗"
+    }
+  }
+}

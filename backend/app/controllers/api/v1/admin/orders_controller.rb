@@ -23,13 +23,6 @@ module Api
           render json: OrderResource.new(@order).to_h
         end
 
-        def export
-          send_data Exports::CsvBuilder.build(filtered_orders_dataset, foreign_keys: { customer_id: Customer }),
-                     type: "text/csv",
-                     filename: export_filename(current_project.name, "orders", ext: "csv"),
-                     disposition: "attachment"
-        end
-
         def cancel
           request = OrderCancelRequest.new(body)
           order = Orders::CancelService.new(order: @order, refund: request.refund, reason: request.reason, performed_by: current_user).call

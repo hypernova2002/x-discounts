@@ -1,4 +1,4 @@
-import { apiFetch, apiDownload, type AuthParams } from '@/lib/api'
+import { apiFetch, type AuthParams } from '@/lib/api'
 import { CampaignSchema, CampaignListSchema, type CampaignInput } from '@/models/campaign'
 
 const BASE = '/api/v1/admin/campaigns'
@@ -30,13 +30,4 @@ export function updateCampaign(id: string, input: Partial<CampaignInput> & { arc
 
 export function duplicateCampaign(id: string, { token, projectId }: AuthParams) {
   return apiFetch(`${BASE}/${id}/duplicate`, { method: 'POST', token, projectId }).then((data) => CampaignSchema.parse(data))
-}
-
-interface ExportCampaignsParams extends AuthParams {
-  includeArchived?: boolean
-}
-
-export function exportCampaigns({ includeArchived, token, projectId }: ExportCampaignsParams) {
-  const path = includeArchived ? `${BASE}/export?include_archived=true` : `${BASE}/export`
-  return apiDownload(path, { token, projectId, filename: 'campaigns.csv' })
 }

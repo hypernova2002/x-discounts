@@ -10,11 +10,12 @@ import BaseButton from '@/components/base/BaseButton.vue'
 import BaseMessage from '@/components/base/BaseMessage.vue'
 import ProjectUsersSection from '@/components/ProjectUsersSection.vue'
 import { useAuthStore } from '@/stores/auth'
-import { ApiError, apiDownload } from '@/lib/api'
+import { ApiError } from '@/lib/api'
 import { updateProject as updateProjectRequest } from '@/api/projects'
 import { projectInputSchema } from '@/models/project'
 import { toFieldErrors } from '@/models/formErrors'
 import { useBaseToast } from '@/composables/useBaseToast'
+import { useExportDownload } from '@/composables/useExportDownload'
 import { TIMEZONE_OPTIONS } from '@/lib/timezone'
 import { CURRENCY_OPTIONS } from '@/lib/currency'
 
@@ -50,16 +51,13 @@ async function saveDetails() {
   }
 }
 
-const exporting = ref(false)
+const { exporting, runExport } = useExportDownload()
 
 async function exportProject() {
-  exporting.value = true
   try {
-    await apiDownload('/api/v1/admin/exports/project', { token: auth.token ?? undefined, projectId: auth.project?.id, filename: 'project-export.zip' })
+    await runExport('project')
   } catch (e) {
     toast.add({ severity: 'error', summary: t('dashboard.exportError'), detail: e instanceof Error ? e.message : String(e), life: 4000 })
-  } finally {
-    exporting.value = false
   }
 }
 </script>

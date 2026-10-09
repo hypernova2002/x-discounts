@@ -19,6 +19,7 @@ const router = createRouter({
     { path: '/account', name: 'account', component: () => import('../views/AccountView.vue') },
     { path: '/project-settings', name: 'project-settings', component: () => import('../views/ProjectSettingsView.vue') },
     { path: '/logs', name: 'logs', component: () => import('../views/LogsView.vue') },
+    { path: '/exports', name: 'exports', component: () => import('../views/ExportsView.vue') },
     { path: '/campaigns', name: 'campaigns', component: () => import('../views/CampaignsView.vue') },
     { path: '/campaigns/coupons', name: 'campaigns-coupons', component: () => import('../views/CouponsView.vue') },
     { path: '/campaigns/promotions', name: 'campaigns-promotions', component: () => import('../views/PromotionsView.vue') },

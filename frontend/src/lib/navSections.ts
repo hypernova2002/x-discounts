@@ -84,6 +84,14 @@ export const NAV_SECTIONS: NavSection[] = [
     group: 'admin',
   },
   {
+    id: 'exports',
+    labelKey: 'nav.exports',
+    icon: 'pi pi-download',
+    to: { name: 'exports' },
+    routeNames: ['exports'],
+    group: 'admin',
+  },
+  {
     id: 'projectSettings',
     labelKey: 'nav.projectSettings',
     icon: 'pi pi-cog',

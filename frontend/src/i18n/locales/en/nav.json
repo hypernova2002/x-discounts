@@ -16,6 +16,7 @@
     "admin": "Admin",
     "account": "Account",
     "logs": "Logs",
+    "exports": "Exports",
     "projectSettings": "Project settings",
     "accountSettings": "Account settings",
     "userSettings": "My settings",

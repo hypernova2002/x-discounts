@@ -44,6 +44,7 @@ class Project < Sequel::Model
   one_to_many :membership_schemes
   one_to_many :gift_shop_items
   one_to_many :activity_logs
+  one_to_many :exports
 
   add_association_dependencies project_memberships: :destroy,
                                 api_keys: :destroy,
@@ -54,7 +55,8 @@ class Project < Sequel::Model
                                 campaigns: :destroy,
                                 membership_schemes: :destroy,
                                 gift_shop_items: :destroy,
-                                activity_logs: :destroy
+                                activity_logs: :destroy,
+                                exports: :destroy
 
   def validate
     super

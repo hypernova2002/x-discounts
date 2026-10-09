@@ -1,4 +1,4 @@
-import { apiFetch, apiDownload, type AuthParams } from '@/lib/api'
+import { apiFetch, type AuthParams } from '@/lib/api'
 import { OrderSchema, OrderListSchema, type OrderCancelInput } from '@/models/order'
 
 const BASE = '/api/v1/admin/orders'
@@ -22,8 +22,4 @@ export function getOrder(id: string, { token, projectId }: AuthParams) {
 
 export function cancelOrder(id: string, input: OrderCancelInput, { token, projectId }: AuthParams) {
   return apiFetch(`${BASE}/${id}/cancel`, { method: 'POST', token, projectId, body: input }).then((data) => OrderSchema.parse(data))
-}
-
-export function exportOrders({ token, projectId }: AuthParams) {
-  return apiDownload(`${BASE}/export`, { token, projectId, filename: 'orders.csv' })
 }

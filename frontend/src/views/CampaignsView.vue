@@ -18,7 +18,8 @@ import MetricCard from '@/components/base/MetricCard.vue'
 import BaseChart from '@/components/base/BaseChart.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useAsync } from '@/composables/useAsync'
-import { listCampaigns, exportCampaigns as exportCampaignsRequest } from '@/api/campaigns'
+import { useExportDownload } from '@/composables/useExportDownload'
+import { listCampaigns } from '@/api/campaigns'
 import { getCampaignAnalytics } from '@/api/analytics'
 import { useBaseToast } from '@/composables/useBaseToast'
 import { formatMonthDayYear, formatNumber, formatCurrency, formatCalendarDate } from '@/lib/format'
@@ -30,8 +31,8 @@ const router = useRouter()
 const { t } = useI18n()
 
 const showArchived = ref(false)
-const exporting = ref(false)
 const range = ref<DateRange | null>(null)
+const { exporting, runExport } = useExportDownload()
 
 const { data: campaigns, loading, error, reload } = useAsync(() =>
   listCampaigns({ includeArchived: showArchived.value, token: auth.token ?? undefined, projectId: auth.project?.id })
@@ -93,13 +94,10 @@ function onShowArchivedChange() {
 }
 
 async function exportCampaigns() {
-  exporting.value = true
   try {
-    await exportCampaignsRequest({ includeArchived: showArchived.value, token: auth.token ?? undefined, projectId: auth.project?.id })
+    await runExport('campaigns', { include_archived: showArchived.value })
   } catch (e) {
     toast.add({ severity: 'error', summary: t('campaigns.exportError'), detail: e instanceof Error ? e.message : String(e), life: 4000 })
-  } finally {
-    exporting.value = false
   }
 }
 </script>

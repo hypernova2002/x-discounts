@@ -45,11 +45,4 @@ class ApplicationController < ActionController::API
   def meta_for(pagy)
     { page: pagy.page, pages: pagy.pages, count: pagy.count }
   end
-
-  # Shared filename builder for CSV/zip export downloads, e.g. export_filename("acme",
-  # "campaigns", ext: "csv") => "acme-campaigns-20260916.csv".
-  def export_filename(*parts, ext:)
-    slug = parts.join("-").downcase.gsub(/[^a-z0-9]+/, "-").gsub(/\A-+|-+\z/, "")
-    "#{slug}-#{Time.now.utc.strftime('%Y%m%d')}.#{ext}"
-  end
 end

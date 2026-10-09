@@ -27,13 +27,6 @@ module Api
           render json: { customers: CustomerResource.new(customers).to_h, meta: meta_for(pagy) }
         end
 
-        def export
-          send_data Exports::CsvBuilder.build(filtered_customers_dataset, foreign_keys: { membership_tier_id: MembershipTier }),
-                     type: "text/csv",
-                     filename: export_filename(current_project.name, "customers", ext: "csv"),
-                     disposition: "attachment"
-        end
-
         def show
           render json: CustomerResource.new(@customer).to_h.merge(
             stats: customer_stats,

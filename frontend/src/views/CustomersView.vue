@@ -15,8 +15,8 @@ import BaseButton from '@/components/base/BaseButton.vue'
 import BaseTag from '@/components/base/BaseTag.vue'
 import CountryFlag from '@/components/CountryFlag.vue'
 import { useAuthStore } from '@/stores/auth'
-import { apiDownload } from '@/lib/api'
 import { useAsync } from '@/composables/useAsync'
+import { useExportDownload } from '@/composables/useExportDownload'
 import { listCustomers } from '@/api/customers'
 import { getCustomerAnalytics } from '@/api/analytics'
 import { useBaseToast } from '@/composables/useBaseToast'
@@ -34,7 +34,7 @@ watch(error, (e) => {
   if (e) toast.add({ severity: 'error', summary: t('customers.loadError'), detail: e instanceof Error ? e.message : String(e), life: 4000 })
 })
 
-const exporting = ref(false)
+const { exporting, runExport } = useExportDownload()
 
 const columns = computed<TableColumn[]>(() => [
   { field: 'external_id', header: t('customers.externalId'), sortable: true, hideable: false, filter: { type: 'string' } },
@@ -66,13 +66,10 @@ function createCustomer() {
 }
 
 async function exportCustomers() {
-  exporting.value = true
   try {
-    await apiDownload('/api/v1/admin/customers/export', { token: auth.token ?? undefined, projectId: auth.project?.id, filename: 'customers.csv' })
+    await runExport('customers')
   } catch (e) {
     toast.add({ severity: 'error', summary: t('customers.exportError'), detail: e instanceof Error ? e.message : String(e), life: 4000 })
-  } finally {
-    exporting.value = false
   }
 }
 

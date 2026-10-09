@@ -35,7 +35,6 @@ Rails.application.routes.draw do
         resources :api_keys, only: %i[index show create destroy]
         resources :campaigns, only: %i[index show create update] do
           post :duplicate, on: :member
-          collection { get :export }
         end
         resources :discounts, only: %i[index show create update destroy] do
           get :design_image, on: :member
@@ -48,7 +47,6 @@ Rails.application.routes.draw do
         resources :activity_logs, only: %i[index]
         resources :orders, only: %i[index show] do
           post :cancel, on: :member
-          collection { get :export }
         end
         resources :order_discounts, only: [] do
           post :refund, on: :member
@@ -59,9 +57,10 @@ Rails.application.routes.draw do
         resources :customers, only: %i[index show update create] do
           post :grant_points, on: :member
           post :duplicate, on: :member
-          collection { get :export }
         end
-        get "exports/project" => "exports#project"
+        resources :exports, only: %i[index show create] do
+          get :download, on: :member
+        end
         get "analytics/coupons" => "analytics#coupons"
         get "analytics/promotions" => "analytics#promotions"
         get "analytics/loyalty" => "analytics#loyalty"

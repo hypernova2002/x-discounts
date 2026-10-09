@@ -1,0 +1,26 @@
+{
+  "exports": {
+    "title": "Exports",
+    "loadError": "Failed to load exports",
+    "typeColumn": "Type",
+    "statusColumn": "Status",
+    "requestedByColumn": "Requested by",
+    "createdAtColumn": "Requested",
+    "sizeColumn": "Size",
+    "actionsColumn": "Actions",
+    "downloadButton": "Download",
+    "unknownRequester": "System",
+    "types": {
+      "campaigns": "Campaigns",
+      "customers": "Customers",
+      "orders": "Orders",
+      "project": "Full project"
+    },
+    "statuses": {
+      "pending": "Queued",
+      "processing": "Processing",
+      "completed": "Completed",
+      "failed": "Failed"
+    }
+  }
+}
