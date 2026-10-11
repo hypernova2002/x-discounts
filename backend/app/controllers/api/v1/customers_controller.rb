@@ -3,17 +3,23 @@
 module Api
   module V1
     class CustomersController < ApplicationController
+      # This is the stable, external-integration-facing API (unlike the admin
+      # dashboard API, which lets the frontend opt into includes= per view) — it
+      # keeps returning every field it always has, by always requesting every
+      # includes= gate CustomerResource defines.
+      FULL_RESOURCE_PARAMS = { includes: %w[membership_tier membership_scheme] }.freeze
+
       before_action :require_project_context!
       before_action :set_customer, only: %i[show]
 
       def create
         request = CustomerRequest.new(body)
         customer = Customers::CreateService.new(project: current_project, attrs: request.attributes).call
-        render json: CustomerResource.new(customer).to_h, status: :created
+        render json: CustomerResource.new(customer, params: FULL_RESOURCE_PARAMS).to_h, status: :created
       end
 
       def show
-        render json: CustomerResource.new(@customer).to_h
+        render json: CustomerResource.new(@customer, params: FULL_RESOURCE_PARAMS).to_h
       end
 
       private

@@ -33,7 +33,14 @@ const perPage = ref(25)
 const q = ref('')
 
 const { data: result, loading, error, reload } = useAsync(() =>
-  listCustomers({ q: q.value || undefined, page: page.value, perPage: perPage.value, token: auth.token ?? undefined, projectId: auth.project?.id })
+  listCustomers({
+    q: q.value || undefined,
+    page: page.value,
+    perPage: perPage.value,
+    includes: ['membership_tier', 'membership_scheme'],
+    token: auth.token ?? undefined,
+    projectId: auth.project?.id,
+  })
 )
 const customers = computed(() => result.value?.items ?? [])
 const meta = computed(() => result.value?.meta)

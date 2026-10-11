@@ -9,9 +9,11 @@ export const CouponCodeSchema = z
     code: z.string(),
     max_redemptions: z.number(),
     created_at: z.string(),
-    redemption_count: z.number(),
-    remaining_redemptions: z.number(),
-    customer: z.object({ id: z.string(), external_id: z.string(), name: z.string().nullable() }).nullable(),
+    // Each of these is only present when requested via ?includes= (see
+    // src/api/couponCodes.ts) — absent, not null, when not asked for.
+    redemption_count: z.number().optional(),
+    remaining_redemptions: z.number().optional(),
+    customer: z.object({ id: z.string(), external_id: z.string(), name: z.string().nullable() }).nullable().optional(),
   })
   .passthrough()
 

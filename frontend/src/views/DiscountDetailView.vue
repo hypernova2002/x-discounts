@@ -54,7 +54,11 @@ async function loadDiscount() {
   loading.value = true
   loadError.value = ''
   try {
-    discount.value = await getDiscount(route.params.id as string, { token: auth.token ?? undefined, projectId: auth.project?.id })
+    discount.value = await getDiscount(route.params.id as string, {
+      includes: ['campaign', 'discount_effects', 'coupon_code_stats', 'redemption_count'],
+      token: auth.token ?? undefined,
+      projectId: auth.project?.id,
+    })
     if (discount.value.kind === 'coupon') loadCouponCodes()
   } catch (e) {
     loadError.value = e instanceof ApiError ? e.message : t('discountDetail.loadError')
@@ -71,7 +75,13 @@ const couponCodesLoading = ref(false)
 async function loadCouponCodes() {
   couponCodesLoading.value = true
   try {
-    couponCodes.value = await listCouponCodes({ discountId: discount.value!.id, perPage: 200, token: auth.token ?? undefined, projectId: auth.project?.id })
+    couponCodes.value = await listCouponCodes({
+      discountId: discount.value!.id,
+      perPage: 200,
+      includes: ['redemption_count', 'customer'],
+      token: auth.token ?? undefined,
+      projectId: auth.project?.id,
+    })
   } catch (e) {
     toast.add({ severity: 'error', summary: t('discountDetail.loadCouponCodesError'), detail: e instanceof Error ? e.message : String(e), life: 4000 })
   } finally {
@@ -143,7 +153,7 @@ async function submitGenerate() {
     toast.add({ severity: 'success', summary: t('discountDetail.couponCodesGeneratedToast'), life: 3000 })
     generateDialogOpen.value = false
     await loadCouponCodes()
-    discount.value = await getDiscount(discount.value!.id, { token: auth.token ?? undefined, projectId: auth.project?.id })
+    discount.value = await getDiscount(discount.value!.id, { includes: ['campaign', 'discount_effects', 'coupon_code_stats', 'redemption_count'], token: auth.token ?? undefined, projectId: auth.project?.id })
   } catch (e) {
     generateErrors.value = e instanceof ApiError ? toFieldErrors(e) : { _root: t('discountDetail.genericError') }
   } finally {
@@ -156,7 +166,7 @@ async function revokeCode(code: CouponCode) {
     await deleteCouponCode(discount.value!.id, code.id, { token: auth.token ?? undefined, projectId: auth.project?.id })
     toast.add({ severity: 'success', summary: t('discountDetail.codeRevokedToast'), life: 3000 })
     await loadCouponCodes()
-    discount.value = await getDiscount(discount.value!.id, { token: auth.token ?? undefined, projectId: auth.project?.id })
+    discount.value = await getDiscount(discount.value!.id, { includes: ['campaign', 'discount_effects', 'coupon_code_stats', 'redemption_count'], token: auth.token ?? undefined, projectId: auth.project?.id })
   } catch (e) {
     toast.add({ severity: 'error', summary: t('discountDetail.revokeCodeError'), detail: e instanceof Error ? e.message : String(e), life: 4000 })
   }
@@ -238,7 +248,7 @@ function editDiscount() {
 }
 
 function viewCampaign() {
-  router.push({ name: 'campaign-show', params: { id: discount.value!.campaign.id } })
+  router.push({ name: 'campaign-show', params: { id: discount.value!.campaign!.id } })
 }
 
 const duplicating = ref(false)
@@ -266,7 +276,7 @@ async function confirmDelete() {
   try {
     await deleteDiscount(discount.value!.id, { token: auth.token ?? undefined, projectId: auth.project?.id })
     toast.add({ severity: 'success', summary: t('discountDetail.discountDeletedToast'), life: 3000 })
-    router.push({ name: 'campaign-show', params: { id: discount.value!.campaign.id } })
+    router.push({ name: 'campaign-show', params: { id: discount.value!.campaign!.id } })
   } catch (e) {
     toast.add({ severity: 'error', summary: t('discountDetail.deleteDiscountError'), detail: e instanceof Error ? e.message : String(e), life: 4000 })
   } finally {
@@ -344,7 +354,7 @@ onMounted(loadDiscount)
     <BaseMessage v-if="loadError" severity="error" :closable="false">{{ loadError }}</BaseMessage>
 
     <template v-if="discount">
-      <PageHeader :crumbs="[{ label: discount.campaign.name, to: { name: 'campaign-show', params: { id: discount.campaign.id } } }]">
+      <PageHeader :crumbs="[{ label: discount.campaign!.name, to: { name: 'campaign-show', params: { id: discount.campaign!.id } } }]">
         <template #title>
           <h2>{{ discount.name }}</h2>
           <BaseTag :value="discount.kind" />
@@ -377,11 +387,11 @@ onMounted(loadDiscount)
               <dd>{{ discount.key }}</dd>
               <dt>{{ $t('discountDetail.campaignLabel') }}</dt>
               <dd>
-                <EntityLink @click="viewCampaign">{{ discount.campaign.name }}</EntityLink>
+                <EntityLink @click="viewCampaign">{{ discount.campaign!.name }}</EntityLink>
                 <BaseTag
                   class="campaign-status"
-                  :severity="discount.campaign.active ? 'success' : 'danger'"
-                  :value="discount.campaign.active ? $t('discountDetail.statusActive') : $t('discountDetail.statusInactive')"
+                  :severity="discount.campaign!.active ? 'success' : 'danger'"
+                  :value="discount.campaign!.active ? $t('discountDetail.statusActive') : $t('discountDetail.statusInactive')"
                 />
               </dd>
               <dt>{{ $t('discountDetail.createdLabel') }}</dt>
@@ -486,8 +496,8 @@ onMounted(loadDiscount)
         <BaseCard>
           <template #title>{{ $t('discountDetail.effectsTitle') }}</template>
           <template #content>
-            <p v-if="!discount.effects.length" class="empty-hint">{{ $t('discountDetail.noEffects') }}</p>
-            <div v-for="effect in discount.effects" :key="effect.id" class="effect-summary">
+            <p v-if="!discount.effects?.length" class="empty-hint">{{ $t('discountDetail.noEffects') }}</p>
+            <div v-for="effect in discount.effects ?? []" :key="effect.id" class="effect-summary">
               <div class="effect-summary__header">
                 <BaseTag :value="effect.effect_type" />
                 <BaseTag severity="secondary" :value="effect.scope" />

@@ -16,20 +16,24 @@ module Api
           dataset = filtered_orders_dataset.eager(*EAGER)
           pagy, orders = paginate(dataset, limit: params[:per_page]&.to_i)
           response.headers.merge!(pagy_headers_merge(pagy))
-          render json: { orders: OrderResource.new(orders).to_h, meta: meta_for(pagy) }
+          render json: { orders: OrderResource.new(orders, params: resource_params).to_h, meta: meta_for(pagy) }
         end
 
         def show
-          render json: OrderResource.new(@order).to_h
+          render json: OrderResource.new(@order, params: resource_params).to_h
         end
 
         def cancel
           request = OrderCancelRequest.new(body)
           order = Orders::CancelService.new(order: @order, refund: request.refund, reason: request.reason, performed_by: current_user).call
-          render json: OrderResource.new(order).to_h
+          render json: OrderResource.new(order, params: resource_params).to_h
         end
 
         private
+
+        def resource_params
+          { includes: requested_includes }
+        end
 
         def set_order
           @order = current_project.orders_dataset.eager(*EAGER).first(public_id: params[:id])

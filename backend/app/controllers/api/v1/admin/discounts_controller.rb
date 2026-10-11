@@ -29,13 +29,19 @@ module Api
             matching_by_code = CouponCode.where(project_id: current_project.id).where(Sequel.ilike(:code, "%#{params[:q]}%")).select(:discount_id)
             dataset = dataset.where(Sequel.ilike(:name, "%#{params[:q]}%") | { id: matching_by_code })
           end
+          eager_associations = %i[campaign discount_effects compatible_discounts] & requested_includes.map(&:to_sym)
+          dataset = dataset.eager(*eager_associations) if eager_associations.any?
           pagy, discounts = paginate(dataset, limit: params[:per_page]&.to_i)
+          # Materialized once — both the bulk stats lookup and serialization
+          # enumerate this collection, and a Sequel dataset re-runs its query
+          # (losing the eager-loaded cache) on every separate enumeration.
+          discounts = discounts.all
           response.headers.merge!(pagy_headers_merge(pagy))
-          render json: { discounts: DiscountResource.new(discounts).to_h, meta: meta_for(pagy) }
+          render json: { discounts: DiscountResource.new(discounts, params: resource_params(discounts)).to_h, meta: meta_for(pagy) }
         end
 
         def show
-          render json: DiscountResource.new(@discount).to_h
+          render json: DiscountResource.new(@discount, params: resource_params).to_h
         end
 
         def create
@@ -45,19 +51,19 @@ module Api
             request: request,
             campaign: find_campaign!(request.campaign_id)
           ).call
-          render json: DiscountResource.new(discount).to_h, status: :created
+          render json: DiscountResource.new(discount, params: resource_params).to_h, status: :created
         end
 
         def update
           request = DiscountUpdateRequest.build(body, kind: @discount.kind)
           campaign = find_campaign!(request.campaign_id) if request.attributes.key?(:campaign_id)
           discount = Discounts::UpdateService.new(discount: @discount, request: request, campaign: campaign).call
-          render json: DiscountResource.new(discount).to_h
+          render json: DiscountResource.new(discount, params: resource_params).to_h
         end
 
         def duplicate
           copy = Discounts::DuplicateService.new(discount: @discount).call
-          render json: DiscountResource.new(copy).to_h, status: :created
+          render json: DiscountResource.new(copy, params: resource_params).to_h, status: :created
         end
 
         def destroy
@@ -72,7 +78,7 @@ module Api
           raise ValidationError.new(details: [{ field: "design_image", message: "is required" }]) unless file.respond_to?(:read)
 
           discount = Coupons::AttachDesignImageService.new(discount: @discount, file: file).call
-          render json: DiscountResource.new(discount).to_h
+          render json: DiscountResource.new(discount, params: resource_params).to_h
         end
 
         def design_image
@@ -82,6 +88,22 @@ module Api
         end
 
         private
+
+        # For a list (`discounts` present), bulk-computes whatever's actually
+        # requested instead of letting the resource fall back to its per-record
+        # queries once per row. For a single record, no bulk map is built — the
+        # resource's per-record fallback is cheap enough for one row.
+        def resource_params(discounts = nil)
+          return { includes: requested_includes } unless discounts && (requested_includes & %w[redemption_count coupon_code_stats]).any?
+
+          stats = Discounts::BulkStatsService.new(discounts).call
+          {
+            includes: requested_includes,
+            redemption_counts: stats.redemption_counts,
+            coupon_code_stats: stats.coupon_code_stats,
+            discount_kinds_by_campaign: stats.discount_kinds_by_campaign
+          }
+        end
 
         def set_discount
           @discount = current_project.discounts_dataset.first(public_id: params[:id])

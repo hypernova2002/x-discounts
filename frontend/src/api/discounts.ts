@@ -10,15 +10,17 @@ interface ListDiscountsParams extends AuthParams {
   q?: string
   page?: number
   perPage?: number
+  includes?: string[]
 }
 
-export function listDiscounts({ campaignId, kind, q, page, perPage, token, projectId }: ListDiscountsParams = {}): Promise<PaginatedResult<Discount>> {
+export function listDiscounts({ campaignId, kind, q, page, perPage, includes, token, projectId }: ListDiscountsParams = {}): Promise<PaginatedResult<Discount>> {
   const params = new URLSearchParams()
   if (campaignId) params.set('campaign_id', campaignId)
   if (kind) params.set('kind', kind)
   if (q) params.set('q', q)
   if (page) params.set('page', String(page))
   if (perPage) params.set('per_page', String(perPage))
+  if (includes?.length) params.set('includes', includes.join(','))
   const qs = params.toString()
   return apiFetch(qs ? `${BASE}?${qs}` : BASE, { token, projectId }).then((data) => {
     const parsed = DiscountListSchema.parse(data)
@@ -26,8 +28,9 @@ export function listDiscounts({ campaignId, kind, q, page, perPage, token, proje
   })
 }
 
-export function getDiscount(id: string, { token, projectId }: AuthParams) {
-  return apiFetch(`${BASE}/${id}`, { token, projectId }).then((data) => DiscountSchema.parse(data))
+export function getDiscount(id: string, { includes, token, projectId }: AuthParams & { includes?: string[] }) {
+  const query = includes?.length ? `?includes=${includes.join(',')}` : ''
+  return apiFetch(`${BASE}/${id}${query}`, { token, projectId }).then((data) => DiscountSchema.parse(data))
 }
 
 export function createDiscount(input: DiscountInput, { token, projectId }: AuthParams) {

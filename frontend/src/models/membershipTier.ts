@@ -12,7 +12,9 @@ export const MembershipTierSchema = z
     grace_period_days: z.number().nullable(),
     requirements_condition: z.record(z.string(), z.any()),
     auto_assignable: z.boolean(),
-    membership_scheme: z.object({ id: z.string(), name: z.string() }).passthrough(),
+    // Only present when requested via ?includes= (see src/api/*.ts) — absent,
+    // not an error, when not asked for.
+    membership_scheme: z.object({ id: z.string(), name: z.string() }).passthrough().optional(),
     created_at: z.string(),
     updated_at: z.string(),
   })

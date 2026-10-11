@@ -12,23 +12,26 @@ module Api
 
         def create
           customer = Customers::AdminCreateService.new(project: current_project, request: CustomerRequest.new(body)).call
-          render json: CustomerResource.new(customer).to_h, status: :created
+          render json: CustomerResource.new(customer, params: resource_params).to_h, status: :created
         end
 
         def duplicate
           copy = Customers::DuplicateService.new(customer: @customer).call
-          render json: CustomerResource.new(copy).to_h, status: :created
+          render json: CustomerResource.new(copy, params: resource_params).to_h, status: :created
         end
 
         def index
           dataset = filtered_customers_dataset
+          if requested_includes.include?("membership_tier")
+            dataset = dataset.eager(requested_includes.include?("membership_scheme") ? { membership_tier: :membership_scheme } : :membership_tier)
+          end
           pagy, customers = paginate(dataset, limit: params[:per_page]&.to_i)
           response.headers.merge!(pagy_headers_merge(pagy))
-          render json: { customers: CustomerResource.new(customers).to_h, meta: meta_for(pagy) }
+          render json: { customers: CustomerResource.new(customers, params: resource_params).to_h, meta: meta_for(pagy) }
         end
 
         def show
-          render json: CustomerResource.new(@customer).to_h.merge(
+          render json: CustomerResource.new(@customer, params: resource_params).to_h.merge(
             stats: customer_stats,
             loyalty_point_lots: loyalty_point_lots,
             activity: Customers::ActivityFeedService.new(customer: @customer).call
@@ -39,7 +42,7 @@ module Api
           request = CustomerUpdateRequest.new(body)
           tier = find_membership_tier!(request.membership_tier_id) if request.attributes.key?(:membership_tier_id) && request.membership_tier_id
           customer = Customers::UpdateService.new(customer: @customer, request: request, membership_tier: tier).call
-          render json: CustomerResource.new(customer).to_h
+          render json: CustomerResource.new(customer, params: resource_params).to_h
         end
 
         def grant_points
@@ -48,7 +51,7 @@ module Api
             customer: @customer, points: request.points, expires_at: request.expires_at,
             reason: request.reason, performed_by: current_user
           ).call
-          render json: CustomerResource.new(@customer).to_h.merge(
+          render json: CustomerResource.new(@customer, params: resource_params).to_h.merge(
             stats: customer_stats,
             loyalty_point_lots: loyalty_point_lots,
             activity: Customers::ActivityFeedService.new(customer: @customer).call
@@ -88,7 +91,11 @@ module Api
 
         def loyalty_point_lots
           lots = @customer.loyalty_point_lots_dataset.order(Sequel.desc(:earned_at)).limit(100).all
-          LoyaltyPointLotResource.new(lots).to_h
+          LoyaltyPointLotResource.new(lots, params: resource_params).to_h
+        end
+
+        def resource_params
+          { includes: requested_includes }
         end
 
         def set_customer

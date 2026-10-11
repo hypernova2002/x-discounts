@@ -9,13 +9,15 @@ interface ListMembershipSchemesParams extends AuthParams {
   q?: string
   page?: number
   perPage?: number
+  includes?: string[]
 }
 
-export function listMembershipSchemes({ q, page, perPage, token, projectId }: ListMembershipSchemesParams = {}): Promise<PaginatedResult<MembershipScheme>> {
+export function listMembershipSchemes({ q, page, perPage, includes, token, projectId }: ListMembershipSchemesParams = {}): Promise<PaginatedResult<MembershipScheme>> {
   const params = new URLSearchParams()
   if (q) params.set('q', q)
   if (page) params.set('page', String(page))
   if (perPage) params.set('per_page', String(perPage))
+  if (includes?.length) params.set('includes', includes.join(','))
   const query = params.toString()
   return apiFetch(`${BASE}${query ? `?${query}` : ''}`, { token, projectId }).then((data) => {
     const parsed = MembershipSchemeListSchema.parse(data)
@@ -23,8 +25,9 @@ export function listMembershipSchemes({ q, page, perPage, token, projectId }: Li
   })
 }
 
-export function getMembershipScheme(id: string, { token, projectId }: AuthParams) {
-  return apiFetch(`${BASE}/${id}`, { token, projectId }).then((data) => MembershipSchemeSchema.parse(data))
+export function getMembershipScheme(id: string, { includes, token, projectId }: AuthParams & { includes?: string[] }) {
+  const query = includes?.length ? `?includes=${includes.join(',')}` : ''
+  return apiFetch(`${BASE}/${id}${query}`, { token, projectId }).then((data) => MembershipSchemeSchema.parse(data))
 }
 
 export function createMembershipScheme(input: MembershipSchemeInput, { token, projectId }: AuthParams) {

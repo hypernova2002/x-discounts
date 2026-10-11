@@ -36,7 +36,14 @@ const perPage = ref(25)
 const q = ref('')
 
 const { data: result, loading, error, reload } = useAsync(() =>
-  listOrders({ q: q.value || undefined, page: page.value, perPage: perPage.value, token: auth.token ?? undefined, projectId: auth.project?.id })
+  listOrders({
+    q: q.value || undefined,
+    page: page.value,
+    perPage: perPage.value,
+    includes: ['customer', 'order_line_items'],
+    token: auth.token ?? undefined,
+    projectId: auth.project?.id,
+  })
 )
 const orders = computed(() => result.value?.items ?? [])
 const meta = computed(() => result.value?.meta)
@@ -73,8 +80,8 @@ function formatTooltipValue(value: number, datasetLabel?: string): string {
 
 const columns = computed<TableColumn[]>(() => [
   { field: 'id', header: t('orders.order'), sortable: true, hideable: false, filter: { type: 'string' } },
-  { field: 'customer', header: t('orders.customer'), hideable: false, filter: { type: 'string', accessor: (row) => (row as unknown as Order).customer.external_id } },
-  { field: 'line_items', header: t('orders.items'), filter: { type: 'number', accessor: (row) => (row as unknown as Order).line_items.length } },
+  { field: 'customer', header: t('orders.customer'), hideable: false, filter: { type: 'string', accessor: (row) => (row as unknown as Order).customer?.external_id } },
+  { field: 'line_items', header: t('orders.items'), filter: { type: 'number', accessor: (row) => (row as unknown as Order).line_items?.length ?? 0 } },
   { field: 'total_amount', header: t('orders.total'), sortable: true, filter: { type: 'number' } },
   { field: 'total_discount_amount', header: t('orders.discount'), sortable: true, filter: { type: 'number' } },
   {
@@ -186,9 +193,9 @@ async function exportOrders() {
           @search="onSearch"
         >
           <template #cell-customer="{ data }">
-            <EntityLink @click="viewCustomer(data.customer)">{{ data.customer.external_id }}</EntityLink>
+            <EntityLink @click="viewCustomer(data.customer!)">{{ data.customer!.external_id }}</EntityLink>
           </template>
-          <template #cell-line_items="{ data }">{{ data.line_items.length }}</template>
+          <template #cell-line_items="{ data }">{{ data.line_items!.length }}</template>
           <template #cell-total_amount="{ data }">{{ formatCurrency(data.total_amount, auth.project?.currency) }}</template>
           <template #cell-total_discount_amount="{ data }">{{ formatCurrency(data.total_discount_amount, auth.project?.currency) }}</template>
           <template #cell-status="{ data }"><OrderStatusTag :status="data.status" /></template>

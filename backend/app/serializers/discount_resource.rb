@@ -1,8 +1,6 @@
 # frozen_string_literal: true
 
-class DiscountResource
-  include Alba::Resource
-
+class DiscountResource < ApplicationResource
   attribute :id, &:public_id
   attributes :key, :kind, :name, :stackable, :refundable, :enabled, :created_at, :updated_at,
              :max_redemptions, :max_redemptions_per_customer, :max_redemptions_per_day,
@@ -26,21 +24,25 @@ class DiscountResource
   end
   attribute(:loyalty) { |d| d.kind == "loyalty" ? d.kind_config.to_h : nil }
 
-  attribute(:compatible_discounts) do |d|
+  attribute(:compatible_discounts, if: proc { included?(:compatible_discounts) }) do |d|
     d.compatible_discounts.map { |cd| { id: cd.public_id, name: cd.name, key: cd.key } }
   end
 
-  attribute(:coupon_code_stats) do |d|
+  attribute(:coupon_code_stats, if: proc { included?(:coupon_code_stats) }) do |d|
     next nil unless d.kind == "coupon"
+
+    next params[:coupon_code_stats][d.id] if params[:coupon_code_stats]&.key?(d.id)
 
     codes = d.coupon_codes_dataset.all
     { total: codes.size, available: codes.count { |c| c.remaining_redemptions.positive? } }
   end
 
-  attribute(:redemption_count) { |d| d.redemption_count }
-  attribute(:points_earned) { |d| d.kind == "loyalty" ? d.points_earned : nil }
-  attribute(:points_redeemed) { |d| d.kind == "loyalty" ? d.points_redeemed : nil }
+  attribute(:redemption_count, if: proc { included?(:redemption_count) }) do |d|
+    params[:redemption_counts]&.fetch(d.id, nil) || d.redemption_count
+  end
+  attribute(:points_earned, if: proc { included?(:points_earned) }) { |d| d.kind == "loyalty" ? d.points_earned : nil }
+  attribute(:points_redeemed, if: proc { included?(:points_redeemed) }) { |d| d.kind == "loyalty" ? d.points_redeemed : nil }
 
-  one :campaign, resource: CampaignResource
-  many :discount_effects, resource: DiscountEffectResource, key: "effects"
+  one :campaign, resource: CampaignResource, if: proc { included?(:campaign) }
+  many :discount_effects, resource: DiscountEffectResource, key: "effects", if: proc { included?(:discount_effects) }
 end

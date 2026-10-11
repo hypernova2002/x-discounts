@@ -20,10 +20,9 @@ export const CampaignSchema = z
     valid_until: z.string().nullable(),
     created_at: z.string(),
     updated_at: z.string(),
-    discount_kinds: z.array(z.enum(['promotion', 'coupon', 'loyalty'])),
-    // Only present on campaigns#show (CampaignSummaryResource) — a real
-    // aggregate query, deliberately left off the list response. See the
-    // Phase 1 plan's backend section for why.
+    // Each of these is only present when requested via ?includes= (see
+    // src/api/campaigns.ts) — absent, not an empty array/null, when not asked for.
+    discount_kinds: z.array(z.enum(['promotion', 'coupon', 'loyalty'])).optional(),
     discount_summary: z
       .object({ count: z.number(), redemption_count: z.number(), discounted_amount: money })
       .optional(),

@@ -1,10 +1,8 @@
 # frozen_string_literal: true
 
-class ApiKeyResource
-  include Alba::Resource
-
+class ApiKeyResource < ApplicationResource
   attribute :id, &:public_id
-  attribute(:user_id) { |key| key.user.public_id }
+  attribute(:user_id, if: proc { included?(:user_id) }) { |key| key.user.public_id }
   attributes :name, :role, :token_last_four, :last_used_at, :revoked_at, :created_at
 
   # The raw token only ever exists on the instance that just generated it — never

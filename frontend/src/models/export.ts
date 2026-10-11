@@ -16,7 +16,8 @@ export const ExportSchema = z
     error_message: z.string().nullable(),
     created_at: z.string(),
     completed_at: z.string().nullable(),
-    requested_by: z.string().nullable(),
+    // Only present when requested via ?includes=requested_by (see src/api/exports.ts).
+    requested_by: z.string().nullable().optional(),
   })
   .passthrough()
 

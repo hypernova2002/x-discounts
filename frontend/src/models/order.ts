@@ -45,12 +45,14 @@ export const OrderDiscountSchema = z
     discount_name: z.string(),
     effect_type: z.string().nullable(),
     amount_off: money.nullable(),
-    points_earned: z.number().nullable(),
-    refunded_amount_off: money.nullable(),
-    refunded_points: z.number().nullable(),
-    refundable: z.boolean().nullable(),
     free_items: z.array(z.unknown()).nullable(),
-    refund_history: z.array(RefundHistoryEntrySchema),
+    // Each of these is only present when requested via ?includes= (see
+    // src/api/orders.ts) — absent, not null, when not asked for.
+    points_earned: z.number().nullable().optional(),
+    refunded_amount_off: money.nullable().optional(),
+    refunded_points: z.number().nullable().optional(),
+    refundable: z.boolean().nullable().optional(),
+    refund_history: z.array(RefundHistoryEntrySchema).optional(),
   })
   .passthrough()
 
@@ -62,7 +64,8 @@ export const PointsRedemptionSchema = z
     points_redeemed: z.number(),
     amount_off: money,
     refunded_points: z.number(),
-    refund_history: z.array(RefundHistoryEntrySchema),
+    // Only present when requested via ?includes=refund_history.
+    refund_history: z.array(RefundHistoryEntrySchema).optional(),
   })
   .passthrough()
 
@@ -80,10 +83,12 @@ export const OrderSchema = z
     cancelled_at: z.string().nullable(),
     created_at: z.string(),
     status: z.enum(['active', 'cancelled', 'refunded', 'partially_refunded']),
-    customer: OrderCustomerSchema,
-    line_items: z.array(OrderLineItemSchema),
-    discounts: z.array(OrderDiscountSchema),
-    points_redemption: PointsRedemptionSchema.nullable(),
+    // Each of these is only present when requested via ?includes= (see
+    // src/api/orders.ts) — absent, not null/empty, when not asked for.
+    customer: OrderCustomerSchema.optional(),
+    line_items: z.array(OrderLineItemSchema).optional(),
+    discounts: z.array(OrderDiscountSchema).optional(),
+    points_redemption: PointsRedemptionSchema.nullable().optional(),
   })
   .passthrough()
 

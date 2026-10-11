@@ -17,7 +17,7 @@ module Api
           request = DiscountCompatibilityRequest.new(body)
           compatible = find_discount!(request.compatible_discount_id)
           DiscountStackingCompatibilities::CreateService.new(discount: @discount, compatible_discount: compatible).call
-          render json: DiscountResource.new(@discount.refresh).to_h, status: :created
+          render json: DiscountResource.new(@discount.refresh, params: { includes: requested_includes }).to_h, status: :created
         rescue Sequel::ValidationFailed => e
           raise ValidationError.from_model(e.model)
         end

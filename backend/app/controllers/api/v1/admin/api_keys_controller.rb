@@ -14,11 +14,11 @@ module Api
           dataset = current_project.api_keys_dataset.order(:id)
           pagy, keys = paginate(dataset)
           response.headers.merge!(pagy_headers_merge(pagy))
-          render json: { api_keys: ApiKeyResource.new(keys).to_h, meta: meta_for(pagy) }
+          render json: { api_keys: ApiKeyResource.new(keys, params: resource_params).to_h, meta: meta_for(pagy) }
         end
 
         def show
-          render json: ApiKeyResource.new(@api_key).to_h
+          render json: ApiKeyResource.new(@api_key, params: resource_params).to_h
         end
 
         def create
@@ -28,7 +28,7 @@ module Api
           raise ValidationError.new(details: [{ field: "user_id", message: "is invalid" }]) unless user
 
           key = ApiKey.create_for(project: current_project, user: user, role: request.role, name: request.name)
-          render json: ApiKeyResource.new(key, params: { include_token: true }).to_h, status: :created
+          render json: ApiKeyResource.new(key, params: resource_params.merge(include_token: true)).to_h, status: :created
         rescue Sequel::ValidationFailed => e
           raise ValidationError.from_model(e.model)
         end
@@ -39,6 +39,10 @@ module Api
         end
 
         private
+
+        def resource_params
+          { includes: requested_includes }
+        end
 
         def set_api_key
           @api_key = current_project.api_keys_dataset.first(public_id: params[:id])

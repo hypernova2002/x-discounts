@@ -137,6 +137,7 @@ async function loadDiscounts() {
       campaignId: campaignId.value!,
       page: discountsPage.value,
       perPage: discountsPerPage.value,
+      includes: ['redemption_count'],
       token: auth.token ?? undefined,
       projectId: auth.project?.id,
     })

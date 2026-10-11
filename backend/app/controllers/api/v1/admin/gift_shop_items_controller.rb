@@ -63,7 +63,7 @@ module Api
             customer_external_id: request.customer_external_id,
             quantity: request.quantity
           ).call
-          render json: GiftShopRedemptionResource.new(redemption).to_h, status: :created
+          render json: GiftShopRedemptionResource.new(redemption, params: { includes: requested_includes }).to_h, status: :created
         end
 
         private

@@ -13,23 +13,24 @@ module Api
         def index
           dataset = current_project.membership_schemes_dataset.order(Sequel.desc(:id))
           dataset = dataset.where(Sequel.ilike(:name, "%#{params[:q]}%")) if params[:q].present?
+          dataset = dataset.eager(:membership_tiers) if requested_includes.include?("membership_tiers")
           pagy, schemes = paginate(dataset, limit: params[:per_page]&.to_i)
           response.headers.merge!(pagy_headers_merge(pagy))
-          render json: { membership_schemes: MembershipSchemeResource.new(schemes).to_h, meta: meta_for(pagy) }
+          render json: { membership_schemes: MembershipSchemeResource.new(schemes, params: resource_params).to_h, meta: meta_for(pagy) }
         end
 
         def show
-          render json: MembershipSchemeResource.new(@scheme).to_h
+          render json: MembershipSchemeResource.new(@scheme, params: resource_params).to_h
         end
 
         def create
           scheme = MembershipSchemes::CreateService.new(project: current_project, request: MembershipSchemeRequest.new(body)).call
-          render json: MembershipSchemeResource.new(scheme).to_h, status: :created
+          render json: MembershipSchemeResource.new(scheme, params: resource_params).to_h, status: :created
         end
 
         def update
           scheme = MembershipSchemes::UpdateService.new(scheme: @scheme, request: MembershipSchemeUpdateRequest.new(body)).call
-          render json: MembershipSchemeResource.new(scheme).to_h
+          render json: MembershipSchemeResource.new(scheme, params: resource_params).to_h
         end
 
         # Runs the same re-evaluation MembershipTierSweepJob would, synchronously and
@@ -46,6 +47,10 @@ module Api
         end
 
         private
+
+        def resource_params
+          { includes: requested_includes }
+        end
 
         def set_scheme
           @scheme = current_project.membership_schemes_dataset.first(public_id: params[:id])

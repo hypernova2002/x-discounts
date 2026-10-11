@@ -39,7 +39,11 @@ async function loadOrder() {
   loading.value = true
   loadError.value = ''
   try {
-    order.value = await getOrder(route.params.id as string, { token: auth.token ?? undefined, projectId: auth.project?.id })
+    order.value = await getOrder(route.params.id as string, {
+      includes: ['customer', 'order_line_items', 'order_discounts', 'points_redemption', 'refundable', 'refund_history'],
+      token: auth.token ?? undefined,
+      projectId: auth.project?.id,
+    })
   } catch (e) {
     loadError.value = e instanceof ApiError ? e.message : t('orderDetail.loadError')
   } finally {
@@ -82,7 +86,7 @@ function canRefundLine(discount: OrderDiscount): boolean {
 }
 
 function viewCustomer() {
-  router.push({ name: 'customer-show', params: { id: order.value!.customer.id } })
+  router.push({ name: 'customer-show', params: { id: order.value!.customer!.id } })
 }
 
 // --- cancel order ---
@@ -112,7 +116,11 @@ async function submitCancel() {
 
   cancelling.value = true
   try {
-    order.value = await cancelOrder(order.value!.id, result.data, { token: auth.token ?? undefined, projectId: auth.project?.id })
+    order.value = await cancelOrder(order.value!.id, result.data, {
+      includes: ['customer', 'order_line_items', 'order_discounts', 'points_redemption', 'refundable', 'refund_history'],
+      token: auth.token ?? undefined,
+      projectId: auth.project?.id,
+    })
     toast.add({ severity: 'success', summary: t('orderDetail.orderCancelled'), life: 3000 })
     cancelDialogOpen.value = false
   } catch (e) {
@@ -191,8 +199,8 @@ interface HistoryTarget {
 }
 
 const historyTarget = ref<HistoryTarget | null>(null)
-function openHistory(discountOrRedemption: { refund_history: RefundHistoryEntry[] }, label: string) {
-  historyTarget.value = { label, entries: discountOrRedemption.refund_history }
+function openHistory(discountOrRedemption: { refund_history?: RefundHistoryEntry[] }, label: string) {
+  historyTarget.value = { label, entries: discountOrRedemption.refund_history ?? [] }
 }
 
 const pointsRedemptionRemaining = computed(() => {
@@ -229,22 +237,22 @@ onMounted(loadOrder)
           <template #content>
             <dl class="details">
               <dt>{{ $t('orderDetail.customer.externalId') }}</dt>
-              <dd><EntityLink @click="viewCustomer">{{ order.customer.external_id }}</EntityLink></dd>
-              <template v-if="order.customer.name">
+              <dd><EntityLink @click="viewCustomer">{{ order.customer!.external_id }}</EntityLink></dd>
+              <template v-if="order.customer!.name">
                 <dt>{{ $t('orderDetail.customer.name') }}</dt>
-                <dd>{{ order.customer.name }}</dd>
+                <dd>{{ order.customer!.name }}</dd>
               </template>
-              <template v-if="order.customer.email">
+              <template v-if="order.customer!.email">
                 <dt>{{ $t('orderDetail.customer.email') }}</dt>
-                <dd><EntityLink @click="viewCustomer">{{ order.customer.email }}</EntityLink></dd>
+                <dd><EntityLink @click="viewCustomer">{{ order.customer!.email }}</EntityLink></dd>
               </template>
-              <template v-if="order.customer.phone_number">
+              <template v-if="order.customer!.phone_number">
                 <dt>{{ $t('orderDetail.customer.phone') }}</dt>
-                <dd>{{ order.customer.phone_number }}</dd>
+                <dd>{{ order.customer!.phone_number }}</dd>
               </template>
-              <template v-if="order.customer.country">
+              <template v-if="order.customer!.country">
                 <dt>{{ $t('orderDetail.customer.country') }}</dt>
-                <dd>{{ order.customer.country }}</dd>
+                <dd>{{ order.customer!.country }}</dd>
               </template>
             </dl>
           </template>
@@ -268,7 +276,7 @@ onMounted(loadOrder)
       <BaseCard class="section-card">
         <template #title>{{ $t('orderDetail.receipt.title') }}</template>
         <template #content>
-          <div v-for="li in order.line_items" :key="li.sku" class="receipt-line-item">
+          <div v-for="li in order.line_items ?? []" :key="li.sku" class="receipt-line-item">
             <div class="receipt-line-item__header">
               <span class="receipt-line-item__sku">{{ li.sku }}</span>
               <span>{{ formatNumber(li.quantity) }} × {{ formatCurrency(li.unit_price, auth.project?.currency) }}</span>

@@ -13,15 +13,19 @@ module Api
 
         def create
           tier = MembershipTiers::CreateService.new(scheme: @scheme, request: MembershipTierRequest.new(body)).call
-          render json: MembershipTierResource.new(tier).to_h, status: :created
+          render json: MembershipTierResource.new(tier, params: resource_params).to_h, status: :created
         end
 
         def update
           tier = MembershipTiers::UpdateService.new(tier: @tier, request: MembershipTierUpdateRequest.new(body)).call
-          render json: MembershipTierResource.new(tier).to_h
+          render json: MembershipTierResource.new(tier, params: resource_params).to_h
         end
 
         private
+
+        def resource_params
+          { includes: requested_includes }
+        end
 
         def set_scheme
           @scheme = current_project.membership_schemes_dataset.first(public_id: params[:membership_scheme_id])

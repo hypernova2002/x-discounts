@@ -5,5 +5,5 @@
 # CampaignResource so the aggregate never accidentally runs on list views or on the
 # nested `campaign` attribute DiscountResource already embeds via CampaignResource.
 class CampaignSummaryResource < CampaignResource
-  attribute(:discount_summary) { |campaign| campaign.discount_summary }
+  attribute(:discount_summary, if: proc { included?(:discount_summary) }) { |campaign| campaign.discount_summary }
 end

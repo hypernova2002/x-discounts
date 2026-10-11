@@ -32,7 +32,15 @@ const perPage = ref(25)
 const q = ref('')
 
 const { data: result, loading, error, reload } = useAsync(() =>
-  listDiscounts({ kind: props.kind, q: q.value || undefined, page: page.value, perPage: perPage.value, token: auth.token ?? undefined, projectId: auth.project?.id })
+  listDiscounts({
+    kind: props.kind,
+    q: q.value || undefined,
+    page: page.value,
+    perPage: perPage.value,
+    includes: ['campaign', 'redemption_count', 'points_earned', 'points_redeemed'],
+    token: auth.token ?? undefined,
+    projectId: auth.project?.id,
+  })
 )
 const discounts = computed(() => result.value?.items ?? [])
 const meta = computed(() => result.value?.meta)
@@ -67,13 +75,13 @@ function validityFields(discount: Discount): { from: string | null | undefined; 
 // the fact). `null` (not 0) when there's no cap, so the cell can tell
 // "unlimited" apart from "0% used".
 function usagePercent(discount: Discount): number | null {
-  if (!discount.max_redemptions) return null
+  if (!discount.max_redemptions || discount.redemption_count === undefined) return null
   return Math.min(100, Math.round((discount.redemption_count / discount.max_redemptions) * 100))
 }
 
 const columns = computed<TableColumn[]>(() => [
   { field: 'name', header: t('discountKindTable.nameColumn'), sortable: true, hideable: false, filter: { type: 'string' } },
-  { field: 'campaign', header: t('discountKindTable.campaignColumn'), filter: { type: 'string', accessor: (row) => (row as unknown as Discount).campaign.name } },
+  { field: 'campaign', header: t('discountKindTable.campaignColumn'), filter: { type: 'string', accessor: (row) => (row as unknown as Discount).campaign?.name } },
   { field: 'redemption_count', header: t('discountKindTable.redemptionsColumn'), sortable: true, filter: { type: 'number' } },
   // Points earned/redeemed only mean anything for loyalty discounts (coupon/
   // promotion give amount-off, not points) — see Discount#points_earned/
@@ -121,7 +129,7 @@ function viewCampaign(campaign: { id: string }) {
         @search="onSearch"
       >
         <template #cell-campaign="{ data }">
-          <EntityLink @click="viewCampaign(data.campaign)">{{ data.campaign.name }}</EntityLink>
+          <EntityLink @click="viewCampaign(data.campaign!)">{{ data.campaign!.name }}</EntityLink>
         </template>
         <template #cell-points_earned="{ data }">{{ formatNumber(data.points_earned) }}</template>
         <template #cell-points_redeemed="{ data }">{{ formatNumber(data.points_redeemed) }}</template>

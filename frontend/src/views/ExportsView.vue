@@ -20,7 +20,7 @@ const auth = useAuthStore()
 const toast = useBaseToast()
 const { t } = useI18n()
 
-const { data: exports, loading, error, reload } = useAsync(() => listExports({ token: auth.token ?? undefined, projectId: auth.project?.id }))
+const { data: exports, loading, error, reload } = useAsync(() => listExports({ includes: ['requested_by'], token: auth.token ?? undefined, projectId: auth.project?.id }))
 
 watch(error, (e) => {
   if (e) toast.add({ severity: 'error', summary: t('exports.loadError'), detail: e instanceof Error ? e.message : String(e), life: 4000 })

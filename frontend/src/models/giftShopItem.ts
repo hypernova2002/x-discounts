@@ -33,8 +33,11 @@ export const GiftShopRedemptionSchema = z
     quantity: z.number(),
     points_spent: z.number(),
     redeemed_at: z.string(),
-    item_id: z.string().nullable(),
-    customer_id: z.string(),
+    // Each of these is only present when requested via ?includes= (see
+    // src/api/giftShopItems.ts) — absent, not null, when not asked for;
+    // nothing in the UI currently reads either, so nothing requests them.
+    item_id: z.string().nullable().optional(),
+    customer_id: z.string().optional(),
   })
   .passthrough()
 

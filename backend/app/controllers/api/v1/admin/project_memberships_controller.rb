@@ -14,11 +14,11 @@ module Api
           dataset = current_project.project_memberships_dataset.order(:id)
           pagy, memberships = paginate(dataset)
           response.headers.merge!(pagy_headers_merge(pagy))
-          render json: { project_memberships: ProjectMembershipResource.new(memberships).to_h, meta: meta_for(pagy) }
+          render json: { project_memberships: ProjectMembershipResource.new(memberships, params: resource_params).to_h, meta: meta_for(pagy) }
         end
 
         def show
-          render json: ProjectMembershipResource.new(@membership).to_h
+          render json: ProjectMembershipResource.new(@membership, params: resource_params).to_h
         end
 
         def create
@@ -35,7 +35,7 @@ module Api
           raise ValidationError.from_model(membership) unless membership.valid?
 
           membership.save
-          render json: ProjectMembershipResource.new(membership).to_h, status: :created
+          render json: ProjectMembershipResource.new(membership, params: resource_params).to_h, status: :created
         end
 
         def update
@@ -47,7 +47,7 @@ module Api
           raise ValidationError.from_model(@membership) unless @membership.valid?
 
           @membership.save
-          render json: ProjectMembershipResource.new(@membership).to_h
+          render json: ProjectMembershipResource.new(@membership, params: resource_params).to_h
         end
 
         def destroy
@@ -60,6 +60,10 @@ module Api
         end
 
         private
+
+        def resource_params
+          { includes: requested_includes }
+        end
 
         def last_admin?(membership)
           current_project.project_memberships_dataset.where(role: "admin").exclude(id: membership.id).empty?

@@ -39,8 +39,8 @@ function configSummary(effect: DiscountEffect): string {
     </div>
     <div class="discount-rules__section">
       <h4>{{ $t('discountRulesSummary.effectsHeading') }}</h4>
-      <p v-if="!discount.effects.length" class="discount-rules__empty">{{ $t('discountRulesSummary.noEffects') }}</p>
-      <div v-for="effect in discount.effects" :key="effect.id" class="discount-rules__effect">
+      <p v-if="!discount.effects?.length" class="discount-rules__empty">{{ $t('discountRulesSummary.noEffects') }}</p>
+      <div v-for="effect in discount.effects ?? []" :key="effect.id" class="discount-rules__effect">
         <div class="discount-rules__effect-header">
           <BaseTag :value="effect.effect_type" />
           <BaseTag severity="secondary" :value="effect.scope" />

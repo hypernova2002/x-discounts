@@ -45,7 +45,11 @@ const ordersLoading = ref(false)
 async function loadCustomer() {
   loadError.value = ''
   try {
-    customer.value = await getCustomer(route.params.id as string, { token: auth.token ?? undefined, projectId: auth.project?.id })
+    customer.value = await getCustomer(route.params.id as string, {
+      includes: ['membership_tier', 'membership_scheme', 'discount_name', 'performed_by', 'status', 'points_remaining'],
+      token: auth.token ?? undefined,
+      projectId: auth.project?.id,
+    })
     await Promise.all([loadTierOptions(), loadOrders()])
   } catch (e) {
     loadError.value = e instanceof ApiError ? e.message : t('customerDetail.loadError')
@@ -135,8 +139,8 @@ const customerOrderColumns = computed<TableColumn[]>(() => [
 ])
 
 async function loadTierOptions() {
-  const schemes = (await listMembershipSchemes({ perPage: 500, token: auth.token ?? undefined, projectId: auth.project?.id })).items
-  tierOptions.value = schemes.flatMap((scheme) => scheme.tiers.map((tier) => ({ label: `${scheme.name} — ${tier.name}`, value: tier.id })))
+  const schemes = (await listMembershipSchemes({ perPage: 500, includes: ['membership_tiers'], token: auth.token ?? undefined, projectId: auth.project?.id })).items
+  tierOptions.value = schemes.flatMap((scheme) => (scheme.tiers ?? []).map((tier) => ({ label: `${scheme.name} — ${tier.name}`, value: tier.id })))
 }
 
 async function setMembershipTier(tierId: string | null) {
@@ -188,7 +192,11 @@ async function submitGrantPoints() {
 
   granting.value = true
   try {
-    customer.value = await grantPointsRequest(customer.value!.id, result.data, { token: auth.token ?? undefined, projectId: auth.project?.id })
+    customer.value = await grantPointsRequest(customer.value!.id, result.data, {
+      includes: ['membership_tier', 'membership_scheme', 'discount_name', 'performed_by', 'status', 'points_remaining'],
+      token: auth.token ?? undefined,
+      projectId: auth.project?.id,
+    })
     toast.add({ severity: 'success', summary: t('customerDetail.pointsGranted'), life: 3000 })
     grantDialogOpen.value = false
   } catch (e) {

@@ -44,6 +44,7 @@ const { data: result, loading, error, reload } = useAsync(() =>
     q: q.value || undefined,
     page: page.value,
     perPage: perPage.value,
+    includes: ['discount_kinds'],
     token: auth.token ?? undefined,
     projectId: auth.project?.id,
   })

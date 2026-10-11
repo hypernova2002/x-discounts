@@ -262,9 +262,13 @@ async function uploadDesignImageIfSelected(id: string) {
 async function load() {
   loading.value = true
   try {
-    const data = await getDiscount(discountId.value!, { token: auth.token ?? undefined, projectId: auth.project?.id })
+    const data = await getDiscount(discountId.value!, {
+      includes: ['campaign', 'compatible_discounts'],
+      token: auth.token ?? undefined,
+      projectId: auth.project?.id,
+    })
     form.kind = data.kind
-    form.campaign_id = data.campaign.id
+    form.campaign_id = data.campaign!.id
     form.key = data.key
     form.name = data.name
     form.stackable = data.stackable

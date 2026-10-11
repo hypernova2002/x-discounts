@@ -55,7 +55,8 @@ FactoryBot.define do
   end
 
   factory :redemption do
-    coupon
+    coupon_code { create(:coupon) }
+    discount { coupon_code.discount }
     customer
     redeemed_at { Time.now.utc }
   end

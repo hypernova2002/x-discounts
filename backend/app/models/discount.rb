@@ -137,6 +137,14 @@ class Discount < Sequel::Model
     OrderDiscount.where(discount_id: id).all.count { |od| !od.refunded? }
   end
 
+  # Bulk form of CampaignResource#discount_kinds — one query for however many
+  # campaigns are on the current page/list, instead of one query per campaign.
+  def self.kinds_by_campaign(campaign_ids)
+    return {} if campaign_ids.empty?
+
+    where(campaign_id: campaign_ids).distinct.select_map([:campaign_id, :kind]).group_by(&:first).transform_values { |pairs| pairs.map(&:last) }
+  end
+
   # Loyalty-only. Total points ever credited to a customer via this discount —
   # every LoyaltyPointLot it earned, regardless of how much of that has since
   # been spent or clawed back.

@@ -12,7 +12,9 @@ export const MembershipSchemeSchema = z
     name: z.string(),
     created_at: z.string(),
     updated_at: z.string(),
-    tiers: z.array(MembershipTierSchema),
+    // Only present when requested via ?includes=membership_tiers (see
+    // src/api/membershipSchemes.ts) — absent, not an empty array, otherwise.
+    tiers: z.array(MembershipTierSchema).optional(),
   })
   .passthrough()
 

@@ -12,15 +12,18 @@ module Api
 
         def index
           dataset = @discount.coupon_codes_dataset.order(Sequel.desc(:id))
+          dataset = dataset.eager(:customer) if requested_includes.include?("customer")
           pagy, codes = paginate(dataset, limit: params[:per_page]&.to_i)
+          # Materialized once — see the matching comment in DiscountsController#index.
+          codes = codes.all
           response.headers.merge!(pagy_headers_merge(pagy))
-          render json: { coupon_codes: CouponCodeResource.new(codes).to_h, meta: meta_for(pagy) }
+          render json: { coupon_codes: CouponCodeResource.new(codes, params: resource_params(codes)).to_h, meta: meta_for(pagy) }
         end
 
         def create
           request = CouponCodeGenerateRequest.new(body)
           codes = CouponCodes::GenerateService.new(discount: @discount, project: current_project, request: request).call
-          render json: CouponCodeResource.new(codes).to_h, status: :created
+          render json: CouponCodeResource.new(codes, params: resource_params).to_h, status: :created
         end
 
         def destroy
@@ -34,6 +37,15 @@ module Api
         end
 
         private
+
+        # Bulk-computes redemption_count for a list instead of 2 queries per
+        # code; create's response is at most a handful of freshly-generated
+        # (unredeemed) codes, so its per-record fallback is fine as-is.
+        def resource_params(codes = nil)
+          return { includes: requested_includes } unless codes && requested_includes.include?("redemption_count")
+
+          { includes: requested_includes, redemption_counts: CouponCodes::BulkStatsService.new(codes).call.redemption_counts }
+        end
 
         def set_discount
           @discount = current_project.discounts_dataset.first(public_id: params[:discount_id], kind: "coupon")

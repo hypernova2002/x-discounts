@@ -9,13 +9,14 @@ module Api
 
         def index
           dataset = current_project.exports_dataset.order(Sequel.desc(:id))
+          dataset = dataset.eager(:user) if requested_includes.include?("requested_by")
           pagy, exports = paginate(dataset, limit: params[:per_page]&.to_i)
           response.headers.merge!(pagy_headers_merge(pagy))
-          render json: { exports: ExportResource.new(exports).to_h, meta: meta_for(pagy) }
+          render json: { exports: ExportResource.new(exports, params: resource_params).to_h, meta: meta_for(pagy) }
         end
 
         def show
-          render json: ExportResource.new(@export).to_h
+          render json: ExportResource.new(@export, params: resource_params).to_h
         end
 
         def create
@@ -33,7 +34,7 @@ module Api
           )
           ExportJob.perform_later(export.id)
 
-          render json: ExportResource.new(export).to_h, status: :created
+          render json: ExportResource.new(export, params: resource_params).to_h, status: :created
         end
 
         def download
@@ -43,6 +44,10 @@ module Api
         end
 
         private
+
+        def resource_params
+          { includes: requested_includes }
+        end
 
         def set_export
           @export = current_project.exports_dataset.first(public_id: params[:id])

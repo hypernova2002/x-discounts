@@ -41,7 +41,7 @@ const duplicating = ref(false)
 async function loadCampaign() {
   loadError.value = ''
   try {
-    campaign.value = await getCampaign(route.params.id as string, { token: auth.token ?? undefined, projectId: auth.project?.id })
+    campaign.value = await getCampaign(route.params.id as string, { includes: ['discount_summary'], token: auth.token ?? undefined, projectId: auth.project?.id })
     await loadDiscounts()
   } catch (e) {
     loadError.value = e instanceof ApiError ? e.message : t('campaignDetail.loadError')
@@ -55,6 +55,7 @@ async function loadDiscounts() {
       campaignId: campaign.value!.id,
       page: discountsPage.value,
       perPage: discountsPerPage.value,
+      includes: ['redemption_count'],
       token: auth.token ?? undefined,
       projectId: auth.project?.id,
     })

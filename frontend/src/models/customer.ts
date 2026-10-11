@@ -19,7 +19,9 @@ const customerFields = {
   created_at: z.string(),
   updated_at: z.string(),
   metadata: z.record(z.string(), z.any()),
-  membership_tier: MembershipTierSchema.nullable(),
+  // Only present when requested via ?includes= (see src/api/customers.ts) —
+  // absent, not null, when not asked for.
+  membership_tier: MembershipTierSchema.nullable().optional(),
 }
 
 // The base shape returned by list, and by the plain `update` (PATCH) endpoint.
@@ -68,16 +70,18 @@ const LoyaltyPointLotSchema = z
   .object({
     id: z.string(),
     points: z.number(),
-    points_remaining: z.number(),
     earned_at: z.string(),
     expires_at: z.string().nullable(),
     source: z.enum(['order', 'manual_grant', 'legacy_backfill', 'redemption_refund']),
     expired: z.boolean(),
-    status: z.enum(['active', 'expired', 'cancelled']),
-    order_id: z.string().nullable(),
-    discount_name: z.string().nullable(),
     reason: z.string().nullable(),
-    performed_by: z.string().nullable(),
+    // Each of these is only present when requested via ?includes= (see
+    // src/api/customers.ts) — absent, not null, when not asked for.
+    points_remaining: z.number().optional(),
+    status: z.enum(['active', 'expired', 'cancelled']).optional(),
+    order_id: z.string().nullable().optional(),
+    discount_name: z.string().nullable().optional(),
+    performed_by: z.string().nullable().optional(),
   })
   .passthrough()
 

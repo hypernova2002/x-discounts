@@ -1,21 +1,19 @@
 # frozen_string_literal: true
 
-class OrderDiscountResource
-  include Alba::Resource
-
+class OrderDiscountResource < ApplicationResource
   attribute :id, &:public_id
   attributes :kind, :discount_key, :discount_name, :effect_type, :amount_off, :sku
 
-  attribute(:points_earned) { |od| od.total_points_earned }
-  attribute(:refunded_points) { |od| od.total_points_refunded }
-  attribute(:refunded_amount_off) { |od| od.refunded_amount_off }
-  attribute(:discount_id) { |od| od.discount&.public_id }
-  attribute(:refundable) { |od| od.discount&.refundable }
+  attribute(:points_earned, if: proc { included?(:points_earned) }) { |od| od.total_points_earned }
+  attribute(:refunded_points, if: proc { included?(:refunded_points) }) { |od| od.total_points_refunded }
+  attribute(:refunded_amount_off, if: proc { included?(:refunded_amount_off) }) { |od| od.refunded_amount_off }
+  attribute(:discount_id, if: proc { included?(:discount_id) }) { |od| od.discount&.public_id }
+  attribute(:refundable, if: proc { included?(:refundable) }) { |od| od.discount&.refundable }
   attribute(:free_items) { |od| od.free_items&.to_a }
 
   # Full history (not just the rollup above) — a line can be partially refunded more
   # than once, each with its own reason/actor.
-  attribute(:refund_history) do |od|
+  attribute(:refund_history, if: proc { included?(:refund_history) }) do |od|
     if od.kind == "loyalty"
       next [] unless od.loyalty_point_lot
 

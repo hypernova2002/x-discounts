@@ -7,11 +7,15 @@ const BASE = (discountId: string) => `/api/v1/admin/discounts/${discountId}/coup
 interface ListCouponCodesParams extends AuthParams {
   discountId: string
   perPage?: number
+  includes?: string[]
 }
 
-export function listCouponCodes({ discountId, perPage, token, projectId }: ListCouponCodesParams) {
-  const path = perPage ? `${BASE(discountId)}?per_page=${perPage}` : BASE(discountId)
-  return apiFetch(path, { token, projectId }).then((data) => CouponCodeListSchema.parse(data).coupon_codes)
+export function listCouponCodes({ discountId, perPage, includes, token, projectId }: ListCouponCodesParams) {
+  const params = new URLSearchParams()
+  if (perPage) params.set('per_page', String(perPage))
+  if (includes?.length) params.set('includes', includes.join(','))
+  const query = params.toString()
+  return apiFetch(`${BASE(discountId)}${query ? `?${query}` : ''}`, { token, projectId }).then((data) => CouponCodeListSchema.parse(data).coupon_codes)
 }
 
 // Renders a bare array, not { coupon_codes: [...] } — see CouponCodesController#create.

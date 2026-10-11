@@ -5,11 +5,15 @@ const BASE = '/api/v1/admin/exports'
 
 interface ListExportsParams extends AuthParams {
   perPage?: number
+  includes?: string[]
 }
 
-export function listExports({ perPage, token, projectId }: ListExportsParams = {}) {
-  const path = perPage ? `${BASE}?per_page=${perPage}` : BASE
-  return apiFetch(path, { token, projectId }).then((data) => ExportListSchema.parse(data).exports)
+export function listExports({ perPage, includes, token, projectId }: ListExportsParams = {}) {
+  const params = new URLSearchParams()
+  if (perPage) params.set('per_page', String(perPage))
+  if (includes?.length) params.set('includes', includes.join(','))
+  const query = params.toString()
+  return apiFetch(`${BASE}${query ? `?${query}` : ''}`, { token, projectId }).then((data) => ExportListSchema.parse(data).exports)
 }
 
 export function getExport(id: string, { token, projectId }: AuthParams) {

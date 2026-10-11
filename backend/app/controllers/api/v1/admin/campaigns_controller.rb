@@ -13,30 +13,41 @@ module Api
         def index
           dataset = filtered_campaigns_dataset
           pagy, campaigns = paginate(dataset, limit: params[:per_page]&.to_i)
+          # Materialized once — see the matching comment in DiscountsController#index.
+          campaigns = campaigns.all
           response.headers.merge!(pagy_headers_merge(pagy))
-          render json: { campaigns: CampaignResource.new(campaigns).to_h, meta: meta_for(pagy) }
+          render json: { campaigns: CampaignResource.new(campaigns, params: resource_params(campaigns)).to_h, meta: meta_for(pagy) }
         end
 
         def show
-          render json: CampaignSummaryResource.new(@campaign).to_h
+          render json: CampaignSummaryResource.new(@campaign, params: resource_params).to_h
         end
 
         def create
           campaign = Campaigns::CreateService.new(project: current_project, request: CampaignRequest.new(body)).call
-          render json: CampaignResource.new(campaign).to_h, status: :created
+          render json: CampaignResource.new(campaign, params: resource_params).to_h, status: :created
         end
 
         def update
           campaign = Campaigns::UpdateService.new(campaign: @campaign, request: CampaignUpdateRequest.new(body)).call
-          render json: CampaignResource.new(campaign).to_h
+          render json: CampaignResource.new(campaign, params: resource_params).to_h
         end
 
         def duplicate
           copy = Campaigns::DuplicateService.new(campaign: @campaign).call
-          render json: CampaignResource.new(copy).to_h, status: :created
+          render json: CampaignResource.new(copy, params: resource_params).to_h, status: :created
         end
 
         private
+
+        # Bulk-computes discount_kinds for a list instead of one query per
+        # campaign; a single record falls back to CampaignResource's own
+        # per-record query, which is cheap enough for one row.
+        def resource_params(campaigns = nil)
+          return { includes: requested_includes } unless campaigns && requested_includes.include?("discount_kinds")
+
+          { includes: requested_includes, discount_kinds_by_campaign: Discount.kinds_by_campaign(campaigns.map(&:id)) }
+        end
 
         def set_campaign
           @campaign = current_project.campaigns_dataset.first(public_id: params[:id])

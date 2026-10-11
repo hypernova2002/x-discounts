@@ -98,7 +98,7 @@ function viewAttentionItem(item: AttentionItem) {
 }
 
 const { data: recentOrders, loading: recentOrdersLoading, error: recentOrdersError } = useAsync(() =>
-  listOrders({ perPage: 5, token: auth.token ?? undefined, projectId: auth.project?.id }),
+  listOrders({ perPage: 5, includes: ['customer'], token: auth.token ?? undefined, projectId: auth.project?.id }),
 )
 
 watch(recentOrdersError, (e) => {
@@ -227,7 +227,7 @@ function viewAllOrders() {
             @row-click="viewOrder($event.data as unknown as Order)"
           >
             <template #cell-customer="{ data }">
-              <EntityLink @click="viewCustomer(data.customer)">{{ data.customer.external_id }}</EntityLink>
+              <EntityLink @click="viewCustomer(data.customer)">{{ data.customer?.external_id }}</EntityLink>
             </template>
             <template #cell-total_amount="{ data }">{{ formatCurrency(data.total_amount, auth.project?.currency) }}</template>
             <template #cell-status="{ data }"><OrderStatusTag :status="data.status" /></template>

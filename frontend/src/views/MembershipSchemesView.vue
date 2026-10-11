@@ -25,7 +25,14 @@ const perPage = ref(25)
 const q = ref('')
 
 const { data: result, loading, error, reload } = useAsync(() =>
-  listMembershipSchemes({ q: q.value || undefined, page: page.value, perPage: perPage.value, token: auth.token ?? undefined, projectId: auth.project?.id })
+  listMembershipSchemes({
+    q: q.value || undefined,
+    page: page.value,
+    perPage: perPage.value,
+    includes: ['membership_tiers'],
+    token: auth.token ?? undefined,
+    projectId: auth.project?.id,
+  })
 )
 const schemes = computed(() => result.value?.items ?? [])
 const meta = computed(() => result.value?.meta)
@@ -48,7 +55,7 @@ function onSearch(value: string) {
 
 const columns = computed<TableColumn[]>(() => [
   { field: 'name', header: t('membershipSchemes.columns.name'), sortable: true, hideable: false, filter: { type: 'string' } },
-  { field: 'tiers', header: t('membershipSchemes.columns.tiers'), filter: { type: 'number', accessor: (row) => (row as unknown as MembershipScheme).tiers.length } },
+  { field: 'tiers', header: t('membershipSchemes.columns.tiers'), filter: { type: 'number', accessor: (row) => (row as unknown as MembershipScheme).tiers?.length ?? 0 } },
   { field: 'created_at', header: t('membershipSchemes.columns.created'), sortable: true, filter: { type: 'date' } },
 ])
 
@@ -84,7 +91,7 @@ function viewScheme(scheme: MembershipScheme) {
           @page="onPage"
           @search="onSearch"
         >
-          <template #cell-tiers="{ data }">{{ data.tiers.map((tier: { name: string }) => tier.name).join(', ') || '—' }}</template>
+          <template #cell-tiers="{ data }">{{ (data.tiers ?? []).map((tier: { name: string }) => tier.name).join(', ') || '—' }}</template>
           <template #cell-created_at="{ data }">{{ formatDate(data.created_at, auth.project?.timezone) }}</template>
         </BaseTable>
       </template>

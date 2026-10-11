@@ -48,7 +48,7 @@ async function runEvaluation() {
 async function loadScheme() {
   loadError.value = ''
   try {
-    scheme.value = await getMembershipScheme(route.params.id as string, { token: auth.token ?? undefined, projectId: auth.project?.id })
+    scheme.value = await getMembershipScheme(route.params.id as string, { includes: ['membership_tiers'], token: auth.token ?? undefined, projectId: auth.project?.id })
   } catch (e) {
     loadError.value = e instanceof ApiError ? e.message : t('membershipSchemeDetail.loadError')
   }
@@ -177,7 +177,7 @@ async function saveEdit() {
       <BaseCard class="section-card">
         <template #title>{{ $t('membershipSchemeDetail.tiersTitle') }}</template>
         <template #content>
-          <BaseTable :data="scheme.tiers" :columns="tierColumns" row-key="id" @refresh="loadScheme">
+          <BaseTable :data="scheme.tiers ?? []" :columns="tierColumns" row-key="id" @refresh="loadScheme">
             <template #cell-auto_assignable="{ data }">
               <BaseTag
                 :severity="data.auto_assignable ? 'success' : 'secondary'"
