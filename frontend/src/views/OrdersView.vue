@@ -31,7 +31,15 @@ const { t } = useI18n()
 const { exporting, runExport } = useExportDownload()
 const range = ref<DateRange | null>(null)
 
-const { data: orders, loading, error, reload } = useAsync(() => listOrders({ token: auth.token ?? undefined, projectId: auth.project?.id }))
+const page = ref(1)
+const perPage = ref(25)
+const q = ref('')
+
+const { data: result, loading, error, reload } = useAsync(() =>
+  listOrders({ q: q.value || undefined, page: page.value, perPage: perPage.value, token: auth.token ?? undefined, projectId: auth.project?.id })
+)
+const orders = computed(() => result.value?.items ?? [])
+const meta = computed(() => result.value?.meta)
 
 watch(error, (e) => {
   if (e) toast.add({ severity: 'error', summary: t('orders.loadError'), detail: e instanceof Error ? e.message : String(e), life: 4000 })
@@ -82,6 +90,18 @@ const columns = computed<TableColumn[]>(() => [
 
 function createOrder() {
   router.push({ name: 'order-new' })
+}
+
+function onPage(event: { page: number; rows: number }) {
+  page.value = event.page
+  perPage.value = event.rows
+  reload()
+}
+
+function onSearch(value: string) {
+  q.value = value
+  page.value = 1
+  reload()
 }
 
 function viewOrder(order: Order) {
@@ -150,16 +170,20 @@ async function exportOrders() {
     <BaseCard class="section-card">
       <template #content>
         <BaseTable
-          :data="orders || []"
+          :data="orders"
           :columns="columns"
           :loading="loading"
           row-key="id"
+          lazy
+          :total-records="meta?.count ?? 0"
           :search-placeholder="$t('orders.searchPlaceholder')"
           :export-label="$t('orders.exportButton')"
           :exporting="exporting"
           @row-click="viewOrder($event.data as unknown as Order)"
           @refresh="reload"
           @export="exportOrders"
+          @page="onPage"
+          @search="onSearch"
         >
           <template #cell-customer="{ data }">
             <EntityLink @click="viewCustomer(data.customer)">{{ data.customer.external_id }}</EntityLink>

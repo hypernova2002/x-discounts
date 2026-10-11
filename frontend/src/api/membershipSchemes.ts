@@ -1,16 +1,26 @@
 import { apiFetch, type AuthParams } from '@/lib/api'
-import { MembershipSchemeSchema, MembershipSchemeListSchema, type MembershipSchemeInput } from '@/models/membershipScheme'
+import { MembershipSchemeSchema, MembershipSchemeListSchema, type MembershipSchemeInput, type MembershipScheme } from '@/models/membershipScheme'
 import { MembershipTierSchema, type MembershipTierInput } from '@/models/membershipTier'
+import type { PaginatedResult } from '@/models/pagination'
 
 const BASE = '/api/v1/admin/membership_schemes'
 
 interface ListMembershipSchemesParams extends AuthParams {
+  q?: string
+  page?: number
   perPage?: number
 }
 
-export function listMembershipSchemes({ perPage, token, projectId }: ListMembershipSchemesParams = {}) {
-  const path = perPage ? `${BASE}?per_page=${perPage}` : BASE
-  return apiFetch(path, { token, projectId }).then((data) => MembershipSchemeListSchema.parse(data).membership_schemes)
+export function listMembershipSchemes({ q, page, perPage, token, projectId }: ListMembershipSchemesParams = {}): Promise<PaginatedResult<MembershipScheme>> {
+  const params = new URLSearchParams()
+  if (q) params.set('q', q)
+  if (page) params.set('page', String(page))
+  if (perPage) params.set('per_page', String(perPage))
+  const query = params.toString()
+  return apiFetch(`${BASE}${query ? `?${query}` : ''}`, { token, projectId }).then((data) => {
+    const parsed = MembershipSchemeListSchema.parse(data)
+    return { items: parsed.membership_schemes, meta: parsed.meta }
+  })
 }
 
 export function getMembershipScheme(id: string, { token, projectId }: AuthParams) {

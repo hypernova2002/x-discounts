@@ -28,7 +28,15 @@ const toast = useBaseToast()
 const router = useRouter()
 const { t } = useI18n()
 
-const { data: customers, loading, error, reload } = useAsync(() => listCustomers({ token: auth.token ?? undefined, projectId: auth.project?.id }))
+const page = ref(1)
+const perPage = ref(25)
+const q = ref('')
+
+const { data: result, loading, error, reload } = useAsync(() =>
+  listCustomers({ q: q.value || undefined, page: page.value, perPage: perPage.value, token: auth.token ?? undefined, projectId: auth.project?.id })
+)
+const customers = computed(() => result.value?.items ?? [])
+const meta = computed(() => result.value?.meta)
 
 watch(error, (e) => {
   if (e) toast.add({ severity: 'error', summary: t('customers.loadError'), detail: e instanceof Error ? e.message : String(e), life: 4000 })
@@ -63,6 +71,18 @@ function viewCustomer(customer: Customer) {
 
 function createCustomer() {
   router.push({ name: 'customer-new' })
+}
+
+function onPage(event: { page: number; rows: number }) {
+  page.value = event.page
+  perPage.value = event.rows
+  reload()
+}
+
+function onSearch(value: string) {
+  q.value = value
+  page.value = 1
+  reload()
 }
 
 async function exportCustomers() {
@@ -130,16 +150,20 @@ const hasChartData = computed(() => (analytics.value?.series || []).some((s) => 
     <BaseCard class="section-card">
       <template #content>
         <BaseTable
-          :data="customers || []"
+          :data="customers"
           :columns="columns"
           :loading="loading"
           row-key="id"
+          lazy
+          :total-records="meta?.count ?? 0"
           :search-placeholder="$t('customers.searchPlaceholder')"
           :export-label="$t('customers.exportButton')"
           :exporting="exporting"
           @row-click="viewCustomer($event.data as unknown as Customer)"
           @refresh="reload"
           @export="exportCustomers"
+          @page="onPage"
+          @search="onSearch"
         >
           <template #cell-membership="{ data }">
             <BaseTag v-if="data.membership_tier" severity="success" :value="`${data.membership_tier.membership_scheme.name} — ${data.membership_tier.name}`" />

@@ -1,5 +1,6 @@
 import { apiFetch, apiUpload, type AuthParams } from '@/lib/api'
-import { DiscountSchema, DiscountListSchema, type DiscountInput } from '@/models/discount'
+import { DiscountSchema, DiscountListSchema, type DiscountInput, type Discount } from '@/models/discount'
+import type { PaginatedResult } from '@/models/pagination'
 
 const BASE = '/api/v1/admin/discounts'
 
@@ -7,17 +8,22 @@ interface ListDiscountsParams extends AuthParams {
   campaignId?: string
   kind?: string
   q?: string
+  page?: number
   perPage?: number
 }
 
-export function listDiscounts({ campaignId, kind, q, perPage, token, projectId }: ListDiscountsParams = {}) {
+export function listDiscounts({ campaignId, kind, q, page, perPage, token, projectId }: ListDiscountsParams = {}): Promise<PaginatedResult<Discount>> {
   const params = new URLSearchParams()
   if (campaignId) params.set('campaign_id', campaignId)
   if (kind) params.set('kind', kind)
   if (q) params.set('q', q)
+  if (page) params.set('page', String(page))
   if (perPage) params.set('per_page', String(perPage))
   const qs = params.toString()
-  return apiFetch(qs ? `${BASE}?${qs}` : BASE, { token, projectId }).then((data) => DiscountListSchema.parse(data).discounts)
+  return apiFetch(qs ? `${BASE}?${qs}` : BASE, { token, projectId }).then((data) => {
+    const parsed = DiscountListSchema.parse(data)
+    return { items: parsed.discounts, meta: parsed.meta }
+  })
 }
 
 export function getDiscount(id: string, { token, projectId }: AuthParams) {

@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { ListMetaSchema } from '@/models/pagination'
 import type { ComposerTranslation } from 'vue-i18n'
 import { CampaignSchema } from '@/models/campaign'
 
@@ -53,7 +54,7 @@ export const DiscountSchema = z
 
 export type Discount = z.infer<typeof DiscountSchema>
 
-export const DiscountListSchema = z.object({ discounts: z.array(DiscountSchema) }).passthrough()
+export const DiscountListSchema = z.object({ discounts: z.array(DiscountSchema), meta: ListMetaSchema }).passthrough()
 
 export type DiscountList = z.infer<typeof DiscountListSchema>
 

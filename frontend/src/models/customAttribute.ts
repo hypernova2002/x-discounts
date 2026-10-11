@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import type { ComposerTranslation } from 'vue-i18n'
+import { ListMetaSchema } from '@/models/pagination'
 
 // Mirrors ConditionVocabulary::ENTITIES / ::DATA_TYPES on the backend
 // (backend/app/models/concerns/condition_vocabulary.rb).
@@ -22,7 +23,7 @@ export const CustomAttributeSchema = z
 
 export type CustomAttribute = z.infer<typeof CustomAttributeSchema>
 
-export const CustomAttributeListSchema = z.object({ custom_attributes: z.array(CustomAttributeSchema) }).passthrough()
+export const CustomAttributeListSchema = z.object({ custom_attributes: z.array(CustomAttributeSchema), meta: ListMetaSchema }).passthrough()
 
 export type CustomAttributeList = z.infer<typeof CustomAttributeListSchema>
 

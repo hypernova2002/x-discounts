@@ -12,6 +12,7 @@ module Api
 
         def index
           dataset = current_project.membership_schemes_dataset.order(Sequel.desc(:id))
+          dataset = dataset.where(Sequel.ilike(:name, "%#{params[:q]}%")) if params[:q].present?
           pagy, schemes = paginate(dataset, limit: params[:per_page]&.to_i)
           response.headers.merge!(pagy_headers_merge(pagy))
           render json: { membership_schemes: MembershipSchemeResource.new(schemes).to_h, meta: meta_for(pagy) }

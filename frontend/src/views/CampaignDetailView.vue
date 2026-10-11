@@ -30,6 +30,9 @@ const { t } = useI18n()
 const campaign = ref<Campaign | null>(null)
 const loadError = ref('')
 const discounts = ref<Discount[]>([])
+const discountsMeta = ref<{ count: number } | null>(null)
+const discountsPage = ref(1)
+const discountsPerPage = ref(25)
 const discountsLoading = ref(false)
 const toggling = ref(false)
 const archiving = ref(false)
@@ -48,10 +51,24 @@ async function loadCampaign() {
 async function loadDiscounts() {
   discountsLoading.value = true
   try {
-    discounts.value = await listDiscounts({ campaignId: campaign.value!.id, token: auth.token ?? undefined, projectId: auth.project?.id })
+    const result = await listDiscounts({
+      campaignId: campaign.value!.id,
+      page: discountsPage.value,
+      perPage: discountsPerPage.value,
+      token: auth.token ?? undefined,
+      projectId: auth.project?.id,
+    })
+    discounts.value = result.items
+    discountsMeta.value = result.meta
   } finally {
     discountsLoading.value = false
   }
+}
+
+function onDiscountsPage(event: { page: number; rows: number }) {
+  discountsPage.value = event.page
+  discountsPerPage.value = event.rows
+  loadDiscounts()
 }
 
 async function toggleEnabled() {
@@ -201,10 +218,13 @@ onMounted(loadCampaign)
             :columns="discountColumns"
             :loading="discountsLoading"
             row-key="id"
+            lazy
+            :total-records="discountsMeta?.count ?? 0"
             :create-label="$t('campaignDetail.newDiscountButton')"
             @row-click="viewDiscount($event.data as unknown as Discount)"
             @refresh="loadDiscounts"
             @create="newDiscount"
+            @page="onDiscountsPage"
           >
             <template #cell-kind="{ data }"><DiscountKindTag :kind="data.kind" /></template>
             <template #cell-redemption_count="{ data }">{{ formatNumber(data.redemption_count) }}</template>

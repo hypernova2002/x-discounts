@@ -46,6 +46,7 @@ module Api
         def filtered_campaigns_dataset
           dataset = current_project.campaigns_dataset.order(Sequel.desc(:id))
           dataset = dataset.where(archived: false) unless ActiveModel::Type::Boolean.new.cast(params[:include_archived])
+          dataset = dataset.where(Sequel.ilike(:name, "%#{params[:q]}%")) if params[:q].present?
           dataset
         end
       end

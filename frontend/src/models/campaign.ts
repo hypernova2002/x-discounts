@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { ListMetaSchema } from '@/models/pagination'
 import type { ComposerTranslation } from 'vue-i18n'
 
 // Money fields are Postgres numeric columns — Rails serializes BigDecimal as a
@@ -31,7 +32,7 @@ export const CampaignSchema = z
 
 export type Campaign = z.infer<typeof CampaignSchema>
 
-export const CampaignListSchema = z.object({ campaigns: z.array(CampaignSchema) }).passthrough()
+export const CampaignListSchema = z.object({ campaigns: z.array(CampaignSchema), meta: ListMetaSchema }).passthrough()
 
 export type CampaignList = z.infer<typeof CampaignListSchema>
 

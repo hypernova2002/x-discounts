@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, reactive, ref, useTemplateRef } from 'vue'
+import { computed, reactive, ref, useTemplateRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Column from 'openvue/column'
 import BaseDataTable from './BaseDataTable.vue'
@@ -86,6 +86,16 @@ interface BaseTableProps {
   createLabel?: string
   exportLabel?: string
   exporting?: boolean
+  // Server-driven pagination: `data` is just the current page, and
+  // `totalRecords` (the backend's real count) drives the page-count display
+  // instead of `data.length`. The advanced per-column filter popover and
+  // column-header sorting both rely entirely on PrimeVue's own client-side
+  // pass over `data` (see DataTable's `processedData`), which it skips
+  // whenever `lazy` is set — so both are hidden/disabled here rather than
+  // silently doing nothing. The global search box keeps working, emitting
+  // `search` instead of filtering in place.
+  lazy?: boolean
+  totalRecords?: number
 }
 
 const props = withDefaults(defineProps<BaseTableProps>(), {
@@ -95,18 +105,28 @@ const props = withDefaults(defineProps<BaseTableProps>(), {
   createLabel: '',
   exportLabel: '',
   exporting: false,
+  lazy: false,
+  totalRecords: 0,
 })
 
-defineEmits<{
+const emit = defineEmits<{
   'row-click': [event: { data: TableRow }]
   refresh: []
   create: []
   export: []
+  page: [{ page: number; rows: number }]
+  search: [value: string]
 }>()
 
 const { t } = useI18n()
 
 const pageSizeOptions = [10, 25, 50, 100].map((n) => ({ label: String(n), value: n }))
+const rows = ref(25)
+const first = ref(0)
+
+function onPage(event: { page: number; rows: number }) {
+  emit('page', { page: event.page + 1, rows: event.rows })
+}
 
 const filterableColumns = computed(() =>
   props.columns.filter((c): c is TableColumn & { filter: ColumnFilter } => !!c.filter),
@@ -165,6 +185,21 @@ const datePredicateOptions = computed(() => [
 const DEFAULT_MATCH_MODE: Record<string, string> = { enum: 'equals', number: 'equals', string: 'contains', date: 'dateAfter' }
 
 const globalFilter = reactive<{ value: unknown; matchMode: string }>({ value: null, matchMode: 'contains' })
+
+// Debounced so every keystroke doesn't fire a request — and only wired to a
+// server round-trip at all when lazy (see the `lazy` prop doc above).
+let searchDebounceTimer: ReturnType<typeof setTimeout> | undefined
+watch(
+  () => globalFilter.value,
+  (value) => {
+    if (!props.lazy) return
+    if (searchDebounceTimer) clearTimeout(searchDebounceTimer)
+    searchDebounceTimer = setTimeout(() => {
+      first.value = 0
+      emit('search', typeof value === 'string' ? value : '')
+    }, 400)
+  },
+)
 
 // One row per active filter: { id, field, matchMode, value }. A field can
 // appear in more than one row (e.g. two "amount" rows for a gte/lte range) —
@@ -243,10 +278,14 @@ const globalFilterFields = computed(() => props.columns.filter((c) => c.field).m
     :data-key="rowKey"
     paginator
     paginator-position="top"
-    :rows="25"
+    :lazy="lazy"
+    :total-records="lazy ? totalRecords : undefined"
+    v-model:first="first"
+    v-model:rows="rows"
     :filters="filters"
     :global-filter-fields="globalFilterFields"
     @row-click="$emit('row-click', $event)"
+    @page="onPage"
   >
     <template #paginatorcontainer="{ page, pageCount, rows, prevPageCallback, nextPageCallback, rowChangeCallback }">
       <div class="base-table__toolbar">
@@ -277,7 +316,7 @@ const globalFilterFields = computed(() => props.columns.filter((c) => c.field).m
             <i :class="exporting ? 'pi pi-spin pi-spinner' : 'pi pi-download'" aria-hidden="true" />
           </button>
           <button
-            v-if="filterableColumns.length"
+            v-if="filterableColumns.length && !lazy"
             type="button"
             class="base-table__icon-btn"
             :class="{ 'base-table__icon-btn--active': hasActiveFilters }"
@@ -287,7 +326,7 @@ const globalFilterFields = computed(() => props.columns.filter((c) => c.field).m
           >
             <i class="pi pi-filter" aria-hidden="true" />
           </button>
-          <BasePopover v-if="filterableColumns.length" ref="filterPopover">
+          <BasePopover v-if="filterableColumns.length && !lazy" ref="filterPopover">
             <div class="base-table__filter-panel">
               <p v-if="!filterRows.length" class="base-table__filter-empty">{{ t('baseTable.noFiltersYet') }}</p>
               <div v-for="row in filterRows" :key="row.id" class="base-table__filter-row">
@@ -420,7 +459,7 @@ const globalFilterFields = computed(() => props.columns.filter((c) => c.field).m
       unstyled
       :field="col.field"
       :header="col.header"
-      :sortable="col.sortable"
+      :sortable="lazy ? false : col.sortable"
     >
       <template #body="scope">
         <slot :name="`cell-${col.field}`" v-bind="scope">{{ scope.data[col.field] }}</slot>

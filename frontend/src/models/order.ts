@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { ListMetaSchema } from '@/models/pagination'
 
 // Money fields are Postgres numeric columns — Rails serializes BigDecimal as a
 // JSON string, but tolerate a plain number too since that's an implementation detail
@@ -88,7 +89,7 @@ export const OrderSchema = z
 
 export type Order = z.infer<typeof OrderSchema>
 
-export const OrderListSchema = z.object({ orders: z.array(OrderSchema) }).passthrough()
+export const OrderListSchema = z.object({ orders: z.array(OrderSchema), meta: ListMetaSchema }).passthrough()
 
 export type OrderList = z.infer<typeof OrderListSchema>
 

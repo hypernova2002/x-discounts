@@ -39,6 +39,12 @@ module Api
         def filtered_orders_dataset
           dataset = current_project.orders_dataset.order(Sequel.desc(:id))
           dataset = dataset.where(customer_id: current_project.customers_dataset.where(external_id: params[:customer_external_id]).select(:id)) if params[:customer_external_id].present?
+          if params[:q].present?
+            matching_customers = current_project.customers_dataset.where(
+              Sequel.ilike(:external_id, "%#{params[:q]}%") | Sequel.ilike(:name, "%#{params[:q]}%")
+            ).select(:id)
+            dataset = dataset.where(Sequel.ilike(:public_id, "%#{params[:q]}%") | { customer_id: matching_customers })
+          end
           dataset
         end
       end

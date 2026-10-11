@@ -40,17 +40,48 @@ const DATA_TYPE_OPTIONS = computed(() => [
 ])
 
 const entityFilter = ref<string | null>(null)
+const page = ref(1)
+const perPage = ref(25)
+const q = ref('')
 
 const {
-  data: attributes,
+  data: result,
   loading,
   error,
   reload,
-} = useAsync(() => listCustomAttributes({ entity: entityFilter.value ?? undefined, token: auth.token ?? undefined, projectId: auth.project?.id }))
+} = useAsync(() =>
+  listCustomAttributes({
+    entity: entityFilter.value ?? undefined,
+    q: q.value || undefined,
+    page: page.value,
+    perPage: perPage.value,
+    token: auth.token ?? undefined,
+    projectId: auth.project?.id,
+  })
+)
+const attributes = computed(() => result.value?.items ?? [])
+const meta = computed(() => result.value?.meta)
 
 watch(error, (e) => {
   if (e) toast.add({ severity: 'error', summary: t('customAttributes.loadError'), detail: e instanceof Error ? e.message : String(e), life: 4000 })
 })
+
+function onEntityFilterChange() {
+  page.value = 1
+  reload()
+}
+
+function onPage(event: { page: number; rows: number }) {
+  page.value = event.page
+  perPage.value = event.rows
+  reload()
+}
+
+function onSearch(value: string) {
+  q.value = value
+  page.value = 1
+  reload()
+}
 
 const columns = computed<TableColumn[]>(() => [
   { field: 'entity', header: t('customAttributes.columns.entity'), hideable: false },
@@ -119,21 +150,25 @@ async function deleteAttribute(attribute: CustomAttribute) {
         option-value="value"
         :placeholder="$t('customAttributes.allEntitiesPlaceholder')"
         show-clear
-        @update:model-value="reload"
+        @update:model-value="onEntityFilterChange"
       />
     </div>
 
     <BaseCard class="section-card">
       <template #content>
         <BaseTable
-          :data="attributes || []"
+          :data="attributes"
           :columns="columns"
           :loading="loading"
           row-key="id"
+          lazy
+          :total-records="meta?.count ?? 0"
           :search-placeholder="$t('customAttributes.searchPlaceholder')"
           :create-label="$t('customAttributes.newAttributeButton')"
           @refresh="reload"
           @create="openCreate"
+          @page="onPage"
+          @search="onSearch"
         >
           <template #cell-entity="{ data }"><BaseTag :value="data.entity" /></template>
           <template #cell-actions="{ data }">

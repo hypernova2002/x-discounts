@@ -55,7 +55,7 @@ async function loadCustomer() {
 async function loadOrders() {
   ordersLoading.value = true
   try {
-    orders.value = await listOrders({ customerExternalId: customer.value!.external_id, token: auth.token ?? undefined, projectId: auth.project?.id })
+    orders.value = (await listOrders({ customerExternalId: customer.value!.external_id, token: auth.token ?? undefined, projectId: auth.project?.id })).items
   } finally {
     ordersLoading.value = false
   }
@@ -135,7 +135,7 @@ const customerOrderColumns = computed<TableColumn[]>(() => [
 ])
 
 async function loadTierOptions() {
-  const schemes = await listMembershipSchemes({ perPage: 500, token: auth.token ?? undefined, projectId: auth.project?.id })
+  const schemes = (await listMembershipSchemes({ perPage: 500, token: auth.token ?? undefined, projectId: auth.project?.id })).items
   tierOptions.value = schemes.flatMap((scheme) => scheme.tiers.map((tier) => ({ label: `${scheme.name} — ${tier.name}`, value: tier.id })))
 }
 

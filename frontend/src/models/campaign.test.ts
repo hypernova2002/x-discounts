@@ -46,7 +46,7 @@ describe('CampaignSchema', () => {
 
 describe('CampaignListSchema', () => {
   it('parses a list response', () => {
-    const parsed = CampaignListSchema.parse({ campaigns: [validCampaign] })
+    const parsed = CampaignListSchema.parse({ campaigns: [validCampaign], meta: { page: 1, pages: 1, count: 1 } })
     expect(parsed.campaigns).toHaveLength(1)
   })
 })

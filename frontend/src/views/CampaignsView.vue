@@ -34,9 +34,22 @@ const showArchived = ref(false)
 const range = ref<DateRange | null>(null)
 const { exporting, runExport } = useExportDownload()
 
-const { data: campaigns, loading, error, reload } = useAsync(() =>
-  listCampaigns({ includeArchived: showArchived.value, token: auth.token ?? undefined, projectId: auth.project?.id })
+const page = ref(1)
+const perPage = ref(25)
+const q = ref('')
+
+const { data: result, loading, error, reload } = useAsync(() =>
+  listCampaigns({
+    includeArchived: showArchived.value,
+    q: q.value || undefined,
+    page: page.value,
+    perPage: perPage.value,
+    token: auth.token ?? undefined,
+    projectId: auth.project?.id,
+  })
 )
+const campaigns = computed(() => result.value?.items ?? [])
+const meta = computed(() => result.value?.meta)
 
 watch(error, (e) => {
   if (e) toast.add({ severity: 'error', summary: t('campaigns.loadError'), detail: e instanceof Error ? e.message : String(e), life: 4000 })
@@ -90,6 +103,19 @@ function editCampaign(campaign: Campaign) {
 }
 
 function onShowArchivedChange() {
+  page.value = 1
+  reload()
+}
+
+function onPage(event: { page: number; rows: number }) {
+  page.value = event.page
+  perPage.value = event.rows
+  reload()
+}
+
+function onSearch(value: string) {
+  q.value = value
+  page.value = 1
   reload()
 }
 
@@ -155,16 +181,20 @@ async function exportCampaigns() {
     <BaseCard class="section-card">
       <template #content>
         <BaseTable
-          :data="campaigns || []"
+          :data="campaigns"
           :columns="columns"
           :loading="loading"
           row-key="id"
+          lazy
+          :total-records="meta?.count ?? 0"
           :search-placeholder="$t('campaigns.searchPlaceholder')"
           :export-label="$t('campaigns.exportButton')"
           :exporting="exporting"
           @row-click="viewCampaign($event.data as unknown as Campaign)"
           @refresh="reload"
           @export="exportCampaigns"
+          @page="onPage"
+          @search="onSearch"
         >
           <template #cell-discount_kinds="{ data }">
             <span class="discount-kinds">

@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { ListMetaSchema } from '@/models/pagination'
 import type { ComposerTranslation } from 'vue-i18n'
 import { MembershipTierSchema } from '@/models/membershipTier'
 
@@ -26,7 +27,7 @@ export const CustomerSchema = z.object(customerFields).passthrough()
 
 export type Customer = z.infer<typeof CustomerSchema>
 
-export const CustomerListSchema = z.object({ customers: z.array(CustomerSchema) }).passthrough()
+export const CustomerListSchema = z.object({ customers: z.array(CustomerSchema), meta: ListMetaSchema }).passthrough()
 
 export type CustomerList = z.infer<typeof CustomerListSchema>
 

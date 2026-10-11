@@ -80,7 +80,7 @@ const campaignOptions = computed(() => campaigns.value.map((c) => ({ label: c.na
 const currentCampaign = computed(() => campaigns.value.find((c) => c.id === form.campaign_id))
 
 async function loadCampaigns() {
-  campaigns.value = await listCampaigns({ perPage: 500, token: auth.token ?? undefined, projectId: auth.project?.id })
+  campaigns.value = (await listCampaigns({ perPage: 500, token: auth.token ?? undefined, projectId: auth.project?.id })).items
 }
 
 // --- compatible discounts (stacking exceptions) ---
@@ -93,7 +93,7 @@ const compatibleDiscountIds = ref<string[]>([])
 const savingCompatibility = ref(false)
 
 async function loadAllDiscounts() {
-  allDiscounts.value = await listDiscounts({ perPage: 500, token: auth.token ?? undefined, projectId: auth.project?.id })
+  allDiscounts.value = (await listDiscounts({ perPage: 500, token: auth.token ?? undefined, projectId: auth.project?.id })).items
 }
 
 async function updateCompatibleDiscounts(newIds: string[]) {
@@ -123,7 +123,7 @@ async function updateCompatibleDiscounts(newIds: string[]) {
 const customers = ref<Customer[]>([])
 const customerOptions = computed(() => customers.value.map((c) => ({ label: c.external_id, value: c.id })))
 async function loadCustomers() {
-  customers.value = await listCustomers({ perPage: 500, token: auth.token ?? undefined, projectId: auth.project?.id })
+  customers.value = (await listCustomers({ perPage: 500, token: auth.token ?? undefined, projectId: auth.project?.id })).items
 }
 
 const couponCodeMode = ref<'oneoff' | 'bulk'>('oneoff')

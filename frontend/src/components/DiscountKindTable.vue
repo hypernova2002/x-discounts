@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import BaseTable from '@/components/base/BaseTable.vue'
@@ -27,11 +27,31 @@ const toast = useBaseToast()
 const router = useRouter()
 const { t } = useI18n()
 
-const { data: discounts, loading, error, reload } = useAsync(() => listDiscounts({ kind: props.kind, token: auth.token ?? undefined, projectId: auth.project?.id }))
+const page = ref(1)
+const perPage = ref(25)
+const q = ref('')
+
+const { data: result, loading, error, reload } = useAsync(() =>
+  listDiscounts({ kind: props.kind, q: q.value || undefined, page: page.value, perPage: perPage.value, token: auth.token ?? undefined, projectId: auth.project?.id })
+)
+const discounts = computed(() => result.value?.items ?? [])
+const meta = computed(() => result.value?.meta)
 
 watch(error, (e) => {
   if (e) toast.add({ severity: 'error', summary: t('discountKindTable.loadError'), detail: e instanceof Error ? e.message : String(e), life: 4000 })
 })
+
+function onPage(event: { page: number; rows: number }) {
+  page.value = event.page
+  perPage.value = event.rows
+  reload()
+}
+
+function onSearch(value: string) {
+  q.value = value
+  page.value = 1
+  reload()
+}
 
 function validityFields(discount: Discount): { from: string | null | undefined; until: string | null | undefined } {
   if (discount.kind === 'coupon') {
@@ -88,13 +108,17 @@ function viewCampaign(campaign: { id: string }) {
   <BaseCard class="section-card">
     <template #content>
       <BaseTable
-        :data="discounts || []"
+        :data="discounts"
         :columns="columns"
         :loading="loading"
         row-key="id"
+        lazy
+        :total-records="meta?.count ?? 0"
         :search-placeholder="t('discountKindTable.searchPlaceholder')"
         @row-click="viewDiscount($event.data as unknown as Discount)"
         @refresh="reload"
+        @page="onPage"
+        @search="onSearch"
       >
         <template #cell-campaign="{ data }">
           <EntityLink @click="viewCampaign(data.campaign)">{{ data.campaign.name }}</EntityLink>

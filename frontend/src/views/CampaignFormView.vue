@@ -125,15 +125,32 @@ async function load() {
 // --- discounts (edit mode only — a campaign needs to exist before it can have any) ---
 
 const discounts = ref<Discount[]>([])
+const discountsMeta = ref<{ count: number } | null>(null)
+const discountsPage = ref(1)
+const discountsPerPage = ref(25)
 const discountsLoading = ref(false)
 
 async function loadDiscounts() {
   discountsLoading.value = true
   try {
-    discounts.value = await listDiscounts({ campaignId: campaignId.value!, token: auth.token ?? undefined, projectId: auth.project?.id })
+    const result = await listDiscounts({
+      campaignId: campaignId.value!,
+      page: discountsPage.value,
+      perPage: discountsPerPage.value,
+      token: auth.token ?? undefined,
+      projectId: auth.project?.id,
+    })
+    discounts.value = result.items
+    discountsMeta.value = result.meta
   } finally {
     discountsLoading.value = false
   }
+}
+
+function onDiscountsPage(event: { page: number; rows: number }) {
+  discountsPage.value = event.page
+  discountsPerPage.value = event.rows
+  loadDiscounts()
 }
 
 function editDiscount(discount: Discount) {
@@ -288,10 +305,13 @@ function cancel() {
           :columns="discountColumns"
           :loading="discountsLoading"
           row-key="id"
+          lazy
+          :total-records="discountsMeta?.count ?? 0"
           :create-label="$t('campaignDetail.newDiscountButton')"
           @row-click="editDiscount($event.data as unknown as Discount)"
           @refresh="loadDiscounts"
           @create="newDiscount"
+          @page="onDiscountsPage"
         >
           <template #cell-kind="{ data }"><DiscountKindTag :kind="data.kind" /></template>
           <template #cell-enabled="{ data }">

@@ -96,7 +96,7 @@ const customers = ref<Customer[]>([])
 const customerOptions = computed(() => customers.value.map((c) => ({ label: c.external_id, value: c.id })))
 
 async function loadCustomers() {
-  customers.value = await listCustomers({ perPage: 500, token: auth.token ?? undefined, projectId: auth.project?.id })
+  customers.value = (await listCustomers({ perPage: 500, token: auth.token ?? undefined, projectId: auth.project?.id })).items
 }
 
 function openGenerate() {

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import AppShell from '@/components/AppShell.vue'
@@ -20,11 +20,31 @@ const toast = useBaseToast()
 const router = useRouter()
 const { t } = useI18n()
 
-const { data: schemes, loading, error, reload } = useAsync(() => listMembershipSchemes({ token: auth.token ?? undefined, projectId: auth.project?.id }))
+const page = ref(1)
+const perPage = ref(25)
+const q = ref('')
+
+const { data: result, loading, error, reload } = useAsync(() =>
+  listMembershipSchemes({ q: q.value || undefined, page: page.value, perPage: perPage.value, token: auth.token ?? undefined, projectId: auth.project?.id })
+)
+const schemes = computed(() => result.value?.items ?? [])
+const meta = computed(() => result.value?.meta)
 
 watch(error, (e) => {
   if (e) toast.add({ severity: 'error', summary: t('membershipSchemes.loadError'), detail: e instanceof Error ? e.message : String(e), life: 4000 })
 })
+
+function onPage(event: { page: number; rows: number }) {
+  page.value = event.page
+  perPage.value = event.rows
+  reload()
+}
+
+function onSearch(value: string) {
+  q.value = value
+  page.value = 1
+  reload()
+}
 
 const columns = computed<TableColumn[]>(() => [
   { field: 'name', header: t('membershipSchemes.columns.name'), sortable: true, hideable: false, filter: { type: 'string' } },
@@ -52,13 +72,17 @@ function viewScheme(scheme: MembershipScheme) {
     <BaseCard class="section-card">
       <template #content>
         <BaseTable
-          :data="schemes || []"
+          :data="schemes"
           :columns="columns"
           :loading="loading"
           row-key="id"
+          lazy
+          :total-records="meta?.count ?? 0"
           :search-placeholder="$t('membershipSchemes.searchPlaceholder')"
           @row-click="viewScheme($event.data as unknown as MembershipScheme)"
           @refresh="reload"
+          @page="onPage"
+          @search="onSearch"
         >
           <template #cell-tiers="{ data }">{{ data.tiers.map((tier: { name: string }) => tier.name).join(', ') || '—' }}</template>
           <template #cell-created_at="{ data }">{{ formatDate(data.created_at, auth.project?.timezone) }}</template>

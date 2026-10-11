@@ -1,21 +1,25 @@
 import { apiFetch, type AuthParams } from '@/lib/api'
-import { CustomerSchema, CustomerListSchema, CustomerDetailSchema, type CustomerInput, type GrantPointsInput } from '@/models/customer'
+import { CustomerSchema, CustomerListSchema, CustomerDetailSchema, type CustomerInput, type GrantPointsInput, type Customer } from '@/models/customer'
+import type { PaginatedResult } from '@/models/pagination'
 
 const BASE = '/api/v1/admin/customers'
 
 interface ListCustomersParams extends AuthParams {
   q?: string
+  page?: number
   perPage?: number
 }
 
-export function listCustomers({ q, perPage, token, projectId }: ListCustomersParams = {}) {
+export function listCustomers({ q, page, perPage, token, projectId }: ListCustomersParams = {}): Promise<PaginatedResult<Customer>> {
   const params = new URLSearchParams()
   if (q) params.set('q', q)
+  if (page) params.set('page', String(page))
   if (perPage) params.set('per_page', String(perPage))
   const query = params.toString()
-  return apiFetch(`${BASE}${query ? `?${query}` : ''}`, { token, projectId }).then(
-    (data) => CustomerListSchema.parse(data).customers
-  )
+  return apiFetch(`${BASE}${query ? `?${query}` : ''}`, { token, projectId }).then((data) => {
+    const parsed = CustomerListSchema.parse(data)
+    return { items: parsed.customers, meta: parsed.meta }
+  })
 }
 
 export function getCustomer(id: string, { token, projectId }: AuthParams) {

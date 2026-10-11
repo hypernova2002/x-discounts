@@ -220,7 +220,7 @@ function viewAllOrders() {
         </template>
         <template #content>
           <BaseTable
-            :data="recentOrders || []"
+            :data="recentOrders?.items || []"
             :columns="recentOrdersColumns"
             :loading="recentOrdersLoading"
             row-key="id"

@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { ListMetaSchema } from '@/models/pagination'
 import type { ComposerTranslation } from 'vue-i18n'
 import { MembershipTierSchema } from '@/models/membershipTier'
 
@@ -17,7 +18,7 @@ export const MembershipSchemeSchema = z
 
 export type MembershipScheme = z.infer<typeof MembershipSchemeSchema>
 
-export const MembershipSchemeListSchema = z.object({ membership_schemes: z.array(MembershipSchemeSchema) }).passthrough()
+export const MembershipSchemeListSchema = z.object({ membership_schemes: z.array(MembershipSchemeSchema), meta: ListMetaSchema }).passthrough()
 
 export type MembershipSchemeList = z.infer<typeof MembershipSchemeListSchema>
 
