@@ -16,21 +16,25 @@ module Exports
     end
 
     def call
-      content, ext = build
-
-      FileUtils.mkdir_p(STORAGE_DIR)
+      ext = @export.export_type == "project" ? "zip" : "csv"
       filename = Exports::Filename.build(@project.name, label, ext: ext)
       path = STORAGE_DIR.join("#{@export.public_id}.#{ext}")
-      File.binwrite(path, content)
+
+      FileUtils.mkdir_p(STORAGE_DIR)
+      write(path)
 
       @export.update(
         status: "completed",
         filename: filename,
         content_type: ext == "zip" ? "application/zip" : "text/csv",
-        byte_size: content.bytesize,
+        byte_size: File.size(path),
         completed_at: Time.now.utc
       )
     rescue StandardError => e
+      # Streaming straight to disk means a failure partway through can leave a
+      # partial file behind (impossible when the old code held the full result
+      # as one in-memory string) — clean it up so it doesn't linger unused.
+      File.delete(path) if path && File.exist?(path)
       @export.update(status: "failed", error_message: e.message)
     end
 
@@ -40,12 +44,12 @@ module Exports
       @export.export_type == "project" ? "export" : @export.export_type
     end
 
-    def build
+    def write(path)
       case @export.export_type
-      when "campaigns" then [Exports::CsvBuilder.build(campaigns_dataset), "csv"]
-      when "customers" then [Exports::CsvBuilder.build(customers_dataset, foreign_keys: { membership_tier_id: MembershipTier }), "csv"]
-      when "orders" then [Exports::CsvBuilder.build(orders_dataset, foreign_keys: { customer_id: Customer }), "csv"]
-      when "project" then [Exports::ProjectExporter.new(project: @project).call, "zip"]
+      when "campaigns" then File.open(path, "w") { |f| Exports::CsvBuilder.build(f, campaigns_dataset) }
+      when "customers" then File.open(path, "w") { |f| Exports::CsvBuilder.build(f, customers_dataset, foreign_keys: { membership_tier_id: MembershipTier }) }
+      when "orders" then File.open(path, "w") { |f| Exports::CsvBuilder.build(f, orders_dataset, foreign_keys: { customer_id: Customer }) }
+      when "project" then Exports::ProjectExporter.new(project: @project).call(path)
       else raise ArgumentError, "unknown export_type #{@export.export_type.inspect}"
       end
     end

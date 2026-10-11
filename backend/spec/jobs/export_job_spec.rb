@@ -72,4 +72,21 @@ RSpec.describe ExportJob do
     expect(export.status).to eq("failed")
     expect(export.error_message).to eq("boom")
   end
+
+  it "leaves no partial file behind when a project export fails partway through" do
+    create(:campaign, project: project)
+    export = create(:export, project: project, export_type: "project")
+    call_count = 0
+    allow(Exports::CsvBuilder).to receive(:build) do
+      call_count += 1
+      raise StandardError, "boom" if call_count == 2
+    end
+
+    described_class.new.perform(export.id)
+    export.refresh
+
+    expect(export.status).to eq("failed")
+    path = Exports::GenerateService::STORAGE_DIR.join("#{export.public_id}.zip")
+    expect(File.exist?(path)).to be(false)
+  end
 end

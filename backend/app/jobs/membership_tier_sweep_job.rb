@@ -11,7 +11,7 @@ class MembershipTierSweepJob < ApplicationJob
 
   def perform(project_id: nil)
     scope = project_id ? Customer.where(project_id: project_id) : Customer.dataset
-    scope.each do |customer|
+    scope.order(:id).paged_each do |customer|
       Memberships::EvaluateCustomerService.new(customer: customer).call
     end
   end

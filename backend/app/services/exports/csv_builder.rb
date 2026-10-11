@@ -3,29 +3,31 @@
 require "csv"
 
 module Exports
-  # Dumps a Sequel dataset to a CSV string. Raw internal ids never leave this app in an
-  # export — the primary key is dropped (or renamed from public_id, where present, to
-  # just "id"), and any foreign key column is resolved from the referenced row's raw
-  # integer id to that row's own public_id, so exported data stays meaningful (and
-  # collision-free to re-import) without ever printing a serial primary key.
+  # Streams a Sequel dataset as CSV directly into the given IO (a File handle, or —
+  # for a project export — the current entry of an open Zip::OutputStream), rather
+  # than building the whole thing as one in-memory string. Raw internal ids never
+  # leave this app in an export — the primary key is dropped (or renamed from
+  # public_id, where present, to just "id"), and any foreign key column is resolved
+  # from the referenced row's raw integer id to that row's own public_id, so exported
+  # data stays meaningful (and collision-free to re-import) without ever printing a
+  # serial primary key.
   module CsvBuilder
     DEFAULT_DROP = %i[id project_id].freeze
     DEFAULT_RENAME = { public_id: :id }.freeze
 
-    def self.build(dataset, foreign_keys: {})
+    def self.build(io, dataset, foreign_keys: {})
       columns = dataset.columns - DEFAULT_DROP
       public_id_cache = Hash.new { |h, k| h[k] = {} }
+      csv = CSV.new(io)
 
-      CSV.generate do |csv|
-        csv << columns.map { |column| (DEFAULT_RENAME[column] || column).to_s }
-        dataset.each do |row|
-          csv << columns.map do |column|
-            raw = row[column]
-            if foreign_keys.key?(column)
-              resolve_public_id(foreign_keys[column], raw, public_id_cache)
-            else
-              serialize_cell(raw)
-            end
+      csv << columns.map { |column| (DEFAULT_RENAME[column] || column).to_s }
+      dataset.each do |row|
+        csv << columns.map do |column|
+          raw = row[column]
+          if foreign_keys.key?(column)
+            resolve_public_id(foreign_keys[column], raw, public_id_cache)
+          else
+            serialize_cell(raw)
           end
         end
       end

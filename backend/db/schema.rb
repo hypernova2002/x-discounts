@@ -1,5 +1,7 @@
 Sequel.migration do
   change do
+    run "CREATE EXTENSION IF NOT EXISTS pg_trgm"
+
     create_table(:accounts) do
       primary_key :id
       column :name, "text", :null=>false
@@ -104,6 +106,7 @@ Sequel.migration do
       column :updated_at, "timestamp with time zone", :null=>false
       column :archived, "boolean", :default=>false, :null=>false
       
+      index [:name], :name=>:campaigns_name_trgm, :type=>:gin, :opclass=>:gin_trgm_ops
       index [:project_id]
       index [:public_id], :name=>:campaigns_public_id_unique, :unique=>true
     end
@@ -118,6 +121,7 @@ Sequel.migration do
       column :created_at, "timestamp with time zone", :null=>false
       column :updated_at, "timestamp with time zone", :null=>false
       
+      index [:key], :name=>:custom_attributes_key_trgm, :type=>:gin, :opclass=>:gin_trgm_ops
       index [:project_id, :entity, :key], :name=>:custom_attributes_project_entity_key_unique, :unique=>true
       index [:project_id]
       index [:public_id], :name=>:custom_attributes_public_id_unique, :unique=>true
@@ -169,6 +173,7 @@ Sequel.migration do
       column :created_at, "timestamp with time zone", :null=>false
       column :updated_at, "timestamp with time zone", :null=>false
       
+      index [:name], :name=>:membership_schemes_name_trgm, :type=>:gin, :opclass=>:gin_trgm_ops
       index [:project_id]
       index [:public_id], :name=>:membership_schemes_public_id_unique, :unique=>true
     end
@@ -235,6 +240,7 @@ Sequel.migration do
       column :enabled, "boolean", :default=>true, :null=>false
       
       index [:campaign_id]
+      index [:name], :name=>:discounts_name_trgm, :type=>:gin, :opclass=>:gin_trgm_ops
       index [:project_id]
       index [:project_id, :key], :name=>:discounts_project_id_key_unique, :unique=>true
       index [:public_id], :name=>:discounts_public_id_unique, :unique=>true
@@ -274,7 +280,10 @@ Sequel.migration do
       foreign_key :membership_tier_id, :membership_tiers, :key=>[:id], :on_delete=>:set_null
       column :membership_tier_entered_at, "timestamp with time zone"
       
+      index [:email], :name=>:customers_email_trgm, :type=>:gin, :opclass=>:gin_trgm_ops
+      index [:external_id], :name=>:customers_external_id_trgm, :type=>:gin, :opclass=>:gin_trgm_ops
       index [:membership_tier_id]
+      index [:name], :name=>:customers_name_trgm, :type=>:gin, :opclass=>:gin_trgm_ops
       index [:project_id, :external_id], :unique=>true
       index [:public_id], :name=>:customers_public_id_unique, :unique=>true
     end
@@ -315,6 +324,7 @@ Sequel.migration do
       column :created_at, "timestamp with time zone", :null=>false
       column :updated_at, "timestamp with time zone", :null=>false
       
+      index [:code], :name=>:coupon_codes_code_trgm, :type=>:gin, :opclass=>:gin_trgm_ops
       index [:customer_id]
       index [:discount_id]
       index [:project_id, :code], :name=>:coupon_codes_project_id_code_unique, :unique=>true
@@ -351,6 +361,7 @@ Sequel.migration do
       
       index [:customer_id]
       index [:project_id]
+      index [:public_id], :name=>:orders_public_id_trgm, :type=>:gin, :opclass=>:gin_trgm_ops
       index [:public_id], :name=>:orders_public_id_unique, :unique=>true
     end
     
@@ -561,5 +572,6 @@ self << "INSERT INTO \"schema_migrations\" (\"filename\") VALUES ('2026092009000
 self << "INSERT INTO \"schema_migrations\" (\"filename\") VALUES ('20260926150001_add_currency_to_projects.rb')"
 self << "INSERT INTO \"schema_migrations\" (\"filename\") VALUES ('20260927013001_create_activity_logs.rb')"
 self << "INSERT INTO \"schema_migrations\" (\"filename\") VALUES ('20261009000001_create_exports.rb')"
+self << "INSERT INTO \"schema_migrations\" (\"filename\") VALUES ('20261011120001_add_trigram_search_indexes.rb')"
                 end
               end

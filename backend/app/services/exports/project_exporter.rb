@@ -85,15 +85,17 @@ module Exports
       @project = project
     end
 
-    def call
-      buffer = ::Zip::OutputStream.write_buffer do |zip|
+    # Writes straight to disk at `path` — each row is read from the DB and
+    # immediately deflated into the zip, so neither a per-table CSV string
+    # nor a whole-zip buffer is ever held in memory at once.
+    def call(path)
+      ::Zip::OutputStream.open(path) do |zip|
         TABLES.each do |table_name, config|
           zip.put_next_entry("#{table_name}.csv")
           dataset = config[:dataset].call(@project)
-          zip.write(Exports::CsvBuilder.build(dataset, foreign_keys: config[:foreign_keys] || {}))
+          Exports::CsvBuilder.build(zip, dataset, foreign_keys: config[:foreign_keys] || {})
         end
       end
-      buffer.string
     end
   end
 end
