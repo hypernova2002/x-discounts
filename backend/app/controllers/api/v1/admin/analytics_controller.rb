@@ -6,20 +6,21 @@ module Api
       class AnalyticsController < BaseController
         before_action :require_project_context!
 
-        REFUNDED = ->(od) { od.refunded? }
-        CANCELLED = ->(order) { order.cancelled_at.present? }
         # How many days out counts as "ending soon" for the dashboard's needs-
         # attention list — matches lib/lifecycleStatus.js's own
         # ENDS_SOON_THRESHOLD_DAYS convention on the frontend.
         ENDING_SOON_DAYS = 14
+        # Comfortably covers every existing frontend preset (DateRangePicker.vue's
+        # largest is 90 days) plus any reasonable custom pick, while bounding the
+        # worst case for the grouped SUM queries below.
+        MAX_RANGE_DAYS = 366
 
         def coupons
           from, to = parse_range!
           discount_ids = current_project.discounts_dataset.where(kind: "coupon").select(:id)
 
-          series = Analytics::DailySeriesService.new(from: from, to: to)
-                                                 .series(order_discounts_in(discount_ids, from, to), exclude: REFUNDED) { 1 }
-          previous_total = previous_period_order_discount_total(discount_ids, from, to) { 1 }
+          series = Analytics::DailySeriesService.new(from: from, to: to).series(order_discounts_in(discount_ids, from, to))
+          previous_total = previous_period_order_discount_total(discount_ids, from, to)
 
           render json: {
             summary: {
@@ -34,12 +35,11 @@ module Api
         def promotions
           from, to = parse_range!
           discount_ids = current_project.discounts_dataset.where(kind: "promotion").select(:id)
+          dataset = order_discounts_in(discount_ids, from, to)
 
-          usage_series = Analytics::DailySeriesService.new(from: from, to: to)
-                                                        .series(order_discounts_in(discount_ids, from, to), exclude: REFUNDED) { 1 }
-          earnings_series = Analytics::DailySeriesService.new(from: from, to: to)
-                                                           .series(order_discounts_in(discount_ids, from, to), exclude: REFUNDED) { |od| (od.amount_off || 0).to_f }
-          previous_earnings_total = previous_period_order_discount_total(discount_ids, from, to) { |od| (od.amount_off || 0).to_f }
+          usage_series = Analytics::DailySeriesService.new(from: from, to: to).series(dataset)
+          earnings_series = Analytics::DailySeriesService.new(from: from, to: to).series(dataset, value: :amount_off)
+          previous_earnings_total = previous_period_order_discount_total(discount_ids, from, to, value: :amount_off)
 
           running_promotions = current_project.discounts_dataset.where(kind: "promotion", enabled: true).all.count(&:active?)
 
@@ -57,13 +57,16 @@ module Api
         def loyalty
           from, to = parse_range!
           discount_ids = current_project.discounts_dataset.where(kind: "loyalty").select(:id)
+          points_value = Sequel[:loyalty_point_lots][:points]
 
           series = Analytics::DailySeriesService.new(from: from, to: to)
-                                                 .series(order_discounts_in(discount_ids, from, to), exclude: REFUNDED) { |od| od.loyalty_point_lot&.points || 0 }
-          previous_total = previous_period_order_discount_total(discount_ids, from, to) { |od| od.loyalty_point_lot&.points || 0 }
+                                                 .series(order_discounts_with_points_in(discount_ids, from, to),
+                                                         value: points_value, date_column: Sequel[:order_discounts][:created_at])
+          prev_from, prev_to = previous_range(from, to)
+          previous_total = Analytics::DailySeriesService.new(from: prev_from, to: prev_to)
+                                                          .total(order_discounts_with_points_in(discount_ids, prev_from, prev_to), value: points_value)
 
           total_points_redeemed = points_redeemed_total(discount_ids, from, to)
-          prev_from, prev_to = previous_range(from, to)
           previous_points_redeemed = points_redeemed_total(discount_ids, prev_from, prev_to)
 
           render json: {
@@ -131,10 +134,10 @@ module Api
         def customers
           from, to = parse_range!
 
-          series = Analytics::DailySeriesService.new(from: from, to: to).series(customers_in(from, to)) { 1 }
+          series = Analytics::DailySeriesService.new(from: from, to: to).series(customers_in(from, to))
           new_customers = series.sum { |s| s[:value] }
           prev_from, prev_to = previous_range(from, to)
-          previous_new_customers = Analytics::DailySeriesService.new(from: prev_from, to: prev_to).total(customers_in(prev_from, prev_to)) { 1 }
+          previous_new_customers = Analytics::DailySeriesService.new(from: prev_from, to: prev_to).total(customers_in(prev_from, prev_to))
 
           render json: {
             summary: {
@@ -155,13 +158,12 @@ module Api
         def campaigns
           from, to = parse_range!
           discount_ids = current_project.discounts_dataset.select(:id)
+          dataset = order_discounts_in(discount_ids, from, to)
 
-          usage_series = Analytics::DailySeriesService.new(from: from, to: to)
-                                                        .series(order_discounts_in(discount_ids, from, to), exclude: REFUNDED) { 1 }
-          earnings_series = Analytics::DailySeriesService.new(from: from, to: to)
-                                                           .series(order_discounts_in(discount_ids, from, to), exclude: REFUNDED) { |od| (od.amount_off || 0).to_f }
-          previous_redemptions_total = previous_period_order_discount_total(discount_ids, from, to) { 1 }
-          previous_discounted_total = previous_period_order_discount_total(discount_ids, from, to) { |od| (od.amount_off || 0).to_f }
+          usage_series = Analytics::DailySeriesService.new(from: from, to: to).series(dataset)
+          earnings_series = Analytics::DailySeriesService.new(from: from, to: to).series(dataset, value: :amount_off)
+          previous_redemptions_total = previous_period_order_discount_total(discount_ids, from, to)
+          previous_discounted_total = previous_period_order_discount_total(discount_ids, from, to, value: :amount_off)
 
           render json: {
             summary: {
@@ -179,24 +181,23 @@ module Api
         # Orders-per-day / revenue-per-day for the orders list's totals/graph.
         # total_orders counts every order in range regardless of status;
         # revenue and discount-given exclude cancelled orders (never a
-        # completed sale) via CANCELLED — refunded/partially-refunded orders
-        # still count their full total_amount, since Order has no stored
-        # net-of-refund total to report instead.
+        # completed sale) via not_cancelled — refunded/partially-refunded
+        # orders still count their full total_amount, since Order has no
+        # stored net-of-refund total to report instead.
         def orders
           from, to = parse_range!
 
-          orders_series = Analytics::DailySeriesService.new(from: from, to: to).series(orders_in(from, to)) { 1 }
-          revenue_series = Analytics::DailySeriesService.new(from: from, to: to)
-                                                          .series(orders_in(from, to), exclude: CANCELLED) { |o| o.total_amount.to_f }
+          orders_series = Analytics::DailySeriesService.new(from: from, to: to).series(orders_in(from, to))
+          revenue_series = Analytics::DailySeriesService.new(from: from, to: to).series(not_cancelled(orders_in(from, to)), value: :total_amount)
 
           total_orders = orders_series.sum { |s| s[:value] }
           total_revenue = revenue_series.sum { |s| s[:value].to_f }
           total_discount_given = Analytics::DailySeriesService.new(from: from, to: to)
-                                                                .total(orders_in(from, to), exclude: CANCELLED) { |o| o.total_discount_amount.to_f }
+                                                                .total(not_cancelled(orders_in(from, to)), value: :total_discount_amount)
 
-          previous_total_orders = previous_period_order_total(from, to) { 1 }
-          previous_total_revenue = previous_period_order_total(from, to, exclude: CANCELLED) { |o| o.total_amount.to_f }
-          previous_total_discount_given = previous_period_order_total(from, to, exclude: CANCELLED) { |o| o.total_discount_amount.to_f }
+          previous_total_orders = previous_period_order_total(from, to)
+          previous_total_revenue = previous_period_order_total(from, to, cancelled_excluded: true, value: :total_amount)
+          previous_total_discount_given = previous_period_order_total(from, to, cancelled_excluded: true, value: :total_discount_amount)
 
           render json: {
             summary: {
@@ -221,10 +222,15 @@ module Api
           current_project.orders_dataset.where(created_at: day_range(from, to))
         end
 
-        def previous_period_order_total(from, to, exclude: Analytics::DailySeriesService::NEVER_EXCLUDE, &block)
+        def not_cancelled(dataset)
+          dataset.where(cancelled_at: nil)
+        end
+
+        def previous_period_order_total(from, to, cancelled_excluded: false, value: 1)
           prev_from, prev_to = previous_range(from, to)
-          Analytics::DailySeriesService.new(from: prev_from, to: prev_to)
-                                        .total(orders_in(prev_from, prev_to), exclude: exclude, &block)
+          dataset = orders_in(prev_from, prev_to)
+          dataset = not_cancelled(dataset) if cancelled_excluded
+          Analytics::DailySeriesService.new(from: prev_from, to: prev_to).total(dataset, value: value)
         end
 
         # Points actually spent (checkout or gift shop) in the range, for lots
@@ -238,14 +244,23 @@ module Api
           -(entries.sum(:delta) || 0)
         end
 
+        # Columns qualified to order_discounts explicitly — #loyalty joins this
+        # dataset to loyalty_point_lots, which has its own discount_id and
+        # created_at columns, and an unqualified WHERE would be ambiguous.
         def order_discounts_in(discount_ids, from, to)
-          OrderDiscount.where(discount_id: discount_ids, created_at: day_range(from, to))
+          OrderDiscount.excluding_refunded(
+            OrderDiscount.where(Sequel[:order_discounts][:discount_id] => discount_ids, Sequel[:order_discounts][:created_at] => day_range(from, to))
+          )
         end
 
-        def previous_period_order_discount_total(discount_ids, from, to, &block)
+        def order_discounts_with_points_in(discount_ids, from, to)
+          order_discounts_in(discount_ids, from, to).left_join(:loyalty_point_lots, id: :loyalty_point_lot_id)
+        end
+
+        def previous_period_order_discount_total(discount_ids, from, to, value: 1)
           prev_from, prev_to = previous_range(from, to)
           Analytics::DailySeriesService.new(from: prev_from, to: prev_to)
-                                        .total(order_discounts_in(discount_ids, prev_from, prev_to), exclude: REFUNDED, &block)
+                                        .total(order_discounts_in(discount_ids, prev_from, prev_to), value: value)
         end
 
         def customers_in(from, to)
@@ -279,6 +294,9 @@ module Api
           from = Date.iso8601(params[:from])
           to = Date.iso8601(params[:to])
           raise ValidationError.new(details: [{ field: "to", message: "must not be before from" }]) if to < from
+          if (to - from).to_i + 1 > MAX_RANGE_DAYS
+            raise ValidationError.new(details: [{ field: "base", message: "date range must not exceed #{MAX_RANGE_DAYS} days" }])
+          end
 
           [from, to]
         rescue ArgumentError, TypeError

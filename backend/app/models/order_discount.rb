@@ -34,6 +34,17 @@ class OrderDiscount < Sequel::Model
     order.project_id
   end
 
+  # Bulk/SQL form of #refunded? — a non-loyalty row is refunded via a
+  # DiscountRefund, a loyalty row via a ledger clawback; excluding both
+  # conditions at once is correct without branching on kind, since a
+  # non-loyalty row can never have a clawback entry and a loyalty row can
+  # never have a DiscountRefund.
+  def self.excluding_refunded(dataset)
+    dataset
+      .exclude(Sequel.lit("EXISTS (SELECT 1 FROM discount_refunds WHERE discount_refunds.order_discount_id = order_discounts.id)"))
+      .exclude(Sequel.lit("EXISTS (SELECT 1 FROM loyalty_point_ledger_entries WHERE loyalty_point_ledger_entries.kind = 'clawback' AND loyalty_point_ledger_entries.order_discount_id = order_discounts.id)"))
+  end
+
   def audit_label
     "#{discount_name} on order #{order.public_id}"
   end
