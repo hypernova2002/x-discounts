@@ -65,4 +65,30 @@ RSpec.describe "includes= opt-in fields", type: :request do
       expect(large_count).to eq(small_count)
     end
   end
+
+  describe "GET /api/v1/admin/customers/:id (loyalty_point_lots)" do
+    def add_lot_with_activity(customer, discount:)
+      order = create(:order, project: project, customer: customer)
+      lot = create(:loyalty_point_lot, customer: customer, order: order, discount: discount, points: 20)
+      create(:loyalty_point_ledger_entry, loyalty_point_lot: lot, kind: "spend", delta: -5)
+    end
+
+    it "keeps query count flat as the number of loyalty point lots grows" do
+      customer = create(:customer, project: project)
+      discount = create(:discount, project: project, kind: "loyalty")
+      includes = "membership_tier,membership_scheme,discount_name,performed_by,status,points_remaining"
+
+      2.times { add_lot_with_activity(customer, discount: discount) }
+      # Warms Sequel's schema cache for tables only this spec touches (e.g.
+      # membership_tiers) — an uncached first touch costs a few extra
+      # one-time queries that would otherwise wrongly show up as "small".
+      get "/api/v1/admin/customers/#{customer.public_id}?includes=#{includes}", headers: headers
+      small_count = count_queries { get "/api/v1/admin/customers/#{customer.public_id}?includes=#{includes}", headers: headers }
+
+      10.times { add_lot_with_activity(customer, discount: discount) }
+      large_count = count_queries { get "/api/v1/admin/customers/#{customer.public_id}?includes=#{includes}", headers: headers }
+
+      expect(large_count).to eq(small_count)
+    end
+  end
 end

@@ -134,7 +134,7 @@ class Discount < Sequel::Model
   # refunded via a ledger clawback, not a DiscountRefund record like the other
   # two kinds — getting that distinction right belongs in one place.
   def redemption_count
-    OrderDiscount.where(discount_id: id).all.count { |od| !od.refunded? }
+    OrderDiscount.excluding_refunded(OrderDiscount.where(discount_id: id)).count
   end
 
   # Bulk form of CampaignResource#discount_kinds — one query for however many

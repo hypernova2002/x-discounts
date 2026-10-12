@@ -72,6 +72,7 @@ Sequel.migration do
       index [:project_id, :created_at]
       index [:public_id], :name=>:activity_logs_public_id_unique, :unique=>true
       index [:request_id]
+      index [:user_id]
     end
     
     create_table(:api_keys) do
@@ -144,6 +145,7 @@ Sequel.migration do
       
       index [:project_id, :created_at]
       index [:public_id], :name=>:exports_public_id_unique, :unique=>true
+      index [:user_id]
     end
     
     create_table(:gift_shop_items) do
@@ -284,6 +286,7 @@ Sequel.migration do
       index [:external_id], :name=>:customers_external_id_trgm, :type=>:gin, :opclass=>:gin_trgm_ops
       index [:membership_tier_id]
       index [:name], :name=>:customers_name_trgm, :type=>:gin, :opclass=>:gin_trgm_ops
+      index [:project_id, :created_at]
       index [:project_id, :external_id], :unique=>true
       index [:public_id], :name=>:customers_public_id_unique, :unique=>true
     end
@@ -310,6 +313,7 @@ Sequel.migration do
       column :created_at, "timestamp with time zone", :null=>false
       column :updated_at, "timestamp with time zone", :null=>false
       
+      index [:compatible_discount_id]
       index [:discount_id, :compatible_discount_id], :name=>:discount_stacking_compatibilities_discount_id_compatible_discou, :unique=>true
     end
     
@@ -359,7 +363,9 @@ Sequel.migration do
       column :updated_at, "timestamp with time zone", :null=>false
       column :cancelled_at, "timestamp with time zone"
       
+      index [:customer_id, :created_at]
       index [:customer_id]
+      index [:project_id, :created_at]
       index [:project_id]
       index [:public_id], :name=>:orders_public_id_trgm, :type=>:gin, :opclass=>:gin_trgm_ops
       index [:public_id], :name=>:orders_public_id_unique, :unique=>true
@@ -427,6 +433,9 @@ Sequel.migration do
       
       index [:customer_id, :expires_at]
       index [:customer_id]
+      index [:discount_id]
+      index [:order_id]
+      index [:performed_by_user_id]
       index [:public_id], :name=>:loyalty_point_lots_public_id_unique, :unique=>true
       index [:refund_of_points_redemption_id]
     end
@@ -448,6 +457,7 @@ Sequel.migration do
       foreign_key :loyalty_point_lot_id, :loyalty_point_lots, :key=>[:id], :on_delete=>:set_null
       column :sku, "text"
       
+      index [:discount_id, :created_at]
       index [:discount_id]
       index [:loyalty_point_lot_id]
       index [:order_id]
@@ -466,7 +476,9 @@ Sequel.migration do
       column :reason, "text"
       foreign_key :performed_by_user_id, :users, :key=>[:id], :on_delete=>:set_null
       
+      index [:created_at]
       index [:order_discount_id]
+      index [:performed_by_user_id]
       index [:public_id], :name=>:discount_refunds_public_id_unique, :unique=>true
     end
     
@@ -483,9 +495,11 @@ Sequel.migration do
       column :reason, "text"
       foreign_key :performed_by_user_id, :users, :key=>[:id], :on_delete=>:set_null
       
+      index [:created_at]
       index [:gift_shop_redemption_id]
       index [:loyalty_point_lot_id]
       index [:order_discount_id]
+      index [:performed_by_user_id]
       index [:points_redemption_id]
       index [:public_id], :name=>:loyalty_point_ledger_entries_public_id_unique, :unique=>true
     end
@@ -573,5 +587,6 @@ self << "INSERT INTO \"schema_migrations\" (\"filename\") VALUES ('2026092615000
 self << "INSERT INTO \"schema_migrations\" (\"filename\") VALUES ('20260927013001_create_activity_logs.rb')"
 self << "INSERT INTO \"schema_migrations\" (\"filename\") VALUES ('20261009000001_create_exports.rb')"
 self << "INSERT INTO \"schema_migrations\" (\"filename\") VALUES ('20261011120001_add_trigram_search_indexes.rb')"
+self << "INSERT INTO \"schema_migrations\" (\"filename\") VALUES ('20261012090001_add_missing_fk_and_created_at_indexes.rb')"
                 end
               end

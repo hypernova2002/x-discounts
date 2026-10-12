@@ -20,22 +20,39 @@ module Customers
 
     private
 
+    # The true top-LIMIT across both streams can never need more than LIMIT
+    # from either stream individually, so bounding each query here keeps this
+    # capped regardless of the customer's lifetime order/redemption count —
+    # only the already-small merged set gets sorted in Ruby below.
+    #
+    # Order#total_points_earned/#total_points_redeemed each issue their own
+    # query when called per-order — bulk-compute both for the whole (now
+    # bounded) batch instead, same shape as the resource bulk-stats services.
     def order_events
-      @customer.orders_dataset.order(Sequel.desc(:created_at)).all.map do |order|
+      orders = @customer.orders_dataset.order(Sequel.desc(:created_at)).limit(LIMIT).all
+      order_ids = orders.map(&:id)
+
+      points_earned_by_order = LoyaltyPointLot.where(order_id: order_ids, source: "order")
+                                               .group(:order_id)
+                                               .select(:order_id, Sequel.function(:sum, :points).as(:total))
+                                               .to_hash(:order_id, :total)
+      points_redeemed_by_order = PointsRedemption.where(order_id: order_ids).to_hash(:order_id, :points_redeemed)
+
+      orders.map do |order|
         {
           type: "order",
           occurred_at: order.created_at,
           order_id: order.public_id,
           total_amount: order.total_amount.to_s,
           total_discount_amount: order.total_discount_amount.to_s,
-          total_points_earned: order.total_points_earned,
-          total_points_redeemed: order.total_points_redeemed
+          total_points_earned: (points_earned_by_order[order.id] || 0).to_i,
+          total_points_redeemed: points_redeemed_by_order[order.id] || 0
         }
       end
     end
 
     def gift_shop_events
-      @customer.gift_shop_redemptions_dataset.order(Sequel.desc(:redeemed_at)).all.map do |redemption|
+      @customer.gift_shop_redemptions_dataset.order(Sequel.desc(:redeemed_at)).limit(LIMIT).all.map do |redemption|
         {
           type: "gift_shop_redemption",
           occurred_at: redemption.redeemed_at,

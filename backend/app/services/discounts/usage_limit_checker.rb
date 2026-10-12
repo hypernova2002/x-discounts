@@ -48,9 +48,7 @@ module Discounts
     # and OrderDiscount#refunded?) no longer count against usage limits, freeing up the
     # slot they used.
     def order_discounts
-      base = OrderDiscount.where(discount_id: @discount.id)
-      refunded_ids = base.all.select(&:refunded?).map(&:id)
-      refunded_ids.empty? ? base : base.exclude(id: refunded_ids)
+      OrderDiscount.excluding_refunded(OrderDiscount.where(discount_id: @discount.id))
     end
 
     def order_discounts_today

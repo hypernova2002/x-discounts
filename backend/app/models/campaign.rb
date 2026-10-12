@@ -31,11 +31,11 @@ class Campaign < Sequel::Model
   # rows are refunded through a ledger clawback rather than a DiscountRefund record,
   # so per-row #refunded? is the one place that distinction needs to be right.
   def discount_summary
-    order_discounts = OrderDiscount.where(discount_id: discounts_dataset.select(:id)).all
-    active_discounts = order_discounts.reject(&:refunded?)
-    refunded_amount = order_discounts.empty? ? 0 : (DiscountRefund.where(order_discount_id: order_discounts.map(&:id)).sum(:amount_off) || 0)
-    discounted_amount = order_discounts.sum { |od| od.amount_off || 0 } - refunded_amount
+    order_discounts = OrderDiscount.where(discount_id: discounts_dataset.select(:id))
+    redemption_count = OrderDiscount.excluding_refunded(order_discounts).count
+    total_amount_off = order_discounts.sum(:amount_off) || 0
+    refunded_amount = DiscountRefund.where(order_discount_id: order_discounts.select(:id)).sum(:amount_off) || 0
 
-    { count: discounts_dataset.count, redemption_count: active_discounts.size, discounted_amount: discounted_amount }
+    { count: discounts_dataset.count, redemption_count: redemption_count, discounted_amount: total_amount_off - refunded_amount }
   end
 end

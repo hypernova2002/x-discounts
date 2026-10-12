@@ -89,9 +89,21 @@ module Api
           }
         end
 
+        LOYALTY_LOT_EAGER_BY_INCLUDE = { "order_id" => :order, "discount_name" => :discount, "performed_by" => :performed_by_user }.freeze
+
         def loyalty_point_lots
-          lots = @customer.loyalty_point_lots_dataset.order(Sequel.desc(:earned_at)).limit(100).all
-          LoyaltyPointLotResource.new(lots, params: resource_params).to_h
+          dataset = @customer.loyalty_point_lots_dataset.order(Sequel.desc(:earned_at)).limit(100)
+          eager_assocs = LOYALTY_LOT_EAGER_BY_INCLUDE.filter_map { |name, assoc| assoc if requested_includes.include?(name) }
+          dataset = dataset.eager(*eager_assocs) if eager_assocs.any?
+          lots = dataset.all
+
+          lot_resource_params = resource_params
+          if (requested_includes & %w[points_remaining status]).any?
+            stats = LoyaltyPointLots::BulkStatsService.new(lots).call
+            lot_resource_params = lot_resource_params.merge(points_remaining_by_lot: stats.points_remaining, status_by_lot: stats.statuses)
+          end
+
+          LoyaltyPointLotResource.new(lots, params: lot_resource_params).to_h
         end
 
         def resource_params

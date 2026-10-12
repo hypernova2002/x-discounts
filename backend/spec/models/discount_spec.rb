@@ -68,4 +68,20 @@ RSpec.describe Discount do
       expect(Array(record.errors[:kind_config])).not_to be_empty
     end
   end
+
+  describe "#redemption_count" do
+    it "counts non-refunded order_discounts, excluding a coupon-refunded and a loyalty-clawed-back row" do
+      discount = create(:discount, kind: "promotion")
+      create(:order_discount, discount: discount, kind: "promotion")
+
+      refunded = create(:order_discount, discount: discount, kind: "promotion")
+      create(:discount_refund, order_discount: refunded)
+
+      lot = create(:loyalty_point_lot)
+      clawed_back = create(:order_discount, discount: discount, kind: "loyalty", loyalty_point_lot: lot)
+      create(:loyalty_point_ledger_entry, loyalty_point_lot: lot, kind: "clawback", order_discount: clawed_back)
+
+      expect(discount.redemption_count).to eq(1)
+    end
+  end
 end
