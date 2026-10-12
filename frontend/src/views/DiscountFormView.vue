@@ -43,6 +43,7 @@ import { couponCodeGeneratePayload } from '@/services/couponCodes'
 import type { CouponCodeGeneratePayload } from '@/services/couponCodes'
 import { useBaseToast } from '@/composables/useBaseToast'
 import { useUnsavedChangesGuard } from '@/composables/useUnsavedChangesGuard'
+import { useSearchableOptions } from '@/composables/useSearchableOptions'
 import { sanitizeHtml } from '@/lib/sanitizeHtml'
 import { isoToZonedInput, zonedInputToIso } from '@/lib/timezone'
 
@@ -51,6 +52,10 @@ const router = useRouter()
 const auth = useAuthStore()
 const toast = useBaseToast()
 const { t } = useI18n()
+
+function authParams() {
+  return { token: auth.token ?? undefined, projectId: auth.project?.id }
+}
 
 const discountId = computed(() => (route.params.id as string | undefined) || null)
 const isEdit = computed(() => !!discountId.value)
@@ -75,25 +80,35 @@ const activeSection = ref<string | null>(null)
 // covered, so loyalty keeps the original single-column layout.
 const showSummary = computed(() => ['coupon', 'promotion'].includes(form.kind))
 
-const campaigns = ref<Campaign[]>([])
-const campaignOptions = computed(() => campaigns.value.map((c) => ({ label: c.name, value: c.id })))
-const currentCampaign = computed(() => campaigns.value.find((c) => c.id === form.campaign_id))
+const campaignOptionsSource = useSearchableOptions<Campaign>(listCampaigns, (c) => ({ label: c.name, value: c.id }))
+const campaignOptions = campaignOptionsSource.options
+const currentCampaign = computed(() => campaignOptionsSource.records.value.find((c) => c.id === form.campaign_id))
 
 async function loadCampaigns() {
-  campaigns.value = (await listCampaigns({ perPage: 500, token: auth.token ?? undefined, projectId: auth.project?.id })).items
+  await campaignOptionsSource.search('', authParams())
 }
 
 // --- compatible discounts (stacking exceptions) ---
 
-const allDiscounts = ref<Discount[]>([])
-const discountOptions = computed(() =>
-  allDiscounts.value.filter((d) => d.id !== discountId.value).map((d) => ({ label: `${d.name} (${d.kind})`, value: d.id }))
-)
+// Minimal shape shared by a real Discount (from listDiscounts) and the
+// embedded compatible_discounts seed objects (DiscountResource only sends
+// {id, name, key} there — no kind, hence the fallback label below).
+interface CompatibleDiscountOption {
+  id: string
+  name: string
+  kind?: string
+}
+
+const discountOptionsSource = useSearchableOptions<CompatibleDiscountOption>(listDiscounts, (d) => ({
+  label: d.kind ? `${d.name} (${d.kind})` : d.name,
+  value: d.id,
+}))
+const discountOptions = computed(() => discountOptionsSource.options.value.filter((d) => d.value !== discountId.value))
 const compatibleDiscountIds = ref<string[]>([])
 const savingCompatibility = ref(false)
 
 async function loadAllDiscounts() {
-  allDiscounts.value = (await listDiscounts({ perPage: 500, token: auth.token ?? undefined, projectId: auth.project?.id })).items
+  await discountOptionsSource.search('', authParams())
 }
 
 async function updateCompatibleDiscounts(newIds: string[]) {
@@ -120,10 +135,16 @@ async function updateCompatibleDiscounts(newIds: string[]) {
 // --- coupon codes (only offered at creation — after that, use the discount's own
 // Coupon codes section, which supports the same one-off/bulk modes) ---
 
-const customers = ref<Customer[]>([])
-const customerOptions = computed(() => customers.value.map((c) => ({ label: c.external_id, value: c.id })))
+const customerOptionsSource = useSearchableOptions<Customer>(listCustomers, (c) => ({
+  label: c.external_id,
+  value: c.id,
+  external_id: c.external_id,
+  name: c.name,
+  email: c.email,
+}))
+const customerOptions = customerOptionsSource.options
 async function loadCustomers() {
-  customers.value = (await listCustomers({ perPage: 500, token: auth.token ?? undefined, projectId: auth.project?.id })).items
+  await customerOptionsSource.search('', authParams())
 }
 
 const couponCodeMode = ref<'oneoff' | 'bulk'>('oneoff')
@@ -269,6 +290,7 @@ async function load() {
     })
     form.kind = data.kind
     form.campaign_id = data.campaign!.id
+    campaignOptionsSource.seed(data.campaign ? [data.campaign] : [])
     form.key = data.key
     form.name = data.name
     form.stackable = data.stackable
@@ -327,6 +349,12 @@ async function load() {
     }))
 
     compatibleDiscountIds.value = (data.compatible_discounts || []).map((d) => d.id as string)
+    const compatibleDiscountSeeds: CompatibleDiscountOption[] = (data.compatible_discounts || []).map((d) => ({
+      id: d.id as string,
+      name: d.name as string,
+      kind: d.kind as string | undefined,
+    }))
+    discountOptionsSource.seed(compatibleDiscountSeeds)
     initialSnapshot.value = JSON.stringify(form)
   } catch (e) {
     loadError.value = e instanceof ApiError ? e.message : t('discountForm.loadError')
@@ -493,7 +521,16 @@ function cancel() {
               </div>
               <div class="field">
                 <label for="campaign_id">{{ $t('discountForm.campaignLabel') }}</label>
-                <BaseSelect id="campaign_id" v-model="form.campaign_id" :options="campaignOptions" option-label="label" option-value="value" filter :invalid="!!errors.campaign_id" />
+                <BaseSelect
+                  id="campaign_id"
+                  v-model="form.campaign_id"
+                  :options="campaignOptions"
+                  option-label="label"
+                  option-value="value"
+                  filter
+                  :invalid="!!errors.campaign_id"
+                  @filter="(e: { value: string }) => campaignOptionsSource.onFilter(e, authParams())"
+                />
                 <small v-if="errors.campaign_id" class="text-danger text-[0.8125rem]">{{ errors.campaign_id }}</small>
               </div>
               <div class="field">
@@ -603,8 +640,10 @@ function cancel() {
                     option-label="label"
                     option-value="value"
                     filter
+                    :filter-fields="['external_id', 'name', 'email']"
                     show-clear
                     :placeholder="$t('discountForm.anyonePlaceholder')"
+                    @filter="(e: { value: string }) => customerOptionsSource.onFilter(e, authParams())"
                   />
                 </div>
                 <div class="field">
@@ -638,6 +677,8 @@ function cancel() {
                     option-label="label"
                     option-value="value"
                     filter
+                    :filter-fields="['external_id', 'name', 'email']"
+                    @filter="(e: { value: string }) => customerOptionsSource.onFilter(e, authParams())"
                   />
                 </div>
                 <div class="field">
@@ -756,7 +797,8 @@ function cancel() {
                 option-value="value"
                 filter
                 :placeholder="$t('discountForm.noExceptionsPlaceholder')"
-                :loading="savingCompatibility"
+                :loading="savingCompatibility || discountOptionsSource.loading.value"
+                @filter="(e: { value: string }) => discountOptionsSource.onFilter(e, authParams())"
                 @update:model-value="updateCompatibleDiscounts"
               />
             </div>

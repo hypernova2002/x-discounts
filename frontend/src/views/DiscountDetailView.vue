@@ -37,12 +37,17 @@ import { couponCodeGeneratePayload } from '@/services/couponCodes'
 import { attrsToObject, lineItemsToPayload } from '@/services/cartAttrs'
 import type { KeyValuePair } from '@/services/cartAttrs'
 import { useBaseToast } from '@/composables/useBaseToast'
+import { useSearchableOptions } from '@/composables/useSearchableOptions'
 import { formatNumber, formatCurrency, formatDateTime } from '@/lib/format'
 import { zonedInputToIso } from '@/lib/timezone'
 
 const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
+
+function authParams() {
+  return { token: auth.token ?? undefined, projectId: auth.project?.id }
+}
 const toast = useBaseToast()
 const { t } = useI18n()
 
@@ -102,11 +107,17 @@ const generateMaxRedemptions = ref(1)
 const generating = ref(false)
 const generateErrors = ref<Record<string, string>>({})
 
-const customers = ref<Customer[]>([])
-const customerOptions = computed(() => customers.value.map((c) => ({ label: c.external_id, value: c.id })))
+const customerOptionsSource = useSearchableOptions<Customer>(listCustomers, (c) => ({
+  label: c.external_id,
+  value: c.id,
+  external_id: c.external_id,
+  name: c.name,
+  email: c.email,
+}))
+const customerOptions = customerOptionsSource.options
 
 async function loadCustomers() {
-  customers.value = (await listCustomers({ perPage: 500, token: auth.token ?? undefined, projectId: auth.project?.id })).items
+  await customerOptionsSource.search('', authParams())
 }
 
 function openGenerate() {
@@ -121,7 +132,7 @@ function openGenerate() {
   generateMaxRedemptions.value = 1
   generateErrors.value = {}
   generateDialogOpen.value = true
-  if (!customers.value.length) loadCustomers()
+  if (!customerOptionsSource.records.value.length) loadCustomers()
 }
 
 function generatePayload() {
@@ -560,7 +571,17 @@ onMounted(loadDiscount)
             <label>{{ $t('discountDetail.codeLabel') }}</label>
             <BaseInputText v-model="oneoffCode" :placeholder="$t('discountDetail.codePlaceholder')" />
             <label>{{ $t('discountDetail.assignCustomerLabel') }}</label>
-            <BaseSelect v-model="oneoffCustomerId" :options="customerOptions" option-label="label" option-value="value" filter show-clear :placeholder="$t('discountDetail.anyonePlaceholder')" />
+            <BaseSelect
+              v-model="oneoffCustomerId"
+              :options="customerOptions"
+              option-label="label"
+              option-value="value"
+              filter
+              :filter-fields="['external_id', 'name', 'email']"
+              show-clear
+              :placeholder="$t('discountDetail.anyonePlaceholder')"
+              @filter="(e: { value: string }) => customerOptionsSource.onFilter(e, authParams())"
+            />
             <label>{{ $t('discountDetail.maxRedemptionsLabel') }}</label>
             <BaseInputNumber v-model="generateMaxRedemptions" :min="1" />
             <p class="usage-limits-hint">
@@ -586,7 +607,15 @@ onMounted(loadDiscount)
             </template>
             <template v-else>
               <label>{{ $t('discountDetail.customersOneCodeEachLabel') }}</label>
-              <BaseMultiSelect v-model="generateCustomerIds" :options="customerOptions" option-label="label" option-value="value" filter />
+              <BaseMultiSelect
+                v-model="generateCustomerIds"
+                :options="customerOptions"
+                option-label="label"
+                option-value="value"
+                filter
+                :filter-fields="['external_id', 'name', 'email']"
+                @filter="(e: { value: string }) => customerOptionsSource.onFilter(e, authParams())"
+              />
             </template>
 
             <label>{{ $t('discountDetail.prefixLabel') }}</label>
