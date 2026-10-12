@@ -43,18 +43,43 @@ const chartLabels = computed(() => (analytics.value?.series || []).map((s) => fo
 const chartDatasets = computed(() => [{ label: t('loyaltyPoints.chartSeriesLabel'), data: (analytics.value?.series || []).map((s) => s.value) }])
 const hasChartData = computed(() => (analytics.value?.series || []).some((s) => s.value > 0))
 
+const activeRedemptionsPage = ref(1)
+const activeRedemptionsPerPage = ref(25)
+const activeRedemptionsQuery = ref('')
+
 const {
   data: activeRedemptionsData,
   loading: activeRedemptionsLoading,
   error: activeRedemptionsError,
   reload: reloadActiveRedemptions,
-} = useAsync(() => getActiveLoyaltyRedemptions({ token: auth.token ?? undefined, projectId: auth.project?.id }))
+} = useAsync(() =>
+  getActiveLoyaltyRedemptions({
+    page: activeRedemptionsPage.value,
+    perPage: activeRedemptionsPerPage.value,
+    q: activeRedemptionsQuery.value || undefined,
+    token: auth.token ?? undefined,
+    projectId: auth.project?.id,
+  })
+)
 
 watch(activeRedemptionsError, (e) => {
   if (e) toast.add({ severity: 'error', summary: t('loyaltyPoints.activeRedemptionsLoadError'), detail: e instanceof Error ? e.message : String(e), life: 4000 })
 })
 
 const activeRedemptions = computed(() => activeRedemptionsData.value?.active_redemptions || [])
+const activeRedemptionsMeta = computed(() => activeRedemptionsData.value?.meta)
+
+function onActiveRedemptionsPage(event: { page: number; rows: number }) {
+  activeRedemptionsPage.value = event.page
+  activeRedemptionsPerPage.value = event.rows
+  reloadActiveRedemptions()
+}
+
+function onActiveRedemptionsSearch(value: string) {
+  activeRedemptionsQuery.value = value
+  activeRedemptionsPage.value = 1
+  reloadActiveRedemptions()
+}
 
 const activeRedemptionsColumns = computed<TableColumn[]>(() => [
   { field: 'customer', header: t('loyaltyPoints.customerColumn'), hideable: false, filter: { type: 'string', accessor: (row) => (row as { customer: { external_id: string } }).customer.external_id } },
@@ -120,8 +145,12 @@ function viewCustomer(customer: { id: string }) {
           :columns="activeRedemptionsColumns"
           :loading="activeRedemptionsLoading"
           row-key="id"
+          lazy
+          :total-records="activeRedemptionsMeta?.count ?? 0"
           :search-placeholder="t('loyaltyPoints.searchPlaceholder')"
           @refresh="reloadActiveRedemptions"
+          @page="onActiveRedemptionsPage"
+          @search="onActiveRedemptionsSearch"
         >
           <template #cell-customer="{ data }">
             <EntityLink @click="viewCustomer(data.customer)">{{ data.customer.external_id }}</EntityLink>

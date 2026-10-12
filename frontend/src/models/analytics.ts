@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { ListMetaSchema } from '@/models/pagination'
 
 const SeriesPointSchema = z.object({ date: z.string(), value: z.number() }).passthrough()
 
@@ -92,7 +93,7 @@ const ActiveRedemptionSchema = z
   })
   .passthrough()
 
-export const ActiveLoyaltyRedemptionsSchema = z.object({ active_redemptions: z.array(ActiveRedemptionSchema) }).passthrough()
+export const ActiveLoyaltyRedemptionsSchema = z.object({ active_redemptions: z.array(ActiveRedemptionSchema), meta: ListMetaSchema }).passthrough()
 
 export type ActiveLoyaltyRedemptions = z.infer<typeof ActiveLoyaltyRedemptionsSchema>
 

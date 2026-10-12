@@ -92,6 +92,57 @@ RSpec.describe "Analytics API", type: :request do
     end
   end
 
+  describe "GET /api/v1/admin/analytics/loyalty/active_redemptions" do
+    it "paginates, excludes clawed-back/expired/zero-balance lots, and filters by customer via q" do
+      findable_customer = create(:customer, project: project, external_id: "findme-1")
+      create(:loyalty_point_lot, customer: findable_customer, points: 40)
+
+      other_customer = create(:customer, project: project)
+      create(:loyalty_point_lot, customer: other_customer, points: 10)
+
+      clawed_back = create(:loyalty_point_lot, customer: other_customer, points: 20)
+      create(:loyalty_point_ledger_entry, loyalty_point_lot: clawed_back, kind: "clawback", order_discount: create(:order_discount, kind: "loyalty"))
+
+      create(:loyalty_point_lot, customer: other_customer, points: 5, expires_at: Time.now.utc - 86_400)
+
+      spent = create(:loyalty_point_lot, customer: other_customer, points: 5)
+      create(:loyalty_point_ledger_entry, loyalty_point_lot: spent, kind: "spend", delta: -5)
+
+      get "/api/v1/admin/analytics/loyalty/active_redemptions", params: { per_page: 1 }, headers: headers
+      body = JSON.parse(response.body)
+
+      expect(body["meta"]["count"]).to eq(2)
+      expect(body["active_redemptions"].size).to eq(1)
+
+      get "/api/v1/admin/analytics/loyalty/active_redemptions", params: { q: "findme" }, headers: headers
+      filtered = JSON.parse(response.body)
+
+      expect(filtered["active_redemptions"].size).to eq(1)
+      expect(filtered["active_redemptions"].first["customer"]["external_id"]).to eq("findme-1")
+      expect(filtered["active_redemptions"].first["quantity"]).to eq(40)
+    end
+  end
+
+  describe "GET /api/v1/admin/analytics/attention" do
+    it "includes a campaign/discount ending just inside the window and excludes ones outside it or with no end date" do
+      now = Time.now.utc
+      soon_campaign = create(:campaign, project: project, enabled: true, archived: false, valid_until: now + (5 * 24 * 60 * 60))
+      create(:campaign, project: project, enabled: true, archived: false, valid_until: now + (30 * 24 * 60 * 60))
+      create(:campaign, project: project, enabled: true, archived: false, valid_until: nil)
+
+      soon_coupon = create(:discount, project: project, campaign: soon_campaign, kind: "coupon", enabled: true,
+                                       kind_config: { valid_until: (now + (3 * 24 * 60 * 60)).iso8601 })
+      create(:discount, project: project, campaign: soon_campaign, kind: "promotion", enabled: true,
+                         kind_config: { active_until: (now + (30 * 24 * 60 * 60)).iso8601 })
+
+      get "/api/v1/admin/analytics/attention", headers: headers
+      body = JSON.parse(response.body)
+
+      expect(body["campaigns"].map { |c| c["id"] }).to eq([soon_campaign.public_id])
+      expect(body["discounts"].map { |d| d["id"] }).to eq([soon_coupon.public_id])
+    end
+  end
+
   describe "date range cap" do
     it "rejects a range wider than 366 days" do
       get "/api/v1/admin/analytics/orders", params: range_params(from: today - 400, to: today), headers: headers

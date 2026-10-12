@@ -80,42 +80,55 @@ module Api
         end
 
         # Not date-range scoped — a live snapshot of currently-active loyalty
-        # point lots, not a period question. Returned in full (no server-side
-        # pagination) — this app's own BaseTable already paginates client-side
-        # over whatever it's handed, matching every other admin list view here.
+        # point lots, not a period question. Paginated like every other admin
+        # list view (see paginate/meta_for below) — "active" is pushed into
+        # SQL via LoyaltyPointLot.active_with_balance rather than loading
+        # every lot and filtering with #status/#points_remaining in Ruby.
         def loyalty_active_redemptions
-          lots = LoyaltyPointLot.where(customer_id: current_project.customers_dataset.select(:id)).all
-          active_lots = lots.select { |lot| lot.status == "active" && lot.points_remaining.positive? }
+          dataset = LoyaltyPointLot.active_with_balance(LoyaltyPointLot.where(customer_id: current_project.customers_dataset.select(:id)))
+          if params[:q].present?
+            matching_customers = current_project.customers_dataset.where(
+              Sequel.ilike(:external_id, "%#{params[:q]}%") | Sequel.ilike(:name, "%#{params[:q]}%")
+            ).select(:id)
+            dataset = dataset.where(customer_id: matching_customers)
+          end
+          dataset = dataset.eager(:customer).order(Sequel.desc(:earned_at))
 
+          pagy, lots = paginate(dataset, limit: params[:per_page]&.to_i)
+          lots = lots.all
+          response.headers.merge!(pagy_headers_merge(pagy))
+
+          points_remaining_by_lot = LoyaltyPointLots::BulkStatsService.new(lots).call.points_remaining
           render json: {
-            active_redemptions: active_lots.map do |lot|
+            active_redemptions: lots.map do |lot|
               {
                 id: lot.public_id,
                 customer: { id: lot.customer.public_id, external_id: lot.customer.external_id, name: lot.customer.name },
-                quantity: lot.points_remaining,
+                quantity: points_remaining_by_lot[lot.id],
                 expires_at: lot.expires_at
               }
-            end
+            end,
+            meta: meta_for(pagy)
           }
         end
 
         # Not date-range scoped — a live snapshot, same shape as
-        # #loyalty_active_redemptions. valid_until/active_until are jsonb-backed
-        # accessors on Discount (see Discount#valid_until/#active_until), not
-        # real columns, so — consistent with how #active_campaigns and
-        # #running_promotions above already work — this loads enabled
-        # campaigns/discounts and filters with those existing accessors in Ruby
-        # rather than a SQL range query.
+        # #loyalty_active_redemptions, but not a navigable list (a small,
+        # inherently-bounded "ending soon" widget), so this stays a plain
+        # action rather than a paginated one — the fix here is pushing the
+        # date-window filter into SQL instead of loading every enabled
+        # campaign/discount and filtering with Ruby accessors.
         def attention
           now = Time.now.utc
           soon = now + (ENDING_SOON_DAYS * 24 * 60 * 60)
-          ending_soon = ->(until_at) { until_at && until_at > now && until_at <= soon }
 
-          campaigns = current_project.campaigns_dataset.where(enabled: true, archived: false).all
-                                      .select { |c| ending_soon.call(c.valid_until) }
+          campaigns = current_project.campaigns_dataset
+                                      .where(enabled: true, archived: false)
+                                      .where(Sequel.lit("valid_until > ? AND valid_until <= ?", now, soon))
+                                      .all
 
-          discounts = current_project.discounts_dataset.where(enabled: true).all
-                                      .select { |d| ending_soon.call(d.kind == "coupon" ? d.valid_until : d.active_until) }
+          discounts = Discount.ending_soon(current_project.discounts_dataset.where(enabled: true), from: now, to: soon)
+                               .eager(:campaign).all
 
           render json: {
             campaigns: campaigns.map { |c| { id: c.public_id, name: c.name, until: c.valid_until } },

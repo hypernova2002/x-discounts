@@ -35,8 +35,19 @@ export function getLoyaltyAnalytics({ from, to, token, projectId }: AnalyticsRan
   return apiFetch(`${BASE}/loyalty${rangeQuery({ from, to })}`, { token, projectId }).then((data) => LoyaltyAnalyticsSchema.parse(data))
 }
 
-export function getActiveLoyaltyRedemptions({ token, projectId }: AuthParams) {
-  return apiFetch(`${BASE}/loyalty/active_redemptions`, { token, projectId }).then((data) => ActiveLoyaltyRedemptionsSchema.parse(data))
+interface ActiveLoyaltyRedemptionsParams extends AuthParams {
+  page?: number
+  perPage?: number
+  q?: string
+}
+
+export function getActiveLoyaltyRedemptions({ page, perPage, q, token, projectId }: ActiveLoyaltyRedemptionsParams = {}) {
+  const params = new URLSearchParams()
+  if (page) params.set('page', String(page))
+  if (perPage) params.set('per_page', String(perPage))
+  if (q) params.set('q', q)
+  const qs = params.toString()
+  return apiFetch(`${BASE}/loyalty/active_redemptions${qs ? `?${qs}` : ''}`, { token, projectId }).then((data) => ActiveLoyaltyRedemptionsSchema.parse(data))
 }
 
 export function getCustomerAnalytics({ from, to, token, projectId }: AnalyticsRangeParams) {

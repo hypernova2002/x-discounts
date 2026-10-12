@@ -56,4 +56,14 @@ class LoyaltyPointLot < Sequel::Model
 
     "active"
   end
+
+  # "Active redemptions" = not cancelled (no clawback), not expired, still
+  # has a positive balance — expressed entirely in SQL so it can be counted
+  # and paginated correctly, not computed per-row via #status/#points_remaining.
+  def self.active_with_balance(dataset)
+    dataset
+      .exclude(Sequel.lit("EXISTS (SELECT 1 FROM loyalty_point_ledger_entries WHERE loyalty_point_ledger_entries.loyalty_point_lot_id = loyalty_point_lots.id AND loyalty_point_ledger_entries.kind = 'clawback')"))
+      .where(Sequel.lit("(expires_at IS NULL OR expires_at > ?)", Time.now.utc))
+      .where(Sequel.lit("(points + COALESCE((SELECT SUM(delta) FROM loyalty_point_ledger_entries WHERE loyalty_point_ledger_entries.loyalty_point_lot_id = loyalty_point_lots.id), 0)) > 0"))
+  end
 end

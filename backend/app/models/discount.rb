@@ -137,6 +137,21 @@ class Discount < Sequel::Model
     OrderDiscount.excluding_refunded(OrderDiscount.where(discount_id: id)).count
   end
 
+  # SQL form of "ending soon" for the dashboard's attention widget. kind_config's
+  # valid_until (coupon) / active_until (promotion, loyalty) are jsonb string
+  # fields written exclusively through validated request models — same trust
+  # assumption the existing Ruby readers (#valid_until/#active_until) already
+  # make via Time.parse with no rescue.
+  def self.ending_soon(dataset, from:, to:)
+    dataset.where(
+      Sequel.lit(
+        "(kind = 'coupon' AND (kind_config->>'valid_until') IS NOT NULL AND (kind_config->>'valid_until')::timestamptz > ? AND (kind_config->>'valid_until')::timestamptz <= ?) OR " \
+        "(kind != 'coupon' AND (kind_config->>'active_until') IS NOT NULL AND (kind_config->>'active_until')::timestamptz > ? AND (kind_config->>'active_until')::timestamptz <= ?)",
+        from, to, from, to
+      )
+    )
+  end
+
   # Bulk form of CampaignResource#discount_kinds — one query for however many
   # campaigns are on the current page/list, instead of one query per campaign.
   def self.kinds_by_campaign(campaign_ids)

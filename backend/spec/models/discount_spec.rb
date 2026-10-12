@@ -84,4 +84,41 @@ RSpec.describe Discount do
       expect(discount.redemption_count).to eq(1)
     end
   end
+
+  describe ".ending_soon" do
+    let(:now) { Time.utc(2026, 6, 1) }
+    let(:soon) { now + (14 * 24 * 60 * 60) }
+
+    it "includes a coupon discount whose valid_until falls just inside the window" do
+      discount = create(:discount, kind: "coupon", kind_config: { valid_until: (now + 10 * 24 * 60 * 60).iso8601 })
+
+      expect(described_class.ending_soon(described_class.dataset, from: now, to: soon)).to include(discount)
+    end
+
+    it "includes a promotion discount whose active_until falls just inside the window" do
+      discount = create(:discount, kind: "promotion", kind_config: { active_until: (now + 10 * 24 * 60 * 60).iso8601 })
+
+      expect(described_class.ending_soon(described_class.dataset, from: now, to: soon)).to include(discount)
+    end
+
+    it "excludes a discount ending after the window" do
+      discount = create(:discount, kind: "promotion", kind_config: { active_until: (now + 30 * 24 * 60 * 60).iso8601 })
+
+      expect(described_class.ending_soon(described_class.dataset, from: now, to: soon)).not_to include(discount)
+    end
+
+    it "excludes a discount with no end date" do
+      discount = create(:discount, kind: "promotion", kind_config: {})
+
+      expect(described_class.ending_soon(described_class.dataset, from: now, to: soon)).not_to include(discount)
+    end
+
+    it "does not match a coupon's valid_until against active_until's kind branch" do
+      # A coupon discount's end date lives under valid_until, not active_until —
+      # confirm the kind-branching doesn't accidentally cross-match.
+      discount = create(:discount, kind: "coupon", kind_config: { active_until: (now + 10 * 24 * 60 * 60).iso8601 })
+
+      expect(described_class.ending_soon(described_class.dataset, from: now, to: soon)).not_to include(discount)
+    end
+  end
 end
