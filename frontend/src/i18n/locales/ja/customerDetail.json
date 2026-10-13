@@ -4,7 +4,8 @@
     "activityLabels": {
       "order": "注文",
       "giftShopRedemption": "ギフトショップ利用",
-      "membership": "メンバーシップ"
+      "membershipStarted": "メンバーシップ開始",
+      "membershipEnded": "メンバーシップ終了"
     },
     "membershipUpdated": "メンバーシップを更新しました",
     "membershipUpdateError": "メンバーシップの更新に失敗しました",
@@ -47,12 +48,14 @@
     },
     "activity": {
       "title": "アクティビティ",
+      "loading": "アクティビティを読み込み中…",
       "empty": "アクティビティはまだありません。",
       "orderSummary": "— 合計{total}、{discount}割引",
       "pointsEarnedSuffix": "、{points}ポイント獲得",
       "pointsRedeemedSuffix": "、{points}ポイント利用",
       "giftShopRedemption": "{quantity}x {item} — {points}ポイント消費",
-      "membershipJoined": "{scheme}に加入 — {tier}"
+      "membershipStarted": "{scheme} 開始 — {tier}",
+      "membershipEnded": "{scheme} 終了 — {tier}"
     },
     "loyaltyPoints": {
       "title": "ポイント",

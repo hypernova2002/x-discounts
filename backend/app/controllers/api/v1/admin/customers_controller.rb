@@ -7,7 +7,7 @@ module Api
         WRITE_ROLES = %w[admin developer marketer].freeze
 
         before_action :require_project_context!
-        before_action :set_customer, only: %i[show update grant_points duplicate]
+        before_action :set_customer, only: %i[show update grant_points duplicate activity]
         before_action -> { require_role!(*WRITE_ROLES) }, only: %i[create update grant_points duplicate]
 
         def create
@@ -33,8 +33,7 @@ module Api
         def show
           render json: CustomerResource.new(@customer, params: resource_params).to_h.merge(
             stats: customer_stats,
-            loyalty_point_lots: loyalty_point_lots,
-            activity: Customers::ActivityFeedService.new(customer: @customer).call
+            loyalty_point_lots: loyalty_point_lots
           )
         end
 
@@ -53,9 +52,19 @@ module Api
           ).call
           render json: CustomerResource.new(@customer, params: resource_params).to_h.merge(
             stats: customer_stats,
-            loyalty_point_lots: loyalty_point_lots,
-            activity: Customers::ActivityFeedService.new(customer: @customer).call
+            loyalty_point_lots: loyalty_point_lots
           )
+        end
+
+        def activity
+          dataset = @customer.customer_activity_events_dataset.order(Sequel.desc(:occurred_at), Sequel.desc(:id))
+          pagy, events = paginate(dataset, limit: params[:per_page]&.to_i)
+          events = events.all
+          response.headers.merge!(pagy_headers_merge(pagy))
+          render json: {
+            activity: events.map { |e| { type: e.type, occurred_at: e.occurred_at }.merge(e.payload.to_h.symbolize_keys) },
+            meta: meta_for(pagy)
+          }
         end
 
         private

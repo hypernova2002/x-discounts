@@ -335,6 +335,20 @@ Sequel.migration do
       index [:public_id], :name=>:coupon_codes_public_id_unique, :unique=>true
     end
     
+    create_table(:customer_activity_events) do
+      primary_key :id
+      foreign_key :customer_id, :customers, :null=>false, :key=>[:id]
+      foreign_key :project_id, :projects, :null=>false, :key=>[:id]
+      column :type, "text", :null=>false
+      column :occurred_at, "timestamp with time zone", :null=>false
+      column :payload, "jsonb", :default=>Sequel::LiteralString.new("'{}'::jsonb"), :null=>false
+      column :public_id, "text", :null=>false
+      column :created_at, "timestamp with time zone", :null=>false
+      
+      index [:customer_id, :occurred_at]
+      index [:public_id], :name=>:customer_activity_events_public_id_unique, :unique=>true
+    end
+    
     create_table(:gift_shop_redemptions) do
       primary_key :id
       foreign_key :customer_id, :customers, :null=>false, :key=>[:id]
@@ -588,5 +602,6 @@ self << "INSERT INTO \"schema_migrations\" (\"filename\") VALUES ('2026092701300
 self << "INSERT INTO \"schema_migrations\" (\"filename\") VALUES ('20261009000001_create_exports.rb')"
 self << "INSERT INTO \"schema_migrations\" (\"filename\") VALUES ('20261011120001_add_trigram_search_indexes.rb')"
 self << "INSERT INTO \"schema_migrations\" (\"filename\") VALUES ('20261012090001_add_missing_fk_and_created_at_indexes.rb')"
+self << "INSERT INTO \"schema_migrations\" (\"filename\") VALUES ('20261013000001_create_customer_activity_events.rb')"
                 end
               end

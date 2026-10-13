@@ -10,10 +10,10 @@ module Customers
 
     def call
       if @request.attributes.key?(:membership_tier_id) && @membership_tier&.id != @customer.membership_tier_id
-        @customer.membership_tier = @membership_tier
-        @customer.membership_tier_entered_at = @membership_tier ? Time.now.utc : nil
+        @customer.change_membership_tier!(@membership_tier)
+      else
+        @customer.save
       end
-      @customer.save
       @customer
     rescue Sequel::ValidationFailed => e
       raise ValidationError.from_model(e.model)

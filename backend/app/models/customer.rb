@@ -17,9 +17,10 @@ class Customer < Sequel::Model
   one_to_many :orders
   one_to_many :loyalty_point_lots
   one_to_many :gift_shop_redemptions
+  one_to_many :customer_activity_events
 
   add_association_dependencies redemptions: :destroy, orders: :destroy, loyalty_point_lots: :destroy,
-                                gift_shop_redemptions: :destroy
+                                gift_shop_redemptions: :destroy, customer_activity_events: :destroy
 
   def validate
     super
@@ -81,7 +82,27 @@ class Customer < Sequel::Model
     end
   end
 
+  # Reassigns the tier and records the transition as activity events — a
+  # `membership_ended` for the tier being left (if any) and a `membership_started`
+  # for the one being entered (if any) — so full tier history is reconstructable
+  # from customer_activity_events, not just the current snapshot.
+  def change_membership_tier!(new_tier, at: Time.now.utc)
+    old_tier = membership_tier
+    db.transaction do
+      self.membership_tier = new_tier
+      self.membership_tier_entered_at = new_tier ? at : nil
+      save
+      CustomerActivityEvent.record!(customer: self, type: "membership_ended", occurred_at: at, payload: tier_payload(old_tier)) if old_tier
+      CustomerActivityEvent.record!(customer: self, type: "membership_started", occurred_at: at, payload: tier_payload(new_tier)) if new_tier
+    end
+    self
+  end
+
   private
+
+  def tier_payload(tier)
+    { tier_name: tier.name, scheme_name: tier.membership_scheme.name }
+  end
 
   def valid_lot_ids(now)
     loyalty_point_lots_dataset

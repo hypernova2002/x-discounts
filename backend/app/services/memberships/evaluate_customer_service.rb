@@ -38,7 +38,7 @@ module Memberships
       return @customer if @customer.membership_tier_id == new_tier&.id
       return @customer if within_grace_period?(new_tier)
 
-      @customer.update(membership_tier: new_tier, membership_tier_entered_at: @now)
+      @customer.change_membership_tier!(new_tier, at: @now)
     end
 
     private

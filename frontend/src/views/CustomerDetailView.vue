@@ -18,11 +18,11 @@ import BaseInputNumber from '@/components/base/BaseInputNumber.vue'
 import BaseInputText from '@/components/base/BaseInputText.vue'
 import { useAuthStore } from '@/stores/auth'
 import { ApiError } from '@/lib/api'
-import { getCustomer, updateCustomer, grantPoints as grantPointsRequest, duplicateCustomer } from '@/api/customers'
+import { getCustomer, updateCustomer, grantPoints as grantPointsRequest, duplicateCustomer, getCustomerActivity } from '@/api/customers'
 import { listOrders } from '@/api/orders'
 import { listMembershipSchemes } from '@/api/membershipSchemes'
 import { grantPointsInputSchema } from '@/models/customer'
-import type { CustomerDetail } from '@/models/customer'
+import type { CustomerDetail, ActivityItem } from '@/models/customer'
 import { toFieldErrors } from '@/models/formErrors'
 import { useBaseToast } from '@/composables/useBaseToast'
 import { formatNumber, formatCurrency, formatDate, formatDateTime } from '@/lib/format'
@@ -41,6 +41,8 @@ const tierOptions = ref<{ label: string; value: string }[]>([])
 const savingMembership = ref(false)
 const orders = ref<Order[]>([])
 const ordersLoading = ref(false)
+const activity = ref<ActivityItem[]>([])
+const activityLoading = ref(false)
 
 async function loadCustomer() {
   loadError.value = ''
@@ -50,7 +52,7 @@ async function loadCustomer() {
       token: auth.token ?? undefined,
       projectId: auth.project?.id,
     })
-    await Promise.all([loadTierOptions(), loadOrders()])
+    await Promise.all([loadTierOptions(), loadOrders(), loadActivity()])
   } catch (e) {
     loadError.value = e instanceof ApiError ? e.message : t('customerDetail.loadError')
   }
@@ -65,15 +67,26 @@ async function loadOrders() {
   }
 }
 
+async function loadActivity() {
+  activityLoading.value = true
+  try {
+    activity.value = (await getCustomerActivity(customer.value!.id, { perPage: 50, token: auth.token ?? undefined, projectId: auth.project?.id })).activity
+  } finally {
+    activityLoading.value = false
+  }
+}
+
 const ACTIVITY_LABELS = computed<Record<string, string>>(() => ({
   order: t('customerDetail.activityLabels.order'),
   gift_shop_redemption: t('customerDetail.activityLabels.giftShopRedemption'),
-  membership: t('customerDetail.activityLabels.membership'),
+  membership_started: t('customerDetail.activityLabels.membershipStarted'),
+  membership_ended: t('customerDetail.activityLabels.membershipEnded'),
 }))
 const ACTIVITY_SEVERITIES: Record<string, string> = {
   order: 'success',
   gift_shop_redemption: 'info',
-  membership: 'warn',
+  membership_started: 'warn',
+  membership_ended: 'secondary',
 }
 const LOYALTY_LOT_STATUS_SEVERITIES: Record<string, string> = { active: 'success', expired: 'secondary', cancelled: 'danger' }
 
@@ -332,8 +345,9 @@ onMounted(loadCustomer)
       <BaseCard class="section-card">
         <template #title>{{ $t('customerDetail.activity.title') }}</template>
         <template #content>
-          <p v-if="!customer.activity.length" class="empty-hint">{{ $t('customerDetail.activity.empty') }}</p>
-          <BaseTimeline v-else :value="customer.activity">
+          <p v-if="activityLoading" class="empty-hint">{{ $t('customerDetail.activity.loading') }}</p>
+          <p v-else-if="!activity.length" class="empty-hint">{{ $t('customerDetail.activity.empty') }}</p>
+          <BaseTimeline v-else :value="activity">
             <template #opposite="{ item }">
               <span class="activity-date">{{ formatDateTime(item.occurred_at, auth.project?.timezone) }}</span>
             </template>
@@ -352,8 +366,12 @@ onMounted(loadCustomer)
                   <span>{{ $t('customerDetail.activity.giftShopRedemption', { quantity: formatNumber(item.quantity), item: item.item_name, points: formatNumber(item.points_spent) }) }}</span>
                 </template>
 
-                <template v-else-if="item.type === 'membership'">
-                  <span>{{ $t('customerDetail.activity.membershipJoined', { scheme: item.scheme_name, tier: item.tier_name }) }}</span>
+                <template v-else-if="item.type === 'membership_started'">
+                  <span>{{ $t('customerDetail.activity.membershipStarted', { scheme: item.scheme_name, tier: item.tier_name }) }}</span>
+                </template>
+
+                <template v-else-if="item.type === 'membership_ended'">
+                  <span>{{ $t('customerDetail.activity.membershipEnded', { scheme: item.scheme_name, tier: item.tier_name }) }}</span>
                 </template>
               </div>
             </template>

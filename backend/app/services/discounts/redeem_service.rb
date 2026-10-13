@@ -61,10 +61,21 @@ module Discounts
         points_redeemed, points_discount_amount = apply_points_redemption(order, customer, total_discount_amount)
         total_discount_amount += points_discount_amount
 
-        loyalty_applied_ids, = create_loyalty_discounts(order, customer, result[:loyalty_points][:breakdown])
+        loyalty_applied_ids, total_points_earned = create_loyalty_discounts(order, customer, result[:loyalty_points][:breakdown])
         applied_discount_ids += loyalty_applied_ids
 
         order.update(total_discount_amount: total_discount_amount)
+
+        CustomerActivityEvent.record!(
+          customer: customer, type: "order", occurred_at: order.created_at,
+          payload: {
+            order_id: order.public_id,
+            total_amount: order.total_amount.to_s,
+            total_discount_amount: order.total_discount_amount.to_s,
+            total_points_earned: total_points_earned,
+            total_points_redeemed: points_redeemed
+          }
+        )
 
         # This order's totals (spend, points, order count) are now what a tier's
         # requirements would see — re-evaluate immediately so a qualifying purchase

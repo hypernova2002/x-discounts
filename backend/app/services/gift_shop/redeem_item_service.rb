@@ -49,6 +49,11 @@ module GiftShop
         )
         customer.consume_loyalty_points!(points_needed, spend_ref: redemption)
         item.update(stock: item.stock - @quantity) if item.stock
+
+        CustomerActivityEvent.record!(
+          customer: customer, type: "gift_shop_redemption", occurred_at: redemption.redeemed_at,
+          payload: { item_name: redemption.item_name, quantity: redemption.quantity, points_spent: redemption.points_spent }
+        )
       end
 
       redemption

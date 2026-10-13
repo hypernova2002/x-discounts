@@ -1,5 +1,13 @@
 import { apiFetch, type AuthParams } from '@/lib/api'
-import { CustomerSchema, CustomerListSchema, CustomerDetailSchema, type CustomerInput, type GrantPointsInput, type Customer } from '@/models/customer'
+import {
+  CustomerSchema,
+  CustomerListSchema,
+  CustomerDetailSchema,
+  CustomerActivitySchema,
+  type CustomerInput,
+  type GrantPointsInput,
+  type Customer,
+} from '@/models/customer'
 import type { PaginatedResult } from '@/models/pagination'
 
 const BASE = '/api/v1/admin/customers'
@@ -27,6 +35,19 @@ export function listCustomers({ q, page, perPage, includes, token, projectId }: 
 export function getCustomer(id: string, { includes, token, projectId }: AuthParams & { includes?: string[] }) {
   const query = includes?.length ? `?includes=${includes.join(',')}` : ''
   return apiFetch(`${BASE}/${id}${query}`, { token, projectId }).then((data) => CustomerDetailSchema.parse(data))
+}
+
+interface GetCustomerActivityParams extends AuthParams {
+  page?: number
+  perPage?: number
+}
+
+export function getCustomerActivity(id: string, { page, perPage, token, projectId }: GetCustomerActivityParams = {}) {
+  const params = new URLSearchParams()
+  if (page) params.set('page', String(page))
+  if (perPage) params.set('per_page', String(perPage))
+  const query = params.toString()
+  return apiFetch(`${BASE}/${id}/activity${query ? `?${query}` : ''}`, { token, projectId }).then((data) => CustomerActivitySchema.parse(data))
 }
 
 export function createCustomer(input: CustomerInput, { token, projectId }: AuthParams) {

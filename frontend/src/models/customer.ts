@@ -56,7 +56,15 @@ const ActivityItemSchema = z.discriminatedUnion('type', [
     .passthrough(),
   z
     .object({
-      type: z.literal('membership'),
+      type: z.literal('membership_started'),
+      occurred_at: z.string(),
+      tier_name: z.string(),
+      scheme_name: z.string(),
+    })
+    .passthrough(),
+  z
+    .object({
+      type: z.literal('membership_ended'),
       occurred_at: z.string(),
       tier_name: z.string(),
       scheme_name: z.string(),
@@ -65,6 +73,10 @@ const ActivityItemSchema = z.discriminatedUnion('type', [
 ])
 
 export type ActivityItem = z.infer<typeof ActivityItemSchema>
+
+export const CustomerActivitySchema = z.object({ activity: z.array(ActivityItemSchema), meta: ListMetaSchema }).passthrough()
+
+export type CustomerActivity = z.infer<typeof CustomerActivitySchema>
 
 const LoyaltyPointLotSchema = z
   .object({
@@ -106,7 +118,6 @@ export const CustomerDetailSchema = z
   .object({
     ...customerFields,
     stats: CustomerStatsSchema,
-    activity: z.array(ActivityItemSchema),
     loyalty_point_lots: z.array(LoyaltyPointLotSchema),
   })
   .passthrough()

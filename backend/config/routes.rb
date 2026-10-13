@@ -57,6 +57,7 @@ Rails.application.routes.draw do
         resources :customers, only: %i[index show update create] do
           post :grant_points, on: :member
           post :duplicate, on: :member
+          get :activity, on: :member
         end
         resources :exports, only: %i[index show create] do
           get :download, on: :member
