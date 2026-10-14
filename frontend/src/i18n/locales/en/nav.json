@@ -21,6 +21,7 @@
     "accountSettings": "Account settings",
     "userSettings": "My settings",
     "toggleMenu": "Toggle menu",
+    "userMenu": "Account menu",
     "switchProject": "Switch project",
     "switchProjectError": "Couldn't switch project",
     "projectTimezoneTooltip": "Dates and times across this project are shown in this timezone"

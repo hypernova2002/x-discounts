@@ -32,7 +32,8 @@ test('enrolls in two-factor authentication, logs out, and logs back in through t
   await page.getByRole('button', { name: "I've saved these codes" }).click()
   await expect(page.getByText('Two-factor authentication is enabled')).toBeVisible()
 
-  await page.getByRole('button', { name: 'Sign out' }).click()
+  await page.getByRole('button', { name: 'Account menu' }).click()
+  await page.getByRole('menuitem', { name: 'Sign out' }).click()
   await expect(page).toHaveURL('/login')
 
   await page.locator('#email').fill(fixture.otp_user_email)

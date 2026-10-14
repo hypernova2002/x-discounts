@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useAttrs } from 'vue'
+import { computed, useAttrs, useTemplateRef } from 'vue'
 import { useRoute } from 'vue-router'
 import Menu from 'openvue/menu'
 
@@ -27,6 +27,18 @@ defineOptions({ inheritAttrs: false })
 const attrs = useAttrs()
 const route = useRoute()
 
+// Popup mode has no built-in trigger — callers hold a template ref and call
+// `.toggle(event)` from their own button's click handler; that's forwarded
+// here via defineExpose since Menu's own toggle method lives on its component
+// instance, not as a prop/emit (same pattern as BasePopover.vue).
+const menuRef = useTemplateRef<InstanceType<typeof Menu>>('menuRef')
+
+function toggle(event: Event) {
+  menuRef.value?.toggle(event)
+}
+
+defineExpose({ toggle })
+
 interface MenuItemModel {
   routeNames?: string[]
   nested?: boolean
@@ -36,8 +48,16 @@ function isActive(item?: MenuItemModel): boolean {
   return typeof route.name === 'string' && !!item?.routeNames?.includes(route.name)
 }
 
-const pt = {
-  root: 'flex flex-col gap-0.5',
+// Popup mode has no card chrome of its own (unstyled) — the inline sidebar
+// usage must stay bare (no border/shadow/background around the whole list),
+// so this chrome only applies when `popup` is set.
+const isPopup = computed(() => 'popup' in attrs && attrs.popup !== false)
+
+const pt = computed(() => ({
+  root: [
+    'flex flex-col gap-0.5',
+    isPopup.value && 'z-50 mt-2 min-w-[12rem] rounded-md border border-border bg-bg py-1 shadow-md',
+  ],
   start: 'mb-2',
   list: 'flex flex-col gap-0.5',
   end: 'mt-2',
@@ -64,11 +84,11 @@ const pt = {
   itemLabel: 'truncate',
   submenuLabel: 'px-3 pt-4 pb-1 text-xs font-semibold uppercase tracking-wide text-text-muted',
   separator: 'my-2 border-t border-border',
-}
+}))
 </script>
 
 <template>
-  <Menu unstyled v-bind="attrs" :pt="pt">
+  <Menu ref="menuRef" unstyled v-bind="attrs" :pt="pt">
     <template v-if="$slots.start" #start><slot name="start" /></template>
     <template v-if="$slots.end" #end><slot name="end" /></template>
   </Menu>

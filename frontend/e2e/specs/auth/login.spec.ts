@@ -33,6 +33,7 @@ test('logs in with valid credentials and signs out', async ({ page }) => {
   await expect(page).toHaveURL('/')
   await expect(page.getByRole('heading', { name: /welcome back/i })).toBeVisible()
 
-  await page.getByRole('button', { name: 'Sign out' }).click()
+  await page.getByRole('button', { name: 'Account menu' }).click()
+  await page.getByRole('menuitem', { name: 'Sign out' }).click()
   await expect(page).toHaveURL('/login')
 })

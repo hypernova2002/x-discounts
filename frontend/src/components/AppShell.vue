@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, useTemplateRef } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
@@ -7,7 +7,6 @@ import { AVAILABLE_LOCALES } from '@/i18n'
 import { NAV_SECTIONS, findSection } from '@/lib/navSections'
 import { useBaseToast } from '@/composables/useBaseToast'
 import BaseMenu from '@/components/base/BaseMenu.vue'
-import BaseButton from '@/components/base/BaseButton.vue'
 import BaseTag from '@/components/base/BaseTag.vue'
 import BaseSelect from '@/components/base/BaseSelect.vue'
 
@@ -63,6 +62,25 @@ async function logout() {
   router.push({ name: 'login' })
 }
 
+const userMenuRef = useTemplateRef<InstanceType<typeof BaseMenu>>('userMenuRef')
+
+function toggleUserMenu(event: Event) {
+  userMenuRef.value?.toggle(event)
+}
+
+const userInitials = computed(() => {
+  const parts = auth.user?.name.trim().split(/\s+/) ?? []
+  if (parts.length === 0) return ''
+  const first = parts[0]?.[0] ?? ''
+  const last = parts.length > 1 ? (parts[parts.length - 1]?.[0] ?? '') : ''
+  return (first + last).toUpperCase()
+})
+
+const userMenuItems = computed(() => [
+  { label: t('nav.userSettings'), icon: 'pi pi-user', command: () => go('user-settings') },
+  { label: t('nav.signOut'), icon: 'pi pi-sign-out', command: logout },
+])
+
 const switchingProject = ref(false)
 
 async function switchProject(projectId: string) {
@@ -106,30 +124,6 @@ onMounted(() => {
       </div>
       <div class="app-shell__topbar-end">
         <BaseSelect
-          v-if="auth.user"
-          :model-value="auth.user.locale"
-          :options="AVAILABLE_LOCALES"
-          option-label="label"
-          option-value="code"
-          :aria-label="t('nav.language')"
-          class="app-shell__locale"
-          @update:model-value="auth.updateLocale"
-        >
-          <template #value>
-            <span class="app-shell__locale-value">
-              <i class="pi pi-language" />
-              <span aria-hidden="true">{{ currentLocale.flag }}</span>
-            </span>
-          </template>
-          <template #option="{ option }">
-            <span class="app-shell__locale-option">
-              <span aria-hidden="true">{{ option.flag }}</span>
-              {{ option.label }}
-            </span>
-          </template>
-        </BaseSelect>
-        <BaseTag v-if="auth.role" :value="auth.role" class="app-shell__role-tag" />
-        <BaseSelect
           v-if="auth.project"
           :model-value="auth.project.id"
           :options="auth.projects"
@@ -141,14 +135,58 @@ onMounted(() => {
           class="app-shell__project"
           @update:model-value="switchProject"
         />
-        <BaseTag
-          v-if="auth.project?.timezone"
-          :value="auth.project.timezone"
-          v-tooltip.bottom="t('nav.projectTimezoneTooltip')"
-          class="app-shell__timezone-tag"
-        />
-        <BaseButton text icon="pi pi-user" :aria-label="t('nav.userSettings')" v-tooltip.bottom="t('nav.userSettings')" @click="go('user-settings')" />
-        <BaseButton text :label="t('nav.signOut')" @click="logout" />
+        <button
+          v-if="auth.user"
+          type="button"
+          class="app-shell__avatar"
+          :aria-label="t('nav.userMenu')"
+          aria-haspopup="menu"
+          @click="toggleUserMenu"
+        >
+          {{ userInitials }}
+        </button>
+        <BaseMenu ref="userMenuRef" popup :model="userMenuItems" :aria-label="t('nav.userMenu')">
+          <template #start>
+            <div v-if="auth.user" class="app-shell__user-identity">
+              <p class="app-shell__user-name">{{ auth.user.name }}</p>
+              <p class="app-shell__user-email">{{ auth.user.email }}</p>
+              <div class="app-shell__user-tags">
+                <BaseTag v-if="auth.role" :value="auth.role" />
+                <BaseTag
+                  v-if="auth.project?.timezone"
+                  :value="auth.project.timezone"
+                  v-tooltip.bottom="t('nav.projectTimezoneTooltip')"
+                />
+              </div>
+            </div>
+            <div class="app-shell__user-divider" />
+            <BaseSelect
+              v-if="auth.user"
+              :model-value="auth.user.locale"
+              :options="AVAILABLE_LOCALES"
+              option-label="label"
+              option-value="code"
+              :aria-label="t('nav.language')"
+              class="app-shell__user-locale"
+              @update:model-value="auth.updateLocale"
+            >
+              <template #value>
+                <span class="app-shell__locale-value">
+                  <i class="pi pi-language" />
+                  <span aria-hidden="true">{{ currentLocale.flag }}</span>
+                  {{ currentLocale.label }}
+                </span>
+              </template>
+              <template #option="{ option }">
+                <span class="app-shell__locale-option">
+                  <span aria-hidden="true">{{ option.flag }}</span>
+                  {{ option.label }}
+                </span>
+              </template>
+            </BaseSelect>
+            <div class="app-shell__user-divider" />
+          </template>
+        </BaseMenu>
       </div>
     </header>
 
@@ -252,10 +290,6 @@ onMounted(() => {
   max-width: 11rem;
 }
 
-.app-shell__locale {
-  width: auto;
-}
-
 .app-shell__locale-value {
   display: inline-flex;
   align-items: center;
@@ -271,6 +305,68 @@ onMounted(() => {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
+}
+
+.app-shell__avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 2.25rem;
+  width: 2.25rem;
+  flex-shrink: 0;
+  border-radius: var(--radius-full);
+  border: none;
+  background: var(--color-primary-subtle);
+  color: var(--color-primary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.app-shell__avatar:hover {
+  background: color-mix(in srgb, var(--color-primary-subtle) 70%, var(--color-primary) 10%);
+}
+
+.app-shell__avatar:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.app-shell__user-identity {
+  min-width: 13rem;
+  padding: 0.25rem 0.75rem 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.app-shell__user-name {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+}
+
+.app-shell__user-email {
+  margin: 0;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+.app-shell__user-tags {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.app-shell__user-divider {
+  margin: 0.5rem 0.75rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.app-shell__user-locale {
+  width: calc(100% - 1.5rem);
+  margin: 0 0.75rem;
 }
 
 .app-shell__body {
@@ -344,11 +440,6 @@ onMounted(() => {
 
   .app-shell__topbar-end {
     gap: 0.375rem;
-  }
-
-  .app-shell__role-tag,
-  .app-shell__timezone-tag {
-    display: none;
   }
 }
 </style>

@@ -21,6 +21,7 @@
     "accountSettings": "アカウント設定",
     "userSettings": "マイ設定",
     "toggleMenu": "メニューを切り替える",
+    "userMenu": "アカウントメニュー",
     "switchProject": "プロジェクトを切り替える",
     "switchProjectError": "プロジェクトを切り替えられませんでした",
     "projectTimezoneTooltip": "このプロジェクトの日時はすべてこのタイムゾーンで表示されます"
