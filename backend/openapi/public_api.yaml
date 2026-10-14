@@ -50,6 +50,68 @@ paths:
                 "$ref": "#/components/schemas/Error"
         '400':
           "$ref": "#/components/responses/SchemaValidationError"
+  "/api/v1/admin/activity_logs":
+    get:
+      summary: List activity logs
+      tags:
+      - Activity Logs
+      operationId: listActivityLogs
+      parameters:
+      - name: entity_type
+        in: query
+        schema:
+          type: string
+        required: false
+      - name: log_action
+        in: query
+        schema:
+          type: string
+        required: false
+      - name: user_id
+        in: query
+        schema:
+          type: string
+        required: false
+      - name: from
+        in: query
+        schema:
+          type: string
+        required: false
+      - name: to
+        in: query
+        schema:
+          type: string
+        required: false
+      - name: per_page
+        in: query
+        schema:
+          type: integer
+        required: false
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          description: lists the project's logs, newest first
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  activity_logs:
+                    type: array
+                    items:
+                      "$ref": "#/components/schemas/ActivityLog"
+                  meta:
+                    type: object
+                    properties:
+                      page:
+                        type: integer
+                      pages:
+                        type: integer
+                      count:
+                        type: integer
+        '400':
+          "$ref": "#/components/responses/SchemaValidationError"
   "/api/v1/admin/api_keys":
     get:
       summary: List API keys
@@ -142,6 +204,149 @@ paths:
           description: key revoked
         '400':
           "$ref": "#/components/responses/SchemaValidationError"
+  "/api/v1/admin/campaigns":
+    get:
+      summary: List campaigns
+      tags:
+      - Campaigns
+      operationId: listCampaigns
+      parameters:
+      - name: q
+        in: query
+        schema:
+          type: string
+        required: false
+      - name: page
+        in: query
+        schema:
+          type: integer
+        required: false
+      - name: per_page
+        in: query
+        schema:
+          type: integer
+        required: false
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          description: returns campaigns for the current project
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  campaigns:
+                    type: array
+                    items:
+                      "$ref": "#/components/schemas/Campaign"
+                  meta:
+                    type: object
+                    properties:
+                      page:
+                        type: integer
+                      pages:
+                        type: integer
+                      count:
+                        type: integer
+        '400':
+          "$ref": "#/components/responses/SchemaValidationError"
+  "/api/v1/admin/custom_attributes":
+    get:
+      summary: List custom attributes
+      tags:
+      - Custom Attributes
+      operationId: listCustomAttributes
+      parameters:
+      - name: entity
+        in: query
+        schema:
+          type: string
+        required: false
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          description: returns custom attributes for the current project
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  custom_attributes:
+                    type: array
+                    items:
+                      "$ref": "#/components/schemas/CustomAttribute"
+                  meta:
+                    type: object
+                    properties:
+                      page:
+                        type: integer
+                      pages:
+                        type: integer
+                      count:
+                        type: integer
+        '400':
+          "$ref": "#/components/responses/SchemaValidationError"
+    post:
+      summary: Create a custom attribute
+      tags:
+      - Custom Attributes
+      operationId: createCustomAttribute
+      security:
+      - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/CustomAttributeCreateRequest"
+      responses:
+        '201':
+          description: attribute created
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/CustomAttribute"
+        '422':
+          description: duplicate entity+key
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+        '403':
+          description: not a write role
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+        '400':
+          "$ref": "#/components/responses/SchemaValidationError"
+  "/api/v1/admin/custom_attributes/{id}":
+    parameters:
+    - name: id
+      in: path
+      schema:
+        type: string
+      required: true
+    delete:
+      summary: Delete a custom attribute
+      tags:
+      - Custom Attributes
+      operationId: deleteCustomAttribute
+      security:
+      - BearerAuth: []
+      responses:
+        '204':
+          description: attribute deleted
+        '404':
+          description: not found
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+        '400':
+          "$ref": "#/components/responses/SchemaValidationError"
   "/api/v1/admin/discounts":
     get:
       summary: List discounts
@@ -193,6 +398,192 @@ paths:
                 "$ref": "#/components/schemas/Discount"
         '422':
           description: validation error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+        '400':
+          "$ref": "#/components/responses/SchemaValidationError"
+  "/api/v1/admin/discounts/{discount_id}/compatible_discounts":
+    parameters:
+    - name: discount_id
+      in: path
+      schema:
+        type: string
+      required: true
+    post:
+      summary: Mark another discount as compatible
+      tags:
+      - Discount Compatibilities
+      operationId: createDiscountCompatibility
+      security:
+      - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201':
+          description: returns the discount, now compatible with the other
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Discount"
+        '422':
+          description: an unresolvable compatible_discount_id
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+        '403':
+          description: not a write role
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+        '400':
+          "$ref": "#/components/responses/SchemaValidationError"
+  "/api/v1/admin/discounts/{discount_id}/compatible_discounts/{id}":
+    parameters:
+    - name: discount_id
+      in: path
+      schema:
+        type: string
+      required: true
+    - name: id
+      in: path
+      schema:
+        type: string
+      required: true
+    delete:
+      summary: Remove a compatibility
+      tags:
+      - Discount Compatibilities
+      operationId: deleteDiscountCompatibility
+      security:
+      - BearerAuth: []
+      responses:
+        '204':
+          description: removes an existing compatibility
+        '403':
+          description: not a write role
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+        '400':
+          "$ref": "#/components/responses/SchemaValidationError"
+  "/api/v1/admin/discounts/{discount_id}/coupon_codes":
+    parameters:
+    - name: discount_id
+      in: path
+      schema:
+        type: string
+      required: true
+    get:
+      summary: List a discount's coupon codes
+      tags:
+      - Coupon Codes
+      operationId: listCouponCodes
+      parameters:
+      - name: includes
+        in: query
+        schema:
+          type: string
+        required: false
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          description: lists codes for the discount
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  coupon_codes:
+                    type: array
+                    items:
+                      "$ref": "#/components/schemas/CouponCode"
+                  meta:
+                    type: object
+                    properties:
+                      page:
+                        type: integer
+                      pages:
+                        type: integer
+                      count:
+                        type: integer
+        '400':
+          "$ref": "#/components/responses/SchemaValidationError"
+    post:
+      summary: Generate coupon codes
+      tags:
+      - Coupon Codes
+      operationId: generateCouponCodes
+      security:
+      - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201':
+          description: generates a manual code
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  "$ref": "#/components/schemas/CouponCode"
+        '403':
+          description: not a write role
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+        '400':
+          "$ref": "#/components/responses/SchemaValidationError"
+  "/api/v1/admin/discounts/{discount_id}/coupon_codes/{id}":
+    parameters:
+    - name: discount_id
+      in: path
+      schema:
+        type: string
+      required: true
+    - name: id
+      in: path
+      schema:
+        type: string
+      required: true
+    delete:
+      summary: Delete a coupon code
+      tags:
+      - Coupon Codes
+      operationId: deleteCouponCode
+      security:
+      - BearerAuth: []
+      responses:
+        '204':
+          description: deletes an unredeemed code
+        '404':
+          description: unknown code
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+        '422':
+          description: a code that's already been redeemed cannot be deleted
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+        '403':
+          description: not a write role
           content:
             application/json:
               schema:
@@ -263,6 +654,440 @@ paths:
       responses:
         '204':
           description: discount deleted
+        '400':
+          "$ref": "#/components/responses/SchemaValidationError"
+  "/api/v1/admin/exports":
+    get:
+      summary: List exports
+      tags:
+      - Exports
+      operationId: listExports
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          description: returns exports for the current project, most recent first
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  exports:
+                    type: array
+                    items:
+                      "$ref": "#/components/schemas/Export"
+                  meta:
+                    type: object
+                    properties:
+                      page:
+                        type: integer
+                      pages:
+                        type: integer
+                      count:
+                        type: integer
+    post:
+      summary: Create an export
+      tags:
+      - Exports
+      operationId: createExport
+      security:
+      - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/ExportCreateRequest"
+      responses:
+        '201':
+          description: export queued
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Export"
+        '422':
+          description: invalid export_type
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+        '400':
+          "$ref": "#/components/responses/SchemaValidationError"
+  "/api/v1/admin/exports/{id}":
+    parameters:
+    - name: id
+      in: path
+      schema:
+        type: string
+      required: true
+    get:
+      summary: Show an export
+      tags:
+      - Exports
+      operationId: getExport
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          description: returns the export
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Export"
+        '404':
+          description: not found
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+        '400':
+          "$ref": "#/components/responses/SchemaValidationError"
+  "/api/v1/admin/exports/{id}/download":
+    parameters:
+    - name: id
+      in: path
+      schema:
+        type: string
+      required: true
+    get:
+      summary: Download a completed export
+      tags:
+      - Exports
+      operationId: downloadExport
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          description: streams the generated file
+        '404':
+          description: not yet completed
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+        '400':
+          "$ref": "#/components/responses/SchemaValidationError"
+  "/api/v1/admin/gift_shop_items":
+    get:
+      summary: List gift shop items
+      tags:
+      - Gift Shop Items
+      operationId: listGiftShopItems
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          description: lists the project's items
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  gift_shop_items:
+                    type: array
+                    items:
+                      "$ref": "#/components/schemas/GiftShopItem"
+                  meta:
+                    type: object
+                    properties:
+                      page:
+                        type: integer
+                      pages:
+                        type: integer
+                      count:
+                        type: integer
+    post:
+      summary: Create a gift shop item
+      tags:
+      - Gift Shop Items
+      operationId: createGiftShopItem
+      security:
+      - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201':
+          description: creates an item
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/GiftShopItem"
+        '403':
+          description: not a write role
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+        '400':
+          "$ref": "#/components/responses/SchemaValidationError"
+  "/api/v1/admin/gift_shop_items/{id}":
+    parameters:
+    - name: id
+      in: path
+      schema:
+        type: string
+      required: true
+    get:
+      summary: Show a gift shop item
+      tags:
+      - Gift Shop Items
+      operationId: getGiftShopItem
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          description: returns the item
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/GiftShopItem"
+        '404':
+          description: unknown item
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+        '400':
+          "$ref": "#/components/responses/SchemaValidationError"
+    patch:
+      summary: Update a gift shop item
+      tags:
+      - Gift Shop Items
+      operationId: updateGiftShopItem
+      security:
+      - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: updates the item
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/GiftShopItem"
+        '400':
+          "$ref": "#/components/responses/SchemaValidationError"
+    delete:
+      summary: Delete a gift shop item
+      tags:
+      - Gift Shop Items
+      operationId: deleteGiftShopItem
+      security:
+      - BearerAuth: []
+      responses:
+        '204':
+          description: deletes the item
+        '400':
+          "$ref": "#/components/responses/SchemaValidationError"
+  "/api/v1/admin/gift_shop_items/{id}/redeem":
+    parameters:
+    - name: id
+      in: path
+      schema:
+        type: string
+      required: true
+    post:
+      summary: Redeem a gift shop item for a customer
+      tags:
+      - Gift Shop Items
+      operationId: redeemGiftShopItem
+      security:
+      - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201':
+          description: redeems the item, requiring no write role
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/GiftShopRedemption"
+        '422':
+          description: insufficient points
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+        '400':
+          "$ref": "#/components/responses/SchemaValidationError"
+  "/api/v1/admin/membership_schemes":
+    get:
+      summary: List membership schemes
+      tags:
+      - Membership Schemes
+      operationId: listMembershipSchemes
+      parameters:
+      - name: q
+        in: query
+        schema:
+          type: string
+        required: false
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          description: returns membership schemes for the current project
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  membership_schemes:
+                    type: array
+                    items:
+                      "$ref": "#/components/schemas/MembershipScheme"
+                  meta:
+                    type: object
+                    properties:
+                      page:
+                        type: integer
+                      pages:
+                        type: integer
+                      count:
+                        type: integer
+        '400':
+          "$ref": "#/components/responses/SchemaValidationError"
+  "/api/v1/admin/order_discounts/{id}/refund":
+    parameters:
+    - name: id
+      in: path
+      schema:
+        type: string
+      required: true
+    post:
+      summary: Refund an order discount line
+      tags:
+      - Order Discounts
+      operationId: refundOrderDiscount
+      security:
+      - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201':
+          description: refunds the full remaining amount_off
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/RefundResult"
+        '404':
+          description: an id belonging to another project
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+        '422':
+          description: nothing left to refund
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+        '403':
+          description: not a write role
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+        '400':
+          "$ref": "#/components/responses/SchemaValidationError"
+  "/api/v1/admin/orders":
+    get:
+      summary: List orders
+      tags:
+      - Orders
+      operationId: listOrders
+      parameters:
+      - name: q
+        in: query
+        schema:
+          type: string
+        required: false
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          description: returns orders for the current project
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  orders:
+                    type: array
+                    items:
+                      "$ref": "#/components/schemas/Order"
+                  meta:
+                    type: object
+                    properties:
+                      page:
+                        type: integer
+                      pages:
+                        type: integer
+                      count:
+                        type: integer
+        '400':
+          "$ref": "#/components/responses/SchemaValidationError"
+  "/api/v1/admin/points_redemptions/{id}/refund":
+    parameters:
+    - name: id
+      in: path
+      schema:
+        type: string
+      required: true
+    post:
+      summary: Refund a points redemption
+      tags:
+      - Points Redemptions
+      operationId: refundPointsRedemption
+      security:
+      - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201':
+          description: refunds the full remaining points
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/RefundResult"
+        '404':
+          description: an id belonging to another project
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+        '422':
+          description: nothing left to refund
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+        '403':
+          description: not a write role
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
         '400':
           "$ref": "#/components/responses/SchemaValidationError"
   "/api/v1/admin/project_memberships":
@@ -490,6 +1315,8 @@ paths:
               properties:
                 name:
                   type: string
+                timezone:
+                  type: string
       responses:
         '200':
           description: project updated
@@ -497,6 +1324,12 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/Project"
+        '422':
+          description: invalid timezone
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
         '400':
           "$ref": "#/components/responses/SchemaValidationError"
     delete:
@@ -636,6 +1469,111 @@ paths:
           description: user deleted
         '400':
           "$ref": "#/components/responses/SchemaValidationError"
+  "/api/v1/customers":
+    post:
+      summary: Create (or upsert) a customer
+      tags:
+      - Customers
+      operationId: createCustomer
+      security:
+      - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/CustomerCreateRequest"
+      responses:
+        '201':
+          description: customer created
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Customer"
+        '422':
+          description: missing external_id
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+        '400':
+          "$ref": "#/components/responses/SchemaValidationError"
+  "/api/v1/customers/{id}":
+    parameters:
+    - name: id
+      in: path
+      schema:
+        type: string
+      required: true
+    get:
+      summary: Show a customer
+      tags:
+      - Customers
+      operationId: getCustomer
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          description: returns the customer
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Customer"
+        '404':
+          description: not found
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+        '400':
+          "$ref": "#/components/responses/SchemaValidationError"
+  "/api/v1/discounts/redeem":
+    post:
+      summary: Redeem applicable discounts and record an order
+      tags:
+      - Discount Redemptions
+      operationId: redeemDiscounts
+      security:
+      - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/DiscountValidationRequest"
+      responses:
+        '201':
+          description: creates an order and applies eligible discounts, creating the
+            customer if new
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Order"
+        '400':
+          "$ref": "#/components/responses/SchemaValidationError"
+  "/api/v1/discounts/validate":
+    post:
+      summary: Validate a cart against a project's discounts
+      tags:
+      - Discount Validations
+      operationId: validateDiscounts
+      security:
+      - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/DiscountValidationRequest"
+      responses:
+        '200':
+          description: sitewide promotion applies to any cart
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/DiscountValidationResponse"
+        '400':
+          "$ref": "#/components/responses/SchemaValidationError"
   "/api/v1/login":
     post:
       summary: Sign in
@@ -728,6 +1666,8 @@ components:
           readOnly: true
         name:
           type: string
+        otp_required:
+          type: boolean
         created_at:
           type: string
           format: date-time
@@ -737,6 +1677,38 @@ components:
           format: date-time
           readOnly: true
       title: Account
+    ActivityLog:
+      type: object
+      properties:
+        id:
+          type: string
+          readOnly: true
+        action:
+          type: string
+          enum:
+          - create
+          - update
+          - delete
+        entity_type:
+          type: string
+        entity_label:
+          type: string
+        entity_public_id:
+          type: string
+          nullable: true
+        actor_label:
+          type: string
+          nullable: true
+        changes:
+          type: object
+        request_id:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      title: ActivityLog
     ApiKey:
       type: object
       properties:
@@ -828,6 +1800,47 @@ components:
         token:
           type: string
       title: ApiKeyWithToken
+    Campaign:
+      type: object
+      properties:
+        id:
+          type: string
+          readOnly: true
+        name:
+          type: string
+        enabled:
+          type: boolean
+        archived:
+          type: boolean
+        valid_from:
+          type: string
+          format: date-time
+          nullable: true
+        valid_until:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        active:
+          type: boolean
+          readOnly: true
+        discount_kinds:
+          type: array
+          readOnly: true
+          items:
+            type: string
+            enum:
+            - promotion
+            - coupon
+            - loyalty
+      title: Campaign
     ConditionNode:
       type: object
       description: Either a condition group (and/or/not + conditions) or a leaf condition
@@ -836,7 +1849,7 @@ components:
         operator:
           type: string
           description: and | or | not | eq | ne | gt | gte | lt | lte | in | not_in
-            | contains
+            | contains | is_null | is_not_null
         entity:
           type: string
           enum:
@@ -845,7 +1858,8 @@ components:
           - customer
         key:
           type: string
-        value: {}
+        value:
+          description: Omit (or leave null) for is_null / is_not_null
         conditions:
           type: array
           items:
@@ -876,15 +1890,152 @@ components:
           - string
           - 'null'
           format: date-time
-        max_redemptions:
-          type:
-          - integer
-          - 'null'
-        max_redemptions_per_customer:
-          type:
-          - integer
-          - 'null'
       title: Coupon
+    CouponCode:
+      type: object
+      properties:
+        id:
+          type: string
+          readOnly: true
+        code:
+          type: string
+        max_redemptions:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        redemption_count:
+          type: integer
+          readOnly: true
+        remaining_redemptions:
+          type: integer
+          readOnly: true
+        customer:
+          type: object
+          nullable: true
+          properties:
+            id:
+              type: string
+            external_id:
+              type: string
+            name:
+              type: string
+              nullable: true
+      title: CouponCode
+    CustomAttribute:
+      type: object
+      properties:
+        id:
+          type: string
+          readOnly: true
+        entity:
+          type: string
+          enum:
+          - cart
+          - line_item
+          - customer
+        key:
+          type: string
+        data_type:
+          type: string
+          enum:
+          - string
+          - number
+          - date
+          - boolean
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      title: CustomAttribute
+    CustomAttributeCreateRequest:
+      type: object
+      required:
+      - entity
+      - key
+      - data_type
+      properties:
+        entity:
+          type: string
+          enum:
+          - cart
+          - line_item
+          - customer
+        key:
+          type: string
+        data_type:
+          type: string
+          enum:
+          - string
+          - number
+          - date
+          - boolean
+      title: CustomAttributeCreateRequest
+    Customer:
+      type: object
+      properties:
+        id:
+          type: string
+          readOnly: true
+        external_id:
+          type: string
+        name:
+          type: string
+          nullable: true
+        email:
+          type: string
+          nullable: true
+        phone_number:
+          type: string
+          nullable: true
+        country:
+          type: string
+          nullable: true
+        date_of_birth:
+          type: string
+          format: date
+          nullable: true
+        marketing_opt_in:
+          type: boolean
+        metadata:
+          type: object
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      title: Customer
+    CustomerCreateRequest:
+      type: object
+      required:
+      - external_id
+      properties:
+        external_id:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+        phone_number:
+          type: string
+        country:
+          type: string
+        date_of_birth:
+          type: string
+          format: date
+        marketing_opt_in:
+          type: boolean
+        metadata:
+          type: object
+      title: CustomerCreateRequest
     Discount:
       type: object
       properties:
@@ -917,6 +2068,25 @@ components:
           type: array
           items:
             "$ref": "#/components/schemas/DiscountEffect"
+        max_redemptions:
+          type: integer
+          nullable: true
+        max_redemptions_per_customer:
+          type: integer
+          nullable: true
+        max_redemptions_per_day:
+          type: integer
+          nullable: true
+        max_redemption_amount:
+          type: number
+          nullable: true
+          description: Total across the discount's whole lifetime
+        max_redemption_amount_per_day:
+          type: number
+          nullable: true
+        max_redemption_amount_per_customer:
+          type: number
+          nullable: true
         created_at:
           type: string
           format: date-time
@@ -981,10 +2151,6 @@ components:
             valid_until:
               type: string
               format: date-time
-            max_redemptions:
-              type: integer
-            max_redemptions_per_customer:
-              type: integer
         effects:
           type: array
           items:
@@ -1015,6 +2181,20 @@ components:
                 description: percentage_off -> {percentage}, fixed_amount_off -> {amount,
                   currency}, free_item -> {buy_quantity, get_quantity, repeatable,
                   buy_condition, get_condition}
+        max_redemptions:
+          type: integer
+          description: Applies to promotions and coupons alike
+        max_redemptions_per_customer:
+          type: integer
+        max_redemptions_per_day:
+          type: integer
+        max_redemption_amount:
+          type: number
+          description: Total across the discount's whole lifetime
+        max_redemption_amount_per_day:
+          type: number
+        max_redemption_amount_per_customer:
+          type: number
       title: DiscountCreateRequest
     DiscountEffect:
       type: object
@@ -1043,6 +2223,103 @@ components:
             fixed_amount_off -> {amount, currency}, free_item -> {buy_quantity, get_quantity,
             repeatable, buy_condition, get_condition}'
       title: DiscountEffect
+    DiscountValidationRequest:
+      type: object
+      properties:
+        cart:
+          type: object
+          description: Arbitrary keys matched against cart custom attributes. total
+            and item_count are reserved — always computed from line_items, not read
+            from this object.
+        line_items:
+          type: array
+          items:
+            type: object
+            required:
+            - sku
+            - quantity
+            - unit_price
+            properties:
+              sku:
+                type: string
+              quantity:
+                type: number
+              unit_price:
+                type: number
+              additionalProperties: true
+        customer:
+          type: object
+          description: external_id plus arbitrary keys matched against customer custom
+            attributes.
+          properties:
+            external_id:
+              type: string
+        coupon_codes:
+          type: array
+          items:
+            type: string
+        as_of:
+          type: string
+          format: date-time
+          description: 'Validate-only: preview against this time instead of now. Ignored
+            by /discounts/redeem.'
+      title: DiscountValidationRequest
+    DiscountValidationResponse:
+      type: object
+      properties:
+        applicable_discounts:
+          type: array
+          items:
+            type: object
+            properties:
+              discount_id:
+                type: string
+              kind:
+                type: string
+                enum:
+                - promotion
+                - coupon
+              key:
+                type: string
+              name:
+                type: string
+              effect_type:
+                type: string
+                enum:
+                - percentage_off
+                - fixed_amount_off
+                - free_item
+              amount_off:
+                type: number
+                description: Present for percentage_off / fixed_amount_off
+              free_items:
+                type: array
+                description: Present for free_item
+                items:
+                  type: object
+                  properties:
+                    sku:
+                      type: string
+                    quantity:
+                      type: integer
+        total_amount_off:
+          type: number
+        coupons:
+          type: array
+          description: One entry per submitted coupon_code
+          items:
+            type: object
+            properties:
+              code:
+                type: string
+              valid:
+                type: boolean
+              reason:
+                type: string
+                nullable: true
+              discounts:
+                type: array
+      title: DiscountValidationResponse
     Error:
       type: object
       properties:
@@ -1066,6 +2343,121 @@ components:
                   message:
                     type: string
       title: Error
+    Export:
+      type: object
+      properties:
+        id:
+          type: string
+          readOnly: true
+        export_type:
+          type: string
+          enum:
+          - campaigns
+          - customers
+          - orders
+          - project
+        status:
+          type: string
+          enum:
+          - pending
+          - processing
+          - completed
+          - failed
+        filename:
+          type: string
+          nullable: true
+        byte_size:
+          type: integer
+          nullable: true
+        error_message:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        completed_at:
+          type: string
+          format: date-time
+          nullable: true
+          readOnly: true
+        requested_by:
+          type: string
+          nullable: true
+          readOnly: true
+      title: Export
+    ExportCreateRequest:
+      type: object
+      required:
+      - export_type
+      properties:
+        export_type:
+          type: string
+          enum:
+          - campaigns
+          - customers
+          - orders
+          - project
+        params:
+          type: object
+      title: ExportCreateRequest
+    GiftShopItem:
+      type: object
+      properties:
+        id:
+          type: string
+          readOnly: true
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        points_cost:
+          type: integer
+        stock:
+          type: integer
+          nullable: true
+        enabled:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        in_stock:
+          type: boolean
+          readOnly: true
+        photo_url:
+          type: string
+          nullable: true
+          readOnly: true
+      title: GiftShopItem
+    GiftShopRedemption:
+      type: object
+      properties:
+        id:
+          type: string
+          readOnly: true
+        item_name:
+          type: string
+        quantity:
+          type: integer
+        points_spent:
+          type: integer
+        redeemed_at:
+          type: string
+          format: date-time
+        item_id:
+          type: string
+          nullable: true
+          readOnly: true
+        customer_id:
+          type: string
+          readOnly: true
+      title: GiftShopRedemption
     LoginRequest:
       type: object
       required:
@@ -1097,7 +2489,32 @@ components:
           - marketer
           - viewer
           -
+        otp_required:
+          type: boolean
+          description: Whether the user's account requires two-factor authentication
       title: MeResponse
+    MembershipScheme:
+      type: object
+      properties:
+        id:
+          type: string
+          readOnly: true
+        name:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        tiers:
+          type: array
+          readOnly: true
+          items:
+            type: object
+      title: MembershipScheme
     MinimalProject:
       type: object
       properties:
@@ -1105,6 +2522,8 @@ components:
           type: string
           readOnly: true
         name:
+          type: string
+        timezone:
           type: string
       title: MinimalProject
     MinimalUser:
@@ -1117,7 +2536,85 @@ components:
           type: string
         email:
           type: string
+        otp_enabled:
+          type: boolean
+          readOnly: true
       title: MinimalUser
+    Order:
+      type: object
+      properties:
+        id:
+          type: string
+          readOnly: true
+        customer_id:
+          type: string
+          readOnly: true
+        total_amount:
+          type: number
+          readOnly: true
+        total_discount_amount:
+          type: number
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        line_items:
+          type: array
+          items:
+            type: object
+            properties:
+              sku:
+                type: string
+              quantity:
+                type: integer
+              unit_price:
+                type: number
+              metadata:
+                type: object
+        discounts:
+          type: array
+          items:
+            type: object
+            properties:
+              discount_id:
+                type: string
+                nullable: true
+              kind:
+                type: string
+                enum:
+                - promotion
+                - coupon
+              discount_key:
+                type: string
+              discount_name:
+                type: string
+              effect_type:
+                type: string
+                enum:
+                - percentage_off
+                - fixed_amount_off
+                - free_item
+              amount_off:
+                type: number
+                nullable: true
+              free_items:
+                type: array
+                nullable: true
+                items:
+                  type: object
+        coupon:
+          type: object
+          nullable: true
+          properties:
+            code:
+              type: string
+            valid:
+              type: boolean
+            reason:
+              type: string
+              nullable: true
+      title: Order
     Project:
       type: object
       properties:
@@ -1125,6 +2622,8 @@ components:
           type: string
           readOnly: true
         name:
+          type: string
+        timezone:
           type: string
         created_at:
           type: string
@@ -1141,6 +2640,8 @@ components:
       - name
       properties:
         name:
+          type: string
+        timezone:
           type: string
       title: ProjectCreateRequest
     ProjectMembership:
@@ -1197,6 +2698,19 @@ components:
           - 'null'
           format: date-time
       title: Promotion
+    RefundResult:
+      type: object
+      properties:
+        amount_off:
+          type: number
+          nullable: true
+        points:
+          type: integer
+          nullable: true
+        refunded_at:
+          type: string
+          format: date-time
+      title: RefundResult
     SessionResponse:
       type: object
       properties:
@@ -1238,6 +2752,9 @@ components:
           type: string
         email:
           type: string
+        otp_enabled:
+          type: boolean
+          readOnly: true
         created_at:
           type: string
           format: date-time
