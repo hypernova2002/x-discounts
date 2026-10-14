@@ -106,13 +106,7 @@ RSpec.describe "Activity Logs API", type: :openapi do
         end
       end
 
-      # NOTE: unlike every other id filter in this API, user_id filters by the user's
-      # raw internal integer id, not their public_id (the controller does a plain
-      # `.where(user_id: params[:user_id])` against the FK column) — ActivityLogResource
-      # exposes actor_label, never a resolvable user id, so there's no way for an API
-      # consumer to discover the value this filter actually expects. Testing the real
-      # behavior as implemented, not the public_id-based convention everywhere else.
-      response 200, "filters by user_id (the raw internal id, not public_id)" do
+      response 200, "filters by user_id (the user's public_id, same convention as every other id filter)" do
         schema type: :object, properties: {
           activity_logs: { type: :array, items: Schemas::ActivityLog },
           meta: { type: :object, properties: { page: { type: :integer }, pages: { type: :integer }, count: { type: :integer } } }
@@ -125,11 +119,45 @@ RSpec.describe "Activity Logs API", type: :openapi do
           log(entity_label: "By someone else")
         end
 
-        let(:user_id) { acting_user.id.to_s }
+        let(:user_id) { acting_user.public_id }
 
         run_test! do
           body = JSON.parse(response.body)
           expect(body["activity_logs"].map { |l| l["entity_label"] }).to eq(["By acting user"])
+        end
+      end
+
+      response 200, "returns no results for an unresolvable user_id, rather than erroring" do
+        schema type: :object, properties: {
+          activity_logs: { type: :array, items: Schemas::ActivityLog },
+          meta: { type: :object, properties: { page: { type: :integer }, pages: { type: :integer }, count: { type: :integer } } }
+        }
+
+        before { log }
+
+        let(:user_id) { "usr_nonexistent" }
+
+        run_test! do
+          body = JSON.parse(response.body)
+          expect(body["activity_logs"]).to eq([])
+        end
+      end
+
+      response 200, "never matches a user from a different account, even by raw id collision" do
+        schema type: :object, properties: {
+          activity_logs: { type: :array, items: Schemas::ActivityLog },
+          meta: { type: :object, properties: { page: { type: :integer }, pages: { type: :integer }, count: { type: :integer } } }
+        }
+
+        let(:other_account_user) { create(:user) }
+
+        before { log(user_id: other_account_user.id, entity_label: "Belongs to another account") }
+
+        let(:user_id) { other_account_user.public_id }
+
+        run_test! do
+          body = JSON.parse(response.body)
+          expect(body["activity_logs"]).to eq([])
         end
       end
 

@@ -13,7 +13,9 @@ module Api
           # that name would silently self-filter to zero rows on every request.
           dataset = dataset.where(entity_type: params[:entity_type]) if params[:entity_type].present?
           dataset = dataset.where(action: params[:log_action]) if params[:log_action].present?
-          dataset = dataset.where(user_id: params[:user_id]) if params[:user_id].present?
+          if params[:user_id].present?
+            dataset = dataset.where(user_id: current_user.account.users_dataset.where(public_id: params[:user_id]).select(:id))
+          end
           if params[:from].present?
             from_date = Date.iso8601(params[:from])
             dataset = dataset.where { created_at >= from_date }
