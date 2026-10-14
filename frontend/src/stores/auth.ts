@@ -5,6 +5,7 @@ import { useCoupons } from '@/composables/useCoupons'
 import { setLocale } from '@/i18n'
 import type { User } from '@/models/user'
 import type { Project } from '@/models/project'
+import type { MinimalAccount } from '@/models/account'
 
 const TOKEN_KEY = 'x-discounts.session-token'
 const PROJECT_KEY = 'x-discounts.project-id'
@@ -13,6 +14,7 @@ interface AuthState {
   token: string | null
   user: User | null
   project: Project | null
+  account: MinimalAccount | null
   role: string | null
   projects: Project[]
   loading: boolean
@@ -48,6 +50,7 @@ interface SessionData {
 interface MeResponse {
   user: User
   project: Project | null
+  account: MinimalAccount
   role: string | null
   otp_required: boolean
 }
@@ -61,6 +64,7 @@ export const useAuthStore = defineStore('auth', {
     token: null,
     user: null,
     project: null,
+    account: null,
     role: null,
     projects: [],
     loading: false,
@@ -156,6 +160,7 @@ export const useAuthStore = defineStore('auth', {
       const data = (await apiFetch('/api/v1/me', { token: this.token ?? undefined, projectId })) as MeResponse
       this.user = data.user
       this.project = data.project
+      this.account = data.account
       this.role = data.role
       this.otpRequired = data.otp_required
       setLocale(this.user?.locale)
@@ -209,6 +214,7 @@ export const useAuthStore = defineStore('auth', {
       this.token = null
       this.user = null
       this.project = null
+      this.account = null
       this.role = null
       this.projects = []
       this.error = null

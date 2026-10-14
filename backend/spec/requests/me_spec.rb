@@ -18,6 +18,7 @@ RSpec.describe "Me API", type: :openapi do
         run_test! do
           body = JSON.parse(response.body)
           expect(body["user"]["email"]).to eq(api_key.user.email)
+          expect(body["account"]["name"]).to eq(api_key.user.account.name)
           expect(body["role"]).to eq("admin")
         end
       end

@@ -2479,6 +2479,8 @@ components:
           description: null until a session picks one via X-Project-Id
         user:
           "$ref": "#/components/schemas/MinimalUser"
+        account:
+          "$ref": "#/components/schemas/MinimalAccount"
         role:
           type:
           - string
@@ -2515,6 +2517,15 @@ components:
           items:
             type: object
       title: MembershipScheme
+    MinimalAccount:
+      type: object
+      properties:
+        id:
+          type: string
+          readOnly: true
+        name:
+          type: string
+      title: MinimalAccount
     MinimalProject:
       type: object
       properties:

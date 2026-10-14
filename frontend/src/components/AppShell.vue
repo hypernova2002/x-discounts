@@ -123,6 +123,8 @@ onMounted(() => {
         </template>
       </div>
       <div class="app-shell__topbar-end">
+        <span v-if="auth.account" class="app-shell__account">{{ auth.account.name }}</span>
+        <span v-if="auth.account && auth.project" class="app-shell__section-divider app-shell__account-divider" aria-hidden="true">/</span>
         <BaseSelect
           v-if="auth.project"
           :model-value="auth.project.id"
@@ -278,6 +280,13 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 0.75rem;
+}
+
+.app-shell__account {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text);
+  white-space: nowrap;
 }
 
 .app-shell__project {
@@ -440,6 +449,11 @@ onMounted(() => {
 
   .app-shell__topbar-end {
     gap: 0.375rem;
+  }
+
+  .app-shell__account,
+  .app-shell__account-divider {
+    display: none;
   }
 }
 </style>

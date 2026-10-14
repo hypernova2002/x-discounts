@@ -16,6 +16,9 @@ export const AccountSchema = z
 
 export type Account = z.infer<typeof AccountSchema>
 
+// What /me returns for the current account (MinimalAccountResource).
+export type MinimalAccount = Pick<Account, 'id' | 'name'>
+
 // Form input. A factory (not a module-level constant) so validation messages
 // are real i18n keys from the caller's own namespace (account.json).
 export function accountInputSchema(t: ComposerTranslation) {

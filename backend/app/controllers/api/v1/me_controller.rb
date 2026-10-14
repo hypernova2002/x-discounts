@@ -7,6 +7,7 @@ module Api
         render json: {
           project: current_project ? MinimalProjectResource.new(current_project).to_h : nil,
           user: MinimalUserResource.new(current_user).to_h,
+          account: MinimalAccountResource.new(current_user.account).to_h,
           role: current_role,
           otp_required: current_user.account.otp_required
         }
