@@ -5,7 +5,6 @@ import { useI18n } from 'vue-i18n'
 import AppShell from '@/components/AppShell.vue'
 import PageHeader from '@/components/PageHeader.vue'
 import DateRangePicker from '@/components/DateRangePicker.vue'
-import type { DateRange } from '@/components/DateRangePicker.vue'
 import BaseCard from '@/components/base/BaseCard.vue'
 import MetricCard from '@/components/base/MetricCard.vue'
 import BaseChart from '@/components/base/BaseChart.vue'
@@ -15,6 +14,7 @@ import BaseButton from '@/components/base/BaseButton.vue'
 import BaseTag from '@/components/base/BaseTag.vue'
 import CountryFlag from '@/components/CountryFlag.vue'
 import { useAuthStore } from '@/stores/auth'
+import { useSharedDateRange } from '@/composables/useSharedDateRange'
 import { useAsync } from '@/composables/useAsync'
 import { useExportDownload } from '@/composables/useExportDownload'
 import { listCustomers } from '@/api/customers'
@@ -100,7 +100,7 @@ async function exportCustomers() {
   }
 }
 
-const range = ref<DateRange | null>(null)
+const range = useSharedDateRange()
 
 const { data: analytics, loading: analyticsLoading, error: analyticsError, reload: reloadAnalytics } = useAsync(
   () => (range.value ? getCustomerAnalytics({ ...range.value, token: auth.token ?? undefined, projectId: auth.project?.id }) : Promise.resolve(null)),
@@ -111,9 +111,13 @@ watch(analyticsError, (e) => {
   if (e) toast.add({ severity: 'error', summary: t('customers.analyticsLoadError'), detail: e instanceof Error ? e.message : String(e), life: 4000 })
 })
 
-watch(range, () => {
-  if (range.value) reloadAnalytics()
-})
+watch(
+  range,
+  () => {
+    if (range.value) reloadAnalytics()
+  },
+  { immediate: true },
+)
 
 const chartLabels = computed(() => (analytics.value?.series || []).map((s) => formatCalendarDate(s.date)))
 const chartDatasets = computed(() => [{ label: t('customers.chartSeriesLabel'), data: (analytics.value?.series || []).map((s) => s.value) }])

@@ -58,8 +58,27 @@ const rangeLabel = computed(() => {
   return t('dateRangePicker.rangeLabel', { from: props.modelValue.from, to: props.modelValue.to })
 })
 
+// Matches an incoming v-model (e.g. restored from a route query param) back to
+// whichever preset button produced it, so the control doesn't show "30 days"
+// selected while actually displaying a 7- or 90-day range.
+function matchingPreset(value: DateRange): string {
+  for (const days of ['7', '30', '90']) {
+    const to = new Date()
+    const from = new Date()
+    from.setDate(from.getDate() - (Number(days) - 1))
+    if (isoDate(to) === value.to && isoDate(from) === value.from) return days
+  }
+  return 'custom'
+}
+
 onMounted(() => {
-  if (!props.modelValue) applyPreset(preset.value)
+  if (!props.modelValue) {
+    applyPreset(preset.value)
+  } else {
+    preset.value = matchingPreset(props.modelValue)
+    customFrom.value = props.modelValue.from
+    customTo.value = props.modelValue.to
+  }
 })
 </script>
 

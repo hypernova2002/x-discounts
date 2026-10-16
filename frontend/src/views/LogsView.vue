@@ -4,13 +4,13 @@ import { useI18n } from 'vue-i18n'
 import AppShell from '@/components/AppShell.vue'
 import PageHeader from '@/components/PageHeader.vue'
 import DateRangePicker from '@/components/DateRangePicker.vue'
-import type { DateRange } from '@/components/DateRangePicker.vue'
 import BaseCard from '@/components/base/BaseCard.vue'
 import BaseSelect from '@/components/base/BaseSelect.vue'
 import BaseTag from '@/components/base/BaseTag.vue'
 import BaseDialog from '@/components/base/BaseDialog.vue'
 import BaseMessage from '@/components/base/BaseMessage.vue'
 import { useAuthStore } from '@/stores/auth'
+import { useSharedDateRange } from '@/composables/useSharedDateRange'
 import { ApiError } from '@/lib/api'
 import { listActivityLogs } from '@/api/activityLogs'
 import { ACTIVITY_LOG_ACTIONS } from '@/models/activityLog'
@@ -23,7 +23,7 @@ const { t } = useI18n()
 const logs = ref<ActivityLog[]>([])
 const loading = ref(false)
 const loadError = ref('')
-const range = ref<DateRange | null>(null)
+const range = useSharedDateRange()
 const entityTypeFilter = ref<string | null>(null)
 const actionFilter = ref<string | null>(null)
 

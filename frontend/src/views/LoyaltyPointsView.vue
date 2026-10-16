@@ -5,7 +5,6 @@ import { useI18n } from 'vue-i18n'
 import AppShell from '@/components/AppShell.vue'
 import PageHeader from '@/components/PageHeader.vue'
 import DateRangePicker from '@/components/DateRangePicker.vue'
-import type { DateRange } from '@/components/DateRangePicker.vue'
 import BaseCard from '@/components/base/BaseCard.vue'
 import MetricCard from '@/components/base/MetricCard.vue'
 import BaseChart from '@/components/base/BaseChart.vue'
@@ -14,6 +13,7 @@ import type { TableColumn } from '@/components/base/BaseTable.vue'
 import EntityLink from '@/components/EntityLink.vue'
 import DiscountKindTable from '@/components/DiscountKindTable.vue'
 import { useAuthStore } from '@/stores/auth'
+import { useSharedDateRange } from '@/composables/useSharedDateRange'
 import { useAsync } from '@/composables/useAsync'
 import { getLoyaltyAnalytics, getActiveLoyaltyRedemptions } from '@/api/analytics'
 import { useBaseToast } from '@/composables/useBaseToast'
@@ -24,7 +24,7 @@ const toast = useBaseToast()
 const router = useRouter()
 const { t } = useI18n()
 
-const range = ref<DateRange | null>(null)
+const range = useSharedDateRange()
 
 const { data: analytics, loading, error, reload } = useAsync(
   () => (range.value ? getLoyaltyAnalytics({ ...range.value, token: auth.token ?? undefined, projectId: auth.project?.id }) : Promise.resolve(null)),
@@ -35,9 +35,13 @@ watch(error, (e) => {
   if (e) toast.add({ severity: 'error', summary: t('loyaltyPoints.analyticsLoadError'), detail: e instanceof Error ? e.message : String(e), life: 4000 })
 })
 
-watch(range, () => {
-  if (range.value) reload()
-})
+watch(
+  range,
+  () => {
+    if (range.value) reload()
+  },
+  { immediate: true },
+)
 
 const chartLabels = computed(() => (analytics.value?.series || []).map((s) => formatCalendarDate(s.date)))
 const chartDatasets = computed(() => [{ label: t('loyaltyPoints.chartSeriesLabel'), data: (analytics.value?.series || []).map((s) => s.value) }])

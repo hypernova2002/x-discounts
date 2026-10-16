@@ -8,7 +8,6 @@ import PageHeader from '@/components/PageHeader.vue'
 import LifecycleStatus from '@/components/LifecycleStatus.vue'
 import DiscountKindTag from '@/components/DiscountKindTag.vue'
 import DateRangePicker from '@/components/DateRangePicker.vue'
-import type { DateRange } from '@/components/DateRangePicker.vue'
 import BaseTable from '@/components/base/BaseTable.vue'
 import type { TableColumn } from '@/components/base/BaseTable.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
@@ -17,6 +16,7 @@ import BaseCard from '@/components/base/BaseCard.vue'
 import MetricCard from '@/components/base/MetricCard.vue'
 import BaseChart from '@/components/base/BaseChart.vue'
 import { useAuthStore } from '@/stores/auth'
+import { useSharedDateRange } from '@/composables/useSharedDateRange'
 import { useAsync } from '@/composables/useAsync'
 import { useExportDownload } from '@/composables/useExportDownload'
 import { listCampaigns } from '@/api/campaigns'
@@ -31,7 +31,7 @@ const router = useRouter()
 const { t } = useI18n()
 
 const showArchived = ref(false)
-const range = ref<DateRange | null>(null)
+const range = useSharedDateRange()
 const { exporting, runExport } = useExportDownload()
 
 const page = ref(1)
@@ -65,9 +65,13 @@ watch(analyticsError, (e) => {
   if (e) toast.add({ severity: 'error', summary: t('campaigns.analyticsLoadError'), detail: e instanceof Error ? e.message : String(e), life: 4000 })
 })
 
-watch(range, () => {
-  if (range.value) reloadAnalytics()
-})
+watch(
+  range,
+  () => {
+    if (range.value) reloadAnalytics()
+  },
+  { immediate: true },
+)
 
 const chartLabels = computed(() => (analytics.value?.usage_series || []).map((s) => formatCalendarDate(s.date)))
 const chartDatasets = computed(() => [

@@ -1,14 +1,14 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { useSharedDateRange } from '@/composables/useSharedDateRange'
 import { useAsync } from '@/composables/useAsync'
 import { useBaseToast } from '@/composables/useBaseToast'
 import AppShell from '@/components/AppShell.vue'
 import PageHeader from '@/components/PageHeader.vue'
 import DateRangePicker from '@/components/DateRangePicker.vue'
-import type { DateRange } from '@/components/DateRangePicker.vue'
 import DiscountKindTag from '@/components/DiscountKindTag.vue'
 import OrderStatusTag from '@/components/OrderStatusTag.vue'
 import EntityLink from '@/components/EntityLink.vue'
@@ -30,7 +30,7 @@ const toast = useBaseToast()
 const router = useRouter()
 const { t } = useI18n()
 
-const range = ref<DateRange | null>(null)
+const range = useSharedDateRange()
 
 // One combined fetch — the KPI row and chart are all one screen's worth of
 // data pulled from three already-built per-domain analytics endpoints
@@ -46,9 +46,13 @@ watch(overviewError, (e) => {
   if (e) toast.add({ severity: 'error', summary: t('dashboard.overviewLoadError'), detail: e instanceof Error ? e.message : String(e), life: 4000 })
 })
 
-watch(range, () => {
-  if (range.value) reloadOverview()
-})
+watch(
+  range,
+  () => {
+    if (range.value) reloadOverview()
+  },
+  { immediate: true },
+)
 
 const chartLabels = computed(() => (overview.value?.orders.orders_series || []).map((s) => formatCalendarDate(s.date)))
 const chartDatasets = computed(() => [
